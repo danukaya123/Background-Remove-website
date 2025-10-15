@@ -3,21 +3,11 @@ import { useState, useRef, useEffect } from 'react';
 const ImageEditor = ({ imageUrl, onClose, onSave }) => {
   const [activeTab, setActiveTab] = useState('filters');
   const [image, setImage] = useState(null);
+  const [editedImage, setEditedImage] = useState(null);
   const canvasRef = useRef(null);
-  const containerRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
-
-  // Crop state
-  const [isCropping, setIsCropping] = useState(false);
-  const [crop, setCrop] = useState({
-    x: 50,
-    y: 50,
-    width: 200,
-    height: 200,
-    aspectRatio: 'free',
-    isDragging: false,
-    dragHandle: null
-  });
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -37,10 +27,12 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     saturation: 100,
     hue: 0,
     blur: 0,
+    sharpen: 0,
     exposure: 0,
     temperature: 0,
     vignette: 0,
     gamma: 100,
+    noise: 0,
     sepia: 0,
     invert: 0
   });
@@ -48,13 +40,32 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
   const [background, setBackground] = useState({
     type: 'transparent',
     color: '#ffffff',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    gradient: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+    pattern: 'none'
+  });
+
+  const [crop, setCrop] = useState({
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    aspectRatio: 'free',
+    isCropping: false
+  });
+
+  const [size, setSize] = useState({
+    width: 100,
+    height: 100,
+    lockAspectRatio: true
   });
 
   const [effects, setEffects] = useState({
-    filmGrain: 0,
+    tiltShift: 0,
+    lensBlur: 0,
+    pixelate: 1,
     glow: 0,
-    pixelate: 1
+    shadow: 0,
+    filmGrain: 0
   });
 
   // Load image and initialize canvas
@@ -64,13 +75,14 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         setImage(img);
-        initializeCanvas(img);
+        setEditedImage(img);
+        drawImageOnCanvas(img);
       };
       img.src = imageUrl;
     }
   }, [imageUrl]);
 
-  const initializeCanvas = (img) => {
+  const drawImageOnCanvas = (img, applyFilters = true) => {
     const canvas = canvasRef.current;
     if (!canvas || !img) return;
 
@@ -78,15 +90,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     canvas.width = img.width;
     canvas.height = img.height;
 
-    drawImageOnCanvas(img);
-  };
-
-  const drawImageOnCanvas = (img) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !img) return;
-
-    const ctx = canvas.getContext('2d');
-    
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -108,15 +111,17 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     }
 
     // Apply filters
-    ctx.filter = `
-      brightness(${filters.brightness}%)
-      contrast(${filters.contrast}%)
-      saturate(${filters.saturation}%)
-      hue-rotate(${filters.hue}deg)
-      blur(${filters.blur}px)
-      sepia(${filters.sepia}%)
-      invert(${filters.invert}%)
-    `;
+    if (applyFilters) {
+      ctx.filter = `
+        brightness(${filters.brightness}%)
+        contrast(${filters.contrast}%)
+        saturate(${filters.saturation}%)
+        hue-rotate(${filters.hue}deg)
+        blur(${filters.blur}px)
+        sepia(${filters.sepia}%)
+        invert(${filters.invert}%)
+      `;
+    }
 
     // Draw image
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -161,131 +166,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     }
   }, [filters, background, effects, image]);
 
-  // Crop functionality
-  const startCrop = () => {
-    setIsCropping(true);
-    if (image) {
-      setCrop(prev => ({
-        ...prev,
-        x: 50,
-        y: 50,
-        width: Math.min(200, image.width - 100),
-        height: Math.min(200, image.height - 100)
-      }));
-    }
-  };
-
-  const handleCropMouseDown = (e, handle) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCrop(prev => ({ ...prev, isDragging: true, dragHandle: handle }));
-  };
-
-  const handleCropMouseMove = (e) => {
-    if (!crop.isDragging || !image) return;
-
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
-
-    setCrop(prev => {
-      const newCrop = { ...prev };
-      const minSize = 20;
-
-      switch (prev.dragHandle) {
-        case 'top-left':
-          newCrop.width += prev.x - mouseX;
-          newCrop.height += prev.y - mouseY;
-          newCrop.x = Math.max(0, mouseX);
-          newCrop.y = Math.max(0, mouseY);
-          newCrop.width = Math.max(minSize, newCrop.width);
-          newCrop.height = Math.max(minSize, newCrop.height);
-          break;
-        case 'top-right':
-          newCrop.width = Math.max(minSize, mouseX - prev.x);
-          newCrop.height += prev.y - mouseY;
-          newCrop.y = Math.max(0, mouseY);
-          break;
-        case 'bottom-left':
-          newCrop.width += prev.x - mouseX;
-          newCrop.height = Math.max(minSize, mouseY - prev.y);
-          newCrop.x = Math.max(0, mouseX);
-          break;
-        case 'bottom-right':
-          newCrop.width = Math.max(minSize, mouseX - prev.x);
-          newCrop.height = Math.max(minSize, mouseY - prev.y);
-          break;
-        case 'move':
-          newCrop.x = Math.max(0, Math.min(canvas.width - newCrop.width, mouseX - newCrop.width / 2));
-          newCrop.y = Math.max(0, Math.min(canvas.height - newCrop.height, mouseY - newCrop.height / 2));
-          break;
-        default:
-          break;
-      }
-
-      return newCrop;
-    });
-  };
-
-  const handleCropMouseUp = () => {
-    setCrop(prev => ({ ...prev, isDragging: false, dragHandle: null }));
-  };
-
-  const applyCrop = () => {
-    if (!image || !isCropping) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const croppedImageData = ctx.getImageData(crop.x, crop.y, crop.width, crop.height);
-
-    // Create new canvas with cropped dimensions
-    const newCanvas = document.createElement('canvas');
-    newCanvas.width = crop.width;
-    newCanvas.height = crop.height;
-    const newCtx = newCanvas.getContext('2d');
-    newCtx.putImageData(croppedImageData, 0, 0);
-
-    // Update the main canvas
-    canvas.width = crop.width;
-    canvas.height = crop.height;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(newCanvas, 0, 0);
-
-    setIsCropping(false);
-    // Create a new image from the canvas
-    const newImg = new Image();
-    newImg.src = canvas.toDataURL();
-    newImg.onload = () => setImage(newImg);
-  };
-
-  const cancelCrop = () => {
-    setIsCropping(false);
-    if (image) {
-      drawImageOnCanvas(image);
-    }
-  };
-
-  // Event listeners for crop
-  useEffect(() => {
-    if (isCropping) {
-      document.addEventListener('mousemove', handleCropMouseMove);
-      document.addEventListener('mouseup', handleCropMouseUp);
-      document.addEventListener('touchmove', handleCropMouseMove);
-      document.addEventListener('touchend', handleCropMouseUp);
-
-      return () => {
-        document.removeEventListener('mousemove', handleCropMouseMove);
-        document.removeEventListener('mouseup', handleCropMouseUp);
-        document.removeEventListener('touchmove', handleCropMouseMove);
-        document.removeEventListener('touchend', handleCropMouseUp);
-      };
-    }
-  }, [isCropping, crop.isDragging]);
-
   const handleFilterChange = (filter, value) => {
     setFilters(prev => ({
       ...prev,
@@ -313,7 +193,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     if (!canvas) return;
 
     const link = document.createElement('a');
-    link.download = `professional-edit-${Date.now()}.png`;
+    link.download = `edited-image-${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
@@ -325,17 +205,22 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       saturation: 100,
       hue: 0,
       blur: 0,
+      sharpen: 0,
       exposure: 0,
       temperature: 0,
       vignette: 0,
       gamma: 100,
+      noise: 0,
       sepia: 0,
       invert: 0
     });
     setEffects({
-      filmGrain: 0,
+      tiltShift: 0,
+      lensBlur: 0,
+      pixelate: 1,
       glow: 0,
-      pixelate: 1
+      shadow: 0,
+      filmGrain: 0
     });
   };
 
@@ -354,19 +239,40 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
   };
 
   const gradientPresets = [
-    { name: 'Sunset', value: 'linear-gradient(135deg, #667eea, #764ba2)' },
+    { name: 'Sunset', value: 'linear-gradient(45deg, #667eea, #764ba2)' },
     { name: 'Coral', value: 'linear-gradient(135deg, #f093fb, #f5576c)' },
-    { name: 'Ocean', value: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
+    { name: 'Ocean', value: 'linear-gradient(45deg, #4facfe, #00f2fe)' },
     { name: 'Emerald', value: 'linear-gradient(135deg, #43e97b, #38f9d7)' },
-    { name: 'Fire', value: 'linear-gradient(135deg, #fa709a, #fee140)' },
+    { name: 'Fire', value: 'linear-gradient(45deg, #fa709a, #fee140)' },
     { name: 'Royal', value: 'linear-gradient(135deg, #667eea, #764ba2)' }
   ];
 
   const FilterSlider = ({ label, value, min, max, onChange, unit = '%' }) => (
-    <div className="filter-slider">
-      <div className="slider-header">
-        <span className="slider-label">{label}</span>
-        <span className="slider-value">{value}{unit}</span>
+    <div style={{ marginBottom: '20px' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '8px'
+      }}>
+        <span style={{ 
+          color: '#374151', 
+          fontSize: '14px', 
+          fontWeight: '600',
+          textTransform: 'capitalize'
+        }}>
+          {label}
+        </span>
+        <span style={{ 
+          color: '#6b7280', 
+          fontSize: '12px', 
+          fontWeight: '600',
+          background: '#f3f4f6',
+          padding: '2px 8px',
+          borderRadius: '12px'
+        }}>
+          {value}{unit}
+        </span>
       </div>
       <input
         type="range"
@@ -374,136 +280,276 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
         max={max}
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="slider-input"
+        style={{
+          width: '100%',
+          height: '6px',
+          borderRadius: '10px',
+          background: 'linear-gradient(90deg, #e5e7eb 0%, #3b82f6 100%)',
+          outline: 'none',
+          WebkitAppearance: 'none',
+          cursor: 'pointer'
+        }}
       />
     </div>
   );
 
-  const CropOverlay = () => (
-    <>
-      {/* Crop rectangle */}
-      <div
-        className="crop-rectangle"
-        style={{
-          left: `${crop.x}px`,
-          top: `${crop.y}px`,
-          width: `${crop.width}px`,
-          height: `${crop.height}px`
-        }}
-        onMouseDown={(e) => handleCropMouseDown(e, 'move')}
-        onTouchStart={(e) => handleCropMouseDown(e, 'move')}
-      >
-        {/* Crop handles */}
-        <div 
-          className="crop-handle top-left" 
-          onMouseDown={(e) => handleCropMouseDown(e, 'top-left')}
-          onTouchStart={(e) => handleCropMouseDown(e, 'top-left')}
-        />
-        <div 
-          className="crop-handle top-right" 
-          onMouseDown={(e) => handleCropMouseDown(e, 'top-right')}
-          onTouchStart={(e) => handleCropMouseDown(e, 'top-right')}
-        />
-        <div 
-          className="crop-handle bottom-left" 
-          onMouseDown={(e) => handleCropMouseDown(e, 'bottom-left')}
-          onTouchStart={(e) => handleCropMouseDown(e, 'bottom-left')}
-        />
-        <div 
-          className="crop-handle bottom-right" 
-          onMouseDown={(e) => handleCropMouseDown(e, 'bottom-right')}
-          onTouchStart={(e) => handleCropMouseDown(e, 'bottom-right')}
-        />
-      </div>
-      
-      {/* Crop overlay */}
-      <div className="crop-overlay" />
-    </>
+  const MobileToolbar = () => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: 'white',
+      borderTop: '1px solid #e5e7eb',
+      padding: '12px 16px',
+      display: 'flex',
+      justifyContent: 'space-around',
+      zIndex: 1000
+    }}>
+      {[
+        { id: 'filters', icon: '🎨', label: 'Filters' },
+        { id: 'adjust', icon: '⚙️', label: 'Adjust' },
+        { id: 'crop', icon: '✂️', label: 'Crop' },
+        { id: 'background', icon: '🖼️', label: 'Background' },
+        { id: 'effects', icon: '✨', label: 'Effects' }
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.id)}
+          style={{
+            background: activeTab === tab.id ? '#3b82f6' : 'transparent',
+            color: activeTab === tab.id ? 'white' : '#6b7280',
+            border: 'none',
+            padding: '8px 12px',
+            borderRadius: '12px',
+            fontSize: '10px',
+            fontWeight: '600',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            minWidth: '60px',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>{tab.icon}</span>
+          <span>{tab.label}</span>
+        </button>
+      ))}
+    </div>
   );
 
   return (
-    <div className="image-editor-overlay">
-      <div className="image-editor-container" ref={containerRef}>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: isMobile ? '0' : '20px',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: isMobile ? '0' : '24px',
+        width: isMobile ? '100%' : '95%',
+        maxWidth: '1400px',
+        height: isMobile ? '100%' : '90%',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 32px 64px rgba(0,0,0,0.2)',
+        overflow: 'hidden'
+      }}>
         {/* Header */}
-        <div className="editor-header">
-          <div className="header-left">
-            <div className="editor-logo">
-              <span className="logo-icon">✎</span>
+        <div style={{
+          padding: isMobile ? '16px' : '24px',
+          borderBottom: '1px solid #f3f4f6',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'white'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              color: 'white',
+              fontWeight: 'bold'
+            }}>
+              ✎
             </div>
-            <div className="header-text">
-              <h2>Professional Editor</h2>
-              <p>Edit your image with premium tools</p>
-            </div>
+            <h2 style={{ 
+              margin: 0, 
+              color: '#1f2937', 
+              fontSize: isMobile ? '20px' : '24px', 
+              fontWeight: '700' 
+            }}>
+              Image Editor
+            </h2>
           </div>
-          <button className="close-button" onClick={onClose}>
-            <span>×</span>
-          </button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isMobile && (
+              <button
+                onClick={() => setShowMobilePreview(!showMobilePreview)}
+                style={{
+                  background: '#f3f4f6',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  cursor: 'pointer'
+                }}
+              >
+                {showMobilePreview ? 'Tools' : 'Preview'}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: '#f3f4f6',
+                border: 'none',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                fontSize: isMobile ? '18px' : '20px',
+                cursor: 'pointer',
+                color: '#6b7280',
+                fontWeight: 'bold',
+                minWidth: '40px',
+                minHeight: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
-        <div className="editor-main">
+        <div style={{
+          display: 'flex',
+          flex: 1,
+          overflow: 'hidden',
+          flexDirection: isMobile && showMobilePreview ? 'column-reverse' : 'row'
+        }}>
           {/* Sidebar - Editing Tools */}
-          <div className="editor-sidebar">
-            {/* Desktop Tab Navigation */}
-            {!isMobile && (
-              <div className="tab-navigation">
-                {[
-                  { id: 'filters', icon: '🎨', label: 'Filters' },
-                  { id: 'adjust', icon: '⚙️', label: 'Adjust' },
-                  { id: 'crop', icon: '✂️', label: 'Crop' },
-                  { id: 'background', icon: '🖼️', label: 'Background' },
-                  { id: 'effects', icon: '✨', label: 'Effects' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-                  >
-                    <span className="tab-icon">{tab.icon}</span>
-                    <span className="tab-label">{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          {(!isMobile || !showMobilePreview) && (
+            <div style={{
+              width: isMobile ? '100%' : '360px',
+              borderRight: isMobile ? 'none' : '1px solid #f3f4f6',
+              padding: isMobile ? '16px' : '24px',
+              overflowY: 'auto',
+              background: 'white'
+            }}>
+              {/* Desktop Tab Navigation */}
+              {!isMobile && (
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  marginBottom: '24px',
+                  borderBottom: '1px solid #f3f4f6',
+                  paddingBottom: '16px'
+                }}>
+                  {[
+                    { id: 'filters', icon: '🎨', label: 'Filters' },
+                    { id: 'adjust', icon: '⚙️', label: 'Adjust' },
+                    { id: 'crop', icon: '✂️', label: 'Crop' },
+                    { id: 'background', icon: '🖼️', label: 'Background' },
+                    { id: 'effects', icon: '✨', label: 'Effects' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      style={{
+                        background: activeTab === tab.id ? '#3b82f6' : 'transparent',
+                        color: activeTab === tab.id ? 'white' : '#6b7280',
+                        border: 'none',
+                        padding: '10px 16px',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'all 0.2s ease',
+                        flex: 1,
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <span>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-            {/* Mobile Tab Navigation */}
-            {isMobile && (
-              <div className="mobile-tab-navigation">
-                {[
-                  { id: 'filters', icon: '🎨', label: 'Filters' },
-                  { id: 'adjust', icon: '⚙️', label: 'Adjust' },
-                  { id: 'crop', icon: '✂️', label: 'Crop' },
-                  { id: 'background', icon: '🖼️', label: 'Background' },
-                  { id: 'effects', icon: '✨', label: 'Effects' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`mobile-tab-button ${activeTab === tab.id ? 'active' : ''}`}
-                  >
-                    <span className="mobile-tab-icon">{tab.icon}</span>
-                    <span className="mobile-tab-label">{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Tools Content */}
-            <div className="tools-content">
               {/* Filter Tools */}
               {activeTab === 'filters' && (
-                <div className="tools-section">
-                  <h3>Filters & Effects</h3>
+                <div>
+                  <h3 style={{ 
+                    color: '#1f2937', 
+                    marginBottom: '20px',
+                    fontSize: '18px',
+                    fontWeight: '700'
+                  }}>
+                    Filters & Effects
+                  </h3>
                   
                   {/* Preset Filters */}
-                  <div className="presets-section">
-                    <h4>Quick Presets</h4>
-                    <div className="presets-grid">
-                      {Object.keys(presetFilters).map(preset => (
+                  <div style={{ marginBottom: '24px' }}>
+                    <h4 style={{ 
+                      color: '#6b7280', 
+                      fontSize: '14px', 
+                      marginBottom: '12px',
+                      fontWeight: '600'
+                    }}>
+                      Quick Presets
+                    </h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '8px'
+                    }}>
+                      {Object.entries(presetFilters).map(([preset, config]) => (
                         <button
                           key={preset}
                           onClick={() => applyPreset(preset)}
-                          className="preset-button"
+                          style={{
+                            background: '#f8fafc',
+                            border: '2px solid #e5e7eb',
+                            padding: '12px 8px',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            textTransform: 'capitalize',
+                            fontWeight: '600',
+                            color: '#374151',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#3b82f6';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#e5e7eb';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
                         >
                           {preset}
                         </button>
@@ -512,14 +558,16 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                   </div>
 
                   {/* Filter Sliders */}
-                  <div className="sliders-container">
+                  <div style={{ maxHeight: isMobile ? '300px' : '400px', overflowY: 'auto' }}>
                     {[
                       { key: 'brightness', label: 'Brightness', min: 0, max: 200 },
                       { key: 'contrast', label: 'Contrast', min: 0, max: 200 },
                       { key: 'saturation', label: 'Saturation', min: 0, max: 200 },
                       { key: 'hue', label: 'Hue Rotation', min: -180, max: 180, unit: '°' },
                       { key: 'blur', label: 'Blur', min: 0, max: 20, unit: 'px' },
-                      { key: 'vignette', label: 'Vignette', min: 0, max: 50 }
+                      { key: 'vignette', label: 'Vignette', min: 0, max: 50 },
+                      { key: 'sepia', label: 'Sepia', min: 0, max: 100 },
+                      { key: 'invert', label: 'Invert', min: 0, max: 100 }
                     ].map(({ key, label, min, max, unit }) => (
                       <FilterSlider
                         key={key}
@@ -537,12 +585,21 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
               {/* Adjust Tools */}
               {activeTab === 'adjust' && (
-                <div className="tools-section">
-                  <h3>Fine Tune</h3>
-                  <div className="sliders-container">
+                <div>
+                  <h3 style={{ 
+                    color: '#1f2937', 
+                    marginBottom: '20px',
+                    fontSize: '18px',
+                    fontWeight: '700'
+                  }}>
+                    Fine Tune
+                  </h3>
+                  
+                  <div style={{ maxHeight: isMobile ? '300px' : '400px', overflowY: 'auto' }}>
                     {[
                       { key: 'exposure', label: 'Exposure', min: -100, max: 100 },
                       { key: 'temperature', label: 'Temperature', min: -100, max: 100 },
+                      { key: 'sharpen', label: 'Sharpen', min: 0, max: 100 },
                       { key: 'gamma', label: 'Gamma', min: 50, max: 200 }
                     ].map(({ key, label, min, max }) => (
                       <FilterSlider
@@ -560,15 +617,41 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
               {/* Background Tools */}
               {activeTab === 'background' && (
-                <div className="tools-section">
-                  <h3>Background</h3>
+                <div>
+                  <h3 style={{ 
+                    color: '#1f2937', 
+                    marginBottom: '20px',
+                    fontSize: '18px',
+                    fontWeight: '700'
+                  }}>
+                    Background
+                  </h3>
                   
-                  <div className="background-type">
-                    <label>Background Type</label>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      color: '#374151', 
+                      marginBottom: '12px', 
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}>
+                      Background Type
+                    </label>
                     <select
                       value={background.type}
                       onChange={(e) => handleBackgroundChange('type', e.target.value)}
-                      className="background-select"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        background: 'white',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                      onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                     >
                       <option value="transparent">Transparent</option>
                       <option value="color">Solid Color</option>
@@ -577,27 +660,62 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                   </div>
 
                   {background.type === 'color' && (
-                    <div className="color-picker-section">
-                      <label>Color Picker</label>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ 
+                        display: 'block', 
+                        color: '#374151', 
+                        marginBottom: '12px', 
+                        fontWeight: '600',
+                        fontSize: '14px'
+                      }}>
+                        Color Picker
+                      </label>
                       <input
                         type="color"
                         value={background.color}
                         onChange={(e) => handleBackgroundChange('color', e.target.value)}
-                        className="color-picker"
+                        style={{
+                          width: '100%',
+                          height: '60px',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          padding: '8px'
+                        }}
                       />
                     </div>
                   )}
 
                   {background.type === 'gradient' && (
-                    <div className="gradient-section">
-                      <h4>Gradient Presets</h4>
-                      <div className="gradients-grid">
+                    <div>
+                      <h4 style={{ 
+                        color: '#6b7280', 
+                        fontSize: '14px', 
+                        marginBottom: '12px',
+                        fontWeight: '600'
+                      }}>
+                        Gradient Presets
+                      </h4>
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '10px'
+                      }}>
                         {gradientPresets.map((gradient, index) => (
                           <div
                             key={index}
                             onClick={() => handleBackgroundChange('gradient', gradient.value)}
-                            className={`gradient-preset ${background.gradient === gradient.value ? 'active' : ''}`}
-                            style={{ background: gradient.value }}
+                            style={{
+                              width: '100%',
+                              aspectRatio: '1',
+                              background: gradient.value,
+                              borderRadius: '10px',
+                              cursor: 'pointer',
+                              border: background.gradient === gradient.value ? '3px solid #3b82f6' : '2px solid #e5e7eb',
+                              transition: 'all 0.2s ease',
+                              position: 'relative',
+                              overflow: 'hidden'
+                            }}
                             title={gradient.name}
                           />
                         ))}
@@ -609,12 +727,21 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
               {/* Effects Tools */}
               {activeTab === 'effects' && (
-                <div className="tools-section">
-                  <h3>Advanced Effects</h3>
-                  <div className="sliders-container">
+                <div>
+                  <h3 style={{ 
+                    color: '#1f2937', 
+                    marginBottom: '20px',
+                    fontSize: '18px',
+                    fontWeight: '700'
+                  }}>
+                    Advanced Effects
+                  </h3>
+                  
+                  <div style={{ maxHeight: isMobile ? '300px' : '400px', overflowY: 'auto' }}>
                     {[
                       { key: 'filmGrain', label: 'Film Grain', min: 0, max: 100 },
                       { key: 'glow', label: 'Glow Effect', min: 0, max: 50 },
+                      { key: 'shadow', label: 'Drop Shadow', min: 0, max: 50 },
                       { key: 'pixelate', label: 'Pixelate', min: 1, max: 20, unit: 'px' }
                     ].map(({ key, label, min, max, unit }) => (
                       <FilterSlider
@@ -633,663 +760,232 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
               {/* Crop Tools */}
               {activeTab === 'crop' && (
-                <div className="tools-section">
-                  <h3>Crop & Resize</h3>
+                <div>
+                  <h3 style={{ 
+                    color: '#1f2937', 
+                    marginBottom: '20px',
+                    fontSize: '18px',
+                    fontWeight: '700'
+                  }}>
+                    Crop & Resize
+                  </h3>
                   
-                  {!isCropping ? (
-                    <>
-                      <div className="crop-instructions">
-                        <p>Click "Start Cropping" to begin cropping your image. Drag the corners to adjust the crop area.</p>
-                      </div>
-                      <button onClick={startCrop} className="crop-start-button">
-                        Start Cropping
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="crop-controls">
-                        <p>Drag the corners or edges to adjust the crop area</p>
-                        <div className="crop-actions">
-                          <button onClick={applyCrop} className="crop-apply-button">
-                            Apply Crop
-                          </button>
-                          <button onClick={cancelCrop} className="crop-cancel-button">
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      color: '#374151', 
+                      marginBottom: '12px', 
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}>
+                      Aspect Ratio
+                    </label>
+                    <select
+                      value={crop.aspectRatio}
+                      onChange={(e) => setCrop(prev => ({ ...prev, aspectRatio: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        background: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="free">Free Form</option>
+                      <option value="1:1">Square (1:1)</option>
+                      <option value="4:3">Landscape (4:3)</option>
+                      <option value="3:4">Portrait (3:4)</option>
+                      <option value="16:9">Widescreen (16:9)</option>
+                      <option value="9:16">Vertical (9:16)</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <FilterSlider
+                      label="Width"
+                      value={size.width}
+                      min={10}
+                      max={200}
+                      onChange={(value) => setSize(prev => ({ ...prev, width: value }))}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <FilterSlider
+                      label="Height"
+                      value={size.height}
+                      min={10}
+                      max={200}
+                      onChange={(value) => setSize(prev => ({ ...prev, height: value }))}
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setCrop(prev => ({ ...prev, isCropping: !prev.isCropping }))}
+                    style={{
+                      background: crop.isCropping ? '#ef4444' : '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      width: '100%',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {crop.isCropping ? 'Cancel Crop' : 'Start Cropping'}
+                  </button>
                 </div>
               )}
 
               {/* Reset Button */}
-              <button onClick={resetFilters} className="reset-button">
+              <button
+                onClick={resetFilters}
+                style={{
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px 24px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  width: '100%',
+                  marginTop: '20px',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+                }}
+              >
                 Reset All Changes
               </button>
             </div>
-          </div>
+          )}
 
           {/* Preview Area */}
-          <div className="editor-preview">
-            <div className="preview-container">
-              <div className="canvas-wrapper">
+          {(!isMobile || showMobilePreview) && (
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: isMobile ? '16px' : '24px',
+              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              position: 'relative',
+              minHeight: isMobile ? '60vh' : 'auto'
+            }}>
+              <div style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                overflow: 'auto',
+                background: 'white',
+                borderRadius: '16px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                padding: isMobile ? '16px' : '24px',
+                border: '1px solid #f3f4f6'
+              }}>
                 <canvas
                   ref={canvasRef}
-                  className="preview-canvas"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: isMobile ? '50vh' : '60vh',
+                    display: 'block',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)'
+                  }}
                 />
-                {isCropping && <CropOverlay />}
+                {crop.isCropping && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    border: '2px dashed #3b82f6',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    cursor: 'move'
+                  }} />
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
+        {/* Mobile Toolbar */}
+        {isMobile && <MobileToolbar />}
+
         {/* Footer Actions */}
-        <div className="editor-footer">
-          <button onClick={onClose} className="footer-button cancel">
+        <div style={{
+          padding: isMobile ? '16px' : '24px',
+          borderTop: '1px solid #f3f4f6',
+          display: 'flex',
+          gap: '12px',
+          justifyContent: isMobile ? 'space-between' : 'flex-end',
+          background: 'white'
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              color: '#6b7280',
+              border: '2px solid #e5e7eb',
+              padding: isMobile ? '12px 16px' : '14px 28px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: isMobile ? '14px' : '16px',
+              fontWeight: '600',
+              flex: isMobile ? 1 : 'auto',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#9ca3af';
+              e.currentTarget.style.color = '#374151';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#e5e7eb';
+              e.currentTarget.style.color = '#6b7280';
+            }}
+          >
             Cancel
           </button>
-          <button onClick={handleDownload} className="footer-button download">
-            Download Image
+          <button
+            onClick={handleDownload}
+            style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              border: 'none',
+              padding: isMobile ? '12px 16px' : '14px 28px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: isMobile ? '14px' : '16px',
+              fontWeight: '600',
+              flex: isMobile ? 1 : 'auto',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+            }}
+          >
+            {isMobile ? 'Download' : 'Download Edited Image'}
           </button>
         </div>
       </div>
-
-      <style jsx>{`
-        .image-editor-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        .image-editor-container {
-          background: white;
-          border-radius: 24px;
-          width: 95%;
-          max-width: 1400px;
-          height: 90%;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 32px 64px rgba(0, 0, 0, 0.08);
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
-
-        /* Header */
-        .editor-header {
-          padding: 24px 32px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: white;
-        }
-
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .editor-logo {
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          color: white;
-          font-weight: bold;
-        }
-
-        .header-text h2 {
-          margin: 0;
-          color: #1a1a1a;
-          font-size: 24px;
-          font-weight: 700;
-        }
-
-        .header-text p {
-          margin: 4px 0 0 0;
-          color: #666;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .close-button {
-          background: rgba(0, 0, 0, 0.04);
-          border: none;
-          padding: 12px;
-          border-radius: 12px;
-          font-size: 20px;
-          cursor: pointer;
-          color: #666;
-          font-weight: bold;
-          min-width: 48px;
-          min-height: 48px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-        }
-
-        .close-button:hover {
-          background: rgba(0, 0, 0, 0.08);
-          color: #333;
-        }
-
-        /* Main Content */
-        .editor-main {
-          display: flex;
-          flex: 1;
-          overflow: hidden;
-          flex-direction: ${isMobile ? 'column' : 'row'};
-        }
-
-        /* Sidebar */
-        .editor-sidebar {
-          width: ${isMobile ? '100%' : '380px'};
-          border-right: ${isMobile ? 'none' : '1px solid rgba(0, 0, 0, 0.06)'};
-          padding: ${isMobile ? '20px' : '24px'};
-          overflow-y: auto;
-          background: ${isMobile ? '#fafbfc' : 'white'};
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .editor-sidebar::-webkit-scrollbar {
-          display: none;
-        }
-
-        /* Tab Navigation */
-        .tab-navigation {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 24px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .tab-button {
-          background: transparent;
-          color: #666;
-          border: 1px solid transparent;
-          padding: 16px 20px;
-          border-radius: 16px;
-          cursor: pointer;
-          font-size: 15px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          transition: all 0.3s ease;
-          text-align: left;
-        }
-
-        .tab-button:hover {
-          background: rgba(102, 126, 234, 0.08);
-          color: #667eea;
-          border-color: rgba(102, 126, 234, 0.2);
-        }
-
-        .tab-button.active {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border-color: transparent;
-          box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-        }
-
-        .tab-icon {
-          font-size: 18px;
-          width: 24px;
-          text-align: center;
-        }
-
-        .mobile-tab-navigation {
-          display: flex;
-          gap: 4px;
-          margin-bottom: 20px;
-          padding: 8px;
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .mobile-tab-button {
-          flex: 1;
-          background: transparent;
-          color: #666;
-          border: none;
-          padding: 12px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .mobile-tab-button.active {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        .mobile-tab-icon {
-          font-size: 16px;
-        }
-
-        /* Tools Content */
-        .tools-content {
-          flex: 1;
-        }
-
-        .tools-section {
-          margin-bottom: 24px;
-        }
-
-        .tools-section h3 {
-          color: #1a1a1a;
-          margin: 0 0 20px 0;
-          font-size: 18px;
-          font-weight: 700;
-        }
-
-        .tools-section h4 {
-          color: #666;
-          font-size: 14px;
-          margin: 0 0 12px 0;
-          font-weight: 600;
-        }
-
-        /* Filter Sliders */
-        .filter-slider {
-          margin-bottom: 20px;
-        }
-
-        .slider-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .slider-label {
-          color: #333;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .slider-value {
-          color: #667eea;
-          font-size: 12px;
-          font-weight: 700;
-          background: rgba(102, 126, 234, 0.1);
-          padding: 4px 8px;
-          border-radius: 8px;
-        }
-
-        .slider-input {
-          width: 100%;
-          height: 6px;
-          border-radius: 10px;
-          background: linear-gradient(90deg, #e5e7eb 0%, #667eea 100%);
-          outline: none;
-          -webkit-appearance: none;
-          cursor: pointer;
-        }
-
-        .slider-input::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: white;
-          border: 2px solid #667eea;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          cursor: grab;
-        }
-
-        /* Presets */
-        .presets-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-          margin-bottom: 20px;
-        }
-
-        .preset-button {
-          background: white;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          padding: 12px 8px;
-          border-radius: 12px;
-          font-size: 13px;
-          cursor: pointer;
-          text-transform: capitalize;
-          font-weight: 600;
-          color: #333;
-          transition: all 0.2s ease;
-        }
-
-        .preset-button:hover {
-          border-color: #667eea;
-          transform: translateY(-1px);
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-        }
-
-        /* Background Tools */
-        .background-type, .color-picker-section {
-          margin-bottom: 20px;
-        }
-
-        .background-type label, .color-picker-section label {
-          display: block;
-          color: #333;
-          margin-bottom: 8px;
-          font-weight: 600;
-          font-size: 14px;
-        }
-
-        .background-select, .color-picker {
-          width: 100%;
-          padding: 12px 16px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          border-radius: 12px;
-          font-size: 14px;
-          background: white;
-          cursor: pointer;
-          transition: border-color 0.2s ease;
-        }
-
-        .background-select:focus, .color-picker:focus {
-          border-color: #667eea;
-          outline: none;
-        }
-
-        .color-picker {
-          height: 60px;
-          padding: 8px;
-        }
-
-        .gradients-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-        }
-
-        .gradient-preset {
-          width: 100%;
-          aspect-ratio: 1;
-          border-radius: 10px;
-          cursor: pointer;
-          border: 2px solid transparent;
-          transition: all 0.2s ease;
-        }
-
-        .gradient-preset.active {
-          border-color: #667eea;
-          transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .gradient-preset:hover {
-          transform: scale(1.05);
-        }
-
-        /* Crop Tools */
-        .crop-instructions, .crop-controls {
-          margin-bottom: 20px;
-        }
-
-        .crop-instructions p, .crop-controls p {
-          color: #666;
-          font-size: 14px;
-          line-height: 1.5;
-          margin: 0 0 16px 0;
-        }
-
-        .crop-start-button, .crop-apply-button, .crop-cancel-button {
-          width: 100%;
-          padding: 14px 24px;
-          border-radius: 12px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 600;
-          transition: all 0.2s ease;
-          border: none;
-        }
-
-        .crop-start-button {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .crop-start-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .crop-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .crop-apply-button {
-          flex: 2;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-        }
-
-        .crop-cancel-button {
-          flex: 1;
-          background: rgba(0, 0, 0, 0.06);
-          color: #666;
-        }
-
-        /* Reset Button */
-        .reset-button {
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          color: white;
-          border: none;
-          padding: 14px 24px;
-          border-radius: 12px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 600;
-          width: 100%;
-          margin-top: 20px;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-          transition: all 0.2s ease;
-        }
-
-        .reset-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-        }
-
-        /* Preview Area */
-        .editor-preview {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: ${isMobile ? '20px' : '32px'};
-          background: #f8fafc;
-          ${isMobile ? 'min-height: 50vh;' : ''}
-        }
-
-        .preview-container {
-          max-width: 100%;
-          max-height: 100%;
-          overflow: auto;
-          background: white;
-          border-radius: 20px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-          padding: 24px;
-        }
-
-        .canvas-wrapper {
-          position: relative;
-          display: inline-block;
-        }
-
-        .preview-canvas {
-          max-width: 100%;
-          max-height: ${isMobile ? '40vh' : '60vh'};
-          display: block;
-          border-radius: 12px;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Crop Overlay */
-        .crop-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.3);
-          pointer-events: none;
-        }
-
-        .crop-rectangle {
-          position: absolute;
-          border: 2px solid #667eea;
-          background: rgba(102, 126, 234, 0.1);
-          cursor: move;
-          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
-        }
-
-        .crop-handle {
-          position: absolute;
-          width: 12px;
-          height: 12px;
-          background: #667eea;
-          border: 2px solid white;
-          border-radius: 2px;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .crop-handle.top-left {
-          top: -6px;
-          left: -6px;
-          cursor: nw-resize;
-        }
-
-        .crop-handle.top-right {
-          top: -6px;
-          right: -6px;
-          cursor: ne-resize;
-        }
-
-        .crop-handle.bottom-left {
-          bottom: -6px;
-          left: -6px;
-          cursor: sw-resize;
-        }
-
-        .crop-handle.bottom-right {
-          bottom: -6px;
-          right: -6px;
-          cursor: se-resize;
-        }
-
-        /* Footer */
-        .editor-footer {
-          padding: 24px 32px;
-          border-top: 1px solid rgba(0, 0, 0, 0.06);
-          display: flex;
-          gap: 12px;
-          justify-content: flex-end;
-          background: white;
-        }
-
-        .footer-button {
-          padding: 14px 32px;
-          border-radius: 12px;
-          cursor: pointer;
-          font-size: 15px;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          border: none;
-          min-width: 140px;
-        }
-
-        .footer-button.cancel {
-          background: transparent;
-          color: #666;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .footer-button.cancel:hover {
-          background: rgba(0, 0, 0, 0.04);
-          color: #333;
-          border-color: rgba(0, 0, 0, 0.2);
-        }
-
-        .footer-button.download {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-        }
-
-        .footer-button.download:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Mobile Optimizations */
-        @media (max-width: 767px) {
-          .image-editor-overlay {
-            padding: 0;
-          }
-
-          .image-editor-container {
-            width: 100%;
-            height: 100%;
-            border-radius: 0;
-          }
-
-          .editor-header {
-            padding: 20px;
-          }
-
-          .editor-sidebar {
-            max-height: 40vh;
-          }
-
-          .preview-container {
-            padding: 16px;
-          }
-
-          .editor-footer {
-            padding: 20px;
-            flex-direction: column;
-          }
-
-          .footer-button {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
   );
 };

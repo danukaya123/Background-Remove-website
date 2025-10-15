@@ -7,7 +7,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
   const containerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Crop state and refs
+  // Crop state
   const [isCropping, setIsCropping] = useState(false);
   const [crop, setCrop] = useState({
     x: 50,
@@ -37,12 +37,10 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     saturation: 100,
     hue: 0,
     blur: 0,
-    sharpen: 0,
     exposure: 0,
     temperature: 0,
     vignette: 0,
     gamma: 100,
-    noise: 0,
     sepia: 0,
     invert: 0
   });
@@ -54,12 +52,9 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
   });
 
   const [effects, setEffects] = useState({
-    tiltShift: 0,
-    lensBlur: 0,
-    pixelate: 1,
+    filmGrain: 0,
     glow: 0,
-    shadow: 0,
-    filmGrain: 0
+    pixelate: 1
   });
 
   // Load image and initialize canvas
@@ -86,7 +81,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     drawImageOnCanvas(img);
   };
 
-  const drawImageOnCanvas = (img, applyFilters = true) => {
+  const drawImageOnCanvas = (img) => {
     const canvas = canvasRef.current;
     if (!canvas || !img) return;
 
@@ -113,17 +108,15 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     }
 
     // Apply filters
-    if (applyFilters) {
-      ctx.filter = `
-        brightness(${filters.brightness}%)
-        contrast(${filters.contrast}%)
-        saturate(${filters.saturation}%)
-        hue-rotate(${filters.hue}deg)
-        blur(${filters.blur}px)
-        sepia(${filters.sepia}%)
-        invert(${filters.invert}%)
-      `;
-    }
+    ctx.filter = `
+      brightness(${filters.brightness}%)
+      contrast(${filters.contrast}%)
+      saturate(${filters.saturation}%)
+      hue-rotate(${filters.hue}deg)
+      blur(${filters.blur}px)
+      sepia(${filters.sepia}%)
+      invert(${filters.invert}%)
+    `;
 
     // Draw image
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -230,6 +223,8 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           newCrop.x = Math.max(0, Math.min(canvas.width - newCrop.width, mouseX - newCrop.width / 2));
           newCrop.y = Math.max(0, Math.min(canvas.height - newCrop.height, mouseY - newCrop.height / 2));
           break;
+        default:
+          break;
       }
 
       return newCrop;
@@ -261,7 +256,10 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     ctx.drawImage(newCanvas, 0, 0);
 
     setIsCropping(false);
-    setImage(newCanvas);
+    // Create a new image from the canvas
+    const newImg = new Image();
+    newImg.src = canvas.toDataURL();
+    newImg.onload = () => setImage(newImg);
   };
 
   const cancelCrop = () => {
@@ -327,22 +325,17 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       saturation: 100,
       hue: 0,
       blur: 0,
-      sharpen: 0,
       exposure: 0,
       temperature: 0,
       vignette: 0,
       gamma: 100,
-      noise: 0,
       sepia: 0,
       invert: 0
     });
     setEffects({
-      tiltShift: 0,
-      lensBlur: 0,
-      pixelate: 1,
+      filmGrain: 0,
       glow: 0,
-      shadow: 0,
-      filmGrain: 0
+      pixelate: 1
     });
   };
 
@@ -401,10 +394,26 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
         onTouchStart={(e) => handleCropMouseDown(e, 'move')}
       >
         {/* Crop handles */}
-        <div className="crop-handle top-left" onMouseDown={(e) => handleCropMouseDown(e, 'top-left')} />
-        <div className="crop-handle top-right" onMouseDown={(e) => handleCropMouseDown(e, 'top-right')} />
-        <div className="crop-handle bottom-left" onMouseDown={(e) => handleCropMouseDown(e, 'bottom-left')} />
-        <div className="crop-handle bottom-right" onMouseDown={(e) => handleCropMouseDown(e, 'bottom-right')} />
+        <div 
+          className="crop-handle top-left" 
+          onMouseDown={(e) => handleCropMouseDown(e, 'top-left')}
+          onTouchStart={(e) => handleCropMouseDown(e, 'top-left')}
+        />
+        <div 
+          className="crop-handle top-right" 
+          onMouseDown={(e) => handleCropMouseDown(e, 'top-right')}
+          onTouchStart={(e) => handleCropMouseDown(e, 'top-right')}
+        />
+        <div 
+          className="crop-handle bottom-left" 
+          onMouseDown={(e) => handleCropMouseDown(e, 'bottom-left')}
+          onTouchStart={(e) => handleCropMouseDown(e, 'bottom-left')}
+        />
+        <div 
+          className="crop-handle bottom-right" 
+          onMouseDown={(e) => handleCropMouseDown(e, 'bottom-right')}
+          onTouchStart={(e) => handleCropMouseDown(e, 'bottom-right')}
+        />
       </div>
       
       {/* Crop overlay */}
@@ -490,7 +499,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                   <div className="presets-section">
                     <h4>Quick Presets</h4>
                     <div className="presets-grid">
-                      {Object.entries(presetFilters).map(([preset, config]) => (
+                      {Object.keys(presetFilters).map(preset => (
                         <button
                           key={preset}
                           onClick={() => applyPreset(preset)}
@@ -534,7 +543,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                     {[
                       { key: 'exposure', label: 'Exposure', min: -100, max: 100 },
                       { key: 'temperature', label: 'Temperature', min: -100, max: 100 },
-                      { key: 'sharpen', label: 'Sharpen', min: 0, max: 100 },
                       { key: 'gamma', label: 'Gamma', min: 50, max: 200 }
                     ].map(({ key, label, min, max }) => (
                       <FilterSlider
@@ -607,7 +615,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                     {[
                       { key: 'filmGrain', label: 'Film Grain', min: 0, max: 100 },
                       { key: 'glow', label: 'Glow Effect', min: 0, max: 50 },
-                      { key: 'shadow', label: 'Drop Shadow', min: 0, max: 50 },
                       { key: 'pixelate', label: 'Pixelate', min: 1, max: 20, unit: 'px' }
                     ].map(({ key, label, min, max, unit }) => (
                       <FilterSlider
@@ -713,11 +720,8 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           height: 90%;
           display: flex;
           flex-direction: column;
-          box-shadow: 
-            0 32px 64px rgba(0, 0, 0, 0.08),
-            0 16px 32px rgba(0, 0, 0, 0.04),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 32px 64px rgba(0, 0, 0, 0.08);
+          border: 1px solid rgba(0, 0, 0, 0.1);
           overflow: hidden;
         }
 
@@ -728,7 +732,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+          background: white;
         }
 
         .header-left {
@@ -748,7 +752,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           font-size: 20px;
           color: white;
           font-weight: bold;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .header-text h2 {
@@ -756,7 +759,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           color: #1a1a1a;
           font-size: 24px;
           font-weight: 700;
-          letter-spacing: -0.5px;
         }
 
         .header-text p {
@@ -793,7 +795,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           display: flex;
           flex: 1;
           overflow: hidden;
-          ${isMobile ? 'flex-direction: column;' : ''}
+          flex-direction: ${isMobile ? 'column' : 'row'};
         }
 
         /* Sidebar */
@@ -802,14 +804,13 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           border-right: ${isMobile ? 'none' : '1px solid rgba(0, 0, 0, 0.06)'};
           padding: ${isMobile ? '20px' : '24px'};
           overflow-y: auto;
-          background: ${isMobile ? 'rgba(250, 251, 252, 0.8)' : 'linear-gradient(180deg, #fafbfc 0%, #ffffff 100%)'};
-          
-          /* Hide scrollbar for desktop */
-          ${!isMobile ? `
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            &::-webkit-scrollbar { display: none; }
-          ` : ''}
+          background: ${isMobile ? '#fafbfc' : 'white'};
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .editor-sidebar::-webkit-scrollbar {
+          display: none;
         }
 
         /* Tab Navigation */
@@ -834,7 +835,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           display: flex;
           align-items: center;
           gap: 12px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s ease;
           text-align: left;
         }
 
@@ -842,7 +843,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           background: rgba(102, 126, 234, 0.08);
           color: #667eea;
           border-color: rgba(102, 126, 234, 0.2);
-          transform: translateX(4px);
         }
 
         .tab-button.active {
@@ -850,7 +850,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           color: white;
           border-color: transparent;
           box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-          transform: translateX(4px);
         }
 
         .tab-icon {
@@ -935,7 +934,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           color: #333;
           font-size: 14px;
           font-weight: 600;
-          text-transform: capitalize;
         }
 
         .slider-value {
@@ -966,11 +964,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           border: 2px solid #667eea;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           cursor: grab;
-        }
-
-        .slider-input::-webkit-slider-thumb:active {
-          cursor: grabbing;
-          transform: scale(1.1);
         }
 
         /* Presets */
@@ -1138,7 +1131,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           align-items: center;
           justify-content: center;
           padding: ${isMobile ? '20px' : '32px'};
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          background: #f8fafc;
           ${isMobile ? 'min-height: 50vh;' : ''}
         }
 
@@ -1148,11 +1141,8 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           overflow: auto;
           background: white;
           border-radius: 20px;
-          box-shadow: 
-            0 20px 40px rgba(0, 0, 0, 0.08),
-            0 8px 16px rgba(0, 0, 0, 0.04);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
           padding: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .canvas-wrapper {
@@ -1229,7 +1219,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           display: flex;
           gap: 12px;
           justify-content: flex-end;
-          background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+          background: white;
         }
 
         .footer-button {
@@ -1238,7 +1228,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           cursor: pointer;
           font-size: 15px;
           font-weight: 600;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s ease;
           border: none;
           min-width: 140px;
         }
@@ -1253,7 +1243,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           background: rgba(0, 0, 0, 0.04);
           color: #333;
           border-color: rgba(0, 0, 0, 0.2);
-          transform: translateY(-1px);
         }
 
         .footer-button.download {

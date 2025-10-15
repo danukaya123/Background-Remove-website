@@ -1,25 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 
-const ImageEditor = () => {
+const ImageEditor = ({ imageUrl, onClose, onSave }) => {
+  const [activeTab, setActiveTab] = useState('adjust');
   const [image, setImage] = useState(null);
-  const [originalImage, setOriginalImage] = useState(null);
   const canvasRef = useRef(null);
-  const fileInputRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Editing states
+  // Enhanced editing states with proper ranges
   const [adjustments, setAdjustments] = useState({
     brightness: 100,
     contrast: 100,
     saturation: 100,
     exposure: 0,
-    temperature: 0,
     vignette: 0,
     blur: 0,
-    sharpen: 0
+    temperature: 0,
+    clarity: 0
   });
 
-  const [filters, setFilters] = useState({
+  const [effects, setEffects] = useState({
     vintage: 0,
     dramatic: 0,
     cinematic: 0,
@@ -28,8 +27,12 @@ const ImageEditor = () => {
     glow: 0
   });
 
-  const [activeTab, setActiveTab] = useState('adjust');
-  const [uploadedImages, setUploadedImages] = useState([]);
+  const [background, setBackground] = useState({
+    type: 'transparent',
+    color: '#ffffff',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    customColor: '#3B82F6'
+  });
 
   // Detect mobile device
   useEffect(() => {
@@ -42,32 +45,25 @@ const ImageEditor = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Handle image upload
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          setImage(img);
-          setOriginalImage(img);
-          initializeCanvas(img);
-          // Add to uploaded images gallery
-          setUploadedImages(prev => [...prev, e.target.result].slice(-4));
-        };
-        img.src = e.target.result;
+  // Load image and initialize canvas
+  useEffect(() => {
+    if (imageUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        setImage(img);
+        initializeCanvas(img);
       };
-      reader.readAsDataURL(file);
+      img.src = imageUrl;
     }
-  };
+  }, [imageUrl]);
 
   const initializeCanvas = (img) => {
     const canvas = canvasRef.current;
     if (!canvas || !img) return;
 
     const ctx = canvas.getContext('2d');
-    const maxWidth = isMobile ? window.innerWidth - 40 : 600;
+    const maxWidth = isMobile ? window.innerWidth - 80 : 600;
     const scale = Math.min(maxWidth / img.width, 1);
     
     canvas.width = img.width * scale;
@@ -82,6 +78,23 @@ const ImageEditor = () => {
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Apply background
+    if (background.type !== 'transparent') {
+      if (background.type === 'color') {
+        ctx.fillStyle = background.color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else if (background.type === 'gradient') {
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        const colors = background.gradient.match(/#[a-fA-F0-9]{6}/g);
+        if (colors) {
+          gradient.addColorStop(0, colors[0]);
+          gradient.addColorStop(1, colors[1] || colors[0]);
+        }
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
 
     // Apply filters
     const filterString = `
@@ -99,33 +112,6 @@ const ImageEditor = () => {
   };
 
   const applyAdvancedEffects = (ctx, width, height) => {
-    // Exposure adjustment
-    if (adjustments.exposure !== 0) {
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const data = imageData.data;
-      const exposure = adjustments.exposure / 100;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.min(255, data[i] + exposure * 255); // Red
-        data[i + 1] = Math.min(255, data[i + 1] + exposure * 255); // Green
-        data[i + 2] = Math.min(255, data[i + 2] + exposure * 255); // Blue
-      }
-      ctx.putImageData(imageData, 0, 0);
-    }
-
-    // Temperature effect
-    if (adjustments.temperature !== 0) {
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const data = imageData.data;
-      const temp = adjustments.temperature / 100;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.min(255, data[i] + (temp > 0 ? temp * 50 : 0)); // Warm - add red
-        data[i + 2] = Math.min(255, data[i + 2] + (temp < 0 ? -temp * 50 : 0)); // Cool - add blue
-      }
-      ctx.putImageData(imageData, 0, 0);
-    }
-
     // Vignette effect
     if (adjustments.vignette > 0) {
       const gradient = ctx.createRadialGradient(
@@ -138,38 +124,48 @@ const ImageEditor = () => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Apply filter presets
-    applyFilterPresets(ctx, width, height);
-  };
-
-  const applyFilterPresets = (ctx, width, height) => {
-    // Vintage filter
-    if (filters.vintage > 0) {
+    // Temperature effect (warm/cool)
+    if (adjustments.temperature !== 0) {
       const imageData = ctx.getImageData(0, 0, width, height);
       const data = imageData.data;
-      const intensity = filters.vintage / 100;
+      const temp = adjustments.temperature / 100;
       
       for (let i = 0; i < data.length; i += 4) {
-        // Sepia tone effect
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        data[i] = Math.min(255, (r * 0.393 + g * 0.769 + b * 0.189) * intensity + r * (1 - intensity));
-        data[i + 1] = Math.min(255, (r * 0.349 + g * 0.686 + b * 0.168) * intensity + g * (1 - intensity));
-        data[i + 2] = Math.min(255, (r * 0.272 + g * 0.534 + b * 0.131) * intensity + b * (1 - intensity));
+        // Warm (positive temp) adds red, cool (negative temp) adds blue
+        data[i] = Math.min(255, data[i] + (temp > 0 ? temp * 50 : 0)); // Red
+        data[i + 2] = Math.min(255, data[i + 2] + (temp < 0 ? -temp * 50 : 0)); // Blue
       }
       ctx.putImageData(imageData, 0, 0);
     }
 
-    // Dramatic filter
-    if (filters.dramatic > 0) {
+    // Apply effect presets
+    applyEffectPresets(ctx, width, height);
+  };
+
+  const applyEffectPresets = (ctx, width, height) => {
+    // Vintage effect
+    if (effects.vintage > 0) {
       const imageData = ctx.getImageData(0, 0, width, height);
       const data = imageData.data;
-      const intensity = filters.dramatic / 100;
+      const intensity = effects.vintage / 100;
       
       for (let i = 0; i < data.length; i += 4) {
-        // Increase contrast
+        // Add warm brown tone
+        data[i] = Math.min(255, data[i] + 20 * intensity);
+        data[i + 1] = Math.min(255, data[i + 1] + 10 * intensity);
+        data[i + 2] = Math.max(0, data[i + 2] - 10 * intensity);
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Dramatic effect
+    if (effects.dramatic > 0) {
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      const intensity = effects.dramatic / 100;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        // Increase contrast dramatically
         const factor = (259 * (intensity * 150 + 255)) / (255 * (259 - intensity * 150));
         data[i] = factor * (data[i] - 128) + 128;
         data[i + 1] = factor * (data[i + 1] - 128) + 128;
@@ -184,14 +180,28 @@ const ImageEditor = () => {
     if (image) {
       drawImageOnCanvas(image);
     }
-  }, [adjustments, filters, image]);
+  }, [adjustments, effects, background, image]);
 
   const handleAdjustmentChange = (adjustment, value) => {
     setAdjustments(prev => ({ ...prev, [adjustment]: value }));
   };
 
-  const handleFilterChange = (filter, value) => {
-    setFilters(prev => ({ ...prev, [filter]: value }));
+  const handleEffectChange = (effect, value) => {
+    setEffects(prev => ({ ...prev, [effect]: value }));
+  };
+
+  const handleBackgroundChange = (type, value) => {
+    setBackground(prev => ({ ...prev, type, [type]: value }));
+  };
+
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const link = document.createElement('a');
+    link.download = `edited-image-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   };
 
   const resetAll = () => {
@@ -200,12 +210,12 @@ const ImageEditor = () => {
       contrast: 100,
       saturation: 100,
       exposure: 0,
-      temperature: 0,
       vignette: 0,
       blur: 0,
-      sharpen: 0
+      temperature: 0,
+      clarity: 0
     });
-    setFilters({
+    setEffects({
       vintage: 0,
       dramatic: 0,
       cinematic: 0,
@@ -213,245 +223,231 @@ const ImageEditor = () => {
       fade: 0,
       glow: 0
     });
+    setBackground({
+      type: 'transparent',
+      color: '#ffffff',
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      customColor: '#3B82F6'
+    });
   };
 
-  const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const link = document.createElement('a');
-    link.download = `fotor-edited-${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+  // Quick presets data
+  const quickPresets = {
+    enhance: { brightness: 110, contrast: 110, saturation: 110, clarity: 30 },
+    portrait: { brightness: 105, contrast: 105, saturation: 95 },
+    landscape: { brightness: 105, contrast: 115, saturation: 120 },
+    moody: { brightness: 85, contrast: 120, saturation: 90, vignette: 40 },
+    vibrant: { brightness: 110, contrast: 110, saturation: 130 },
+    cinematic: { brightness: 90, contrast: 120, saturation: 95, vignette: 25 },
+    vintage: { brightness: 95, contrast: 105, saturation: 85, temperature: 25 },
+    dramatic: { brightness: 80, contrast: 130, saturation: 95, vignette: 35 },
+    clean: { brightness: 105, contrast: 105, saturation: 100 },
+    warm: { brightness: 105, contrast: 105, saturation: 110, temperature: 15 }
   };
-
-  // Quick adjustment presets
-  const quickPresets = [
-    { name: 'Auto Enhance', icon: '⚡', values: { brightness: 110, contrast: 110, saturation: 110 } },
-    { name: 'Portrait', icon: '👤', values: { brightness: 105, contrast: 105, saturation: 95, blur: 2 } },
-    { name: 'Landscape', icon: '🏞️', values: { brightness: 105, contrast: 115, saturation: 120 } },
-    { name: 'Vintage', icon: '📻', values: { temperature: 25, vintage: 80 } },
-    { name: 'Dramatic', icon: '🎭', values: { contrast: 130, vignette: 30 } },
-    { name: 'Cinematic', icon: '🎬', values: { contrast: 120, saturation: 95, vignette: 25 } }
-  ];
 
   const applyQuickPreset = (preset) => {
-    setAdjustments(prev => ({ ...prev, ...preset.values }));
-    if (preset.values.vintage) {
-      setFilters(prev => ({ ...prev, vintage: preset.values.vintage }));
-    }
+    setAdjustments(prev => ({ ...prev, ...quickPresets[preset] }));
   };
 
-  // Enhanced Slider Component
-  const EditorSlider = ({ 
+  // Enhanced Draggable Slider Component
+  const DraggableSlider = ({ 
     label, 
     value, 
     min, 
     max, 
     onChange, 
-    unit = '',
+    unit = '%',
     defaultValue = 0,
-    icon = '⚡'
+    icon = null
   }) => {
     const sliderRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
 
     const handleMouseDown = (e) => {
-      const updateValue = (e) => {
-        if (!sliderRef.current) return;
-        const rect = sliderRef.current.getBoundingClientRect();
-        let percentage = (e.clientX - rect.left) / rect.width;
-        percentage = Math.min(Math.max(percentage, 0), 1);
-        const newValue = Math.round(min + percentage * (max - min));
-        onChange(newValue);
-      };
-
+      setIsDragging(true);
       updateValue(e);
-      
-      const handleMouseMove = (e) => updateValue(e);
-      const handleMouseUp = () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     };
 
     const handleTouchStart = (e) => {
-      const updateValue = (touch) => {
-        if (!sliderRef.current) return;
-        const rect = sliderRef.current.getBoundingClientRect();
-        let percentage = (touch.clientX - rect.left) / rect.width;
-        percentage = Math.min(Math.max(percentage, 0), 1);
-        const newValue = Math.round(min + percentage * (max - min));
-        onChange(newValue);
-      };
-
+      setIsDragging(true);
       updateValue(e.touches[0]);
-      
-      const handleTouchMove = (e) => updateValue(e.touches[0]);
-      const handleTouchEnd = () => {
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', handleTouchEnd);
-      };
-
       document.addEventListener('touchmove', handleTouchMove);
       document.addEventListener('touchend', handleTouchEnd);
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      updateValue(e);
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isDragging) return;
+      updateValue(e.touches[0]);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+
+    const updateValue = (e) => {
+      if (!sliderRef.current) return;
+      const rect = sliderRef.current.getBoundingClientRect();
+      let percentage = (e.clientX - rect.left) / rect.width;
+      percentage = Math.min(Math.max(percentage, 0), 1);
+      const newValue = Math.round(min + percentage * (max - min));
+      onChange(newValue);
+    };
+
+    const resetToDefault = () => {
+      onChange(defaultValue);
     };
 
     const progress = ((value - min) / (max - min)) * 100;
 
     return (
-      <div className="editor-slider">
-        <div className="slider-header">
-          <span className="slider-label">
-            <span className="slider-icon">{icon}</span>
-            {label}
-          </span>
-          <span className="slider-value">{value}{unit}</span>
+      <div className="adjustment-control">
+        <div className="control-header">
+          <span>{label}</span>
+          <span className="value-display">{value}{unit}</span>
         </div>
-        <div 
-          ref={sliderRef}
-          className="slider-track"
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
+        <div className="slider-container">
+          {icon && <i className={icon}></i>}
           <div 
-            className="slider-progress" 
-            style={{ width: `${progress}%` }}
-          />
-          <div 
-            className="slider-thumb" 
-            style={{ left: `${progress}%` }}
-          />
+            ref={sliderRef}
+            className={`slider-track ${isDragging ? 'dragging' : ''}`}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+          >
+            <div 
+              className="slider-progress" 
+              style={{ width: `${progress}%` }}
+            />
+            <div 
+              className="slider-thumb" 
+              style={{ left: `${progress}%` }}
+            />
+          </div>
+          {icon && <i className={icon}></i>}
         </div>
       </div>
     );
   };
 
   return (
-    <div className="fotor-editor">
-      {/* Header */}
-      <header className="editor-header">
-        <div className="header-content">
-          <div className="logo-section">
-            <h1>Fotor</h1>
-            <span className="tagline">AI Photo Editor</span>
-          </div>
-          <div className="header-actions">
-            <button className="premium-btn">
-              🔥 Up to 10% Off
-            </button>
+    <div className="editor-overlay">
+      <div className="editor-container">
+        {/* Header */}
+        <div className="editor-header">
+          <div className="header-content">
+            <div className="logo">
+              <i className="fas fa-camera-retro"></i>
+              <span>PixelPro</span>
+            </div>
+            <div className="editor-actions">
+              <button className="btn btn-outline">
+                <i className="fas fa-download"></i> Export
+              </button>
+              <button className="btn btn-primary" onClick={handleDownload}>
+                <i className="fas fa-save"></i> Save Project
+              </button>
+            </div>
           </div>
         </div>
-      </header>
 
-      <div className="editor-main">
-        {/* Sidebar - Upload Section */}
-        <aside className="editor-sidebar">
-          <div className="upload-section">
-            <h3>Upload Image</h3>
-            <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
-              <div className="upload-icon">📁</div>
-              <span>Click to Upload</span>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                style={{ display: 'none' }}
-              />
-            </div>
-            
-            {uploadedImages.length > 0 && (
-              <div className="uploaded-gallery">
-                <h4>Recent Images</h4>
-                <div className="gallery-grid">
-                  {uploadedImages.map((src, index) => (
-                    <img
-                      key={index}
-                      src={src}
-                      alt={`Uploaded ${index}`}
-                      className="gallery-thumb"
-                      onClick={() => {
-                        const img = new Image();
-                        img.onload = () => {
-                          setImage(img);
-                          initializeCanvas(img);
-                        };
-                        img.src = src;
-                      }}
+        {/* Main Content */}
+        <div className="main-content">
+          {/* Editor Section */}
+          <div className="editor-container-section">
+            <div className="editor-body">
+              <div className="image-container">
+                {!image ? (
+                  <div className="image-placeholder">
+                    <i className="fas fa-cloud-upload-alt"></i>
+                    <h3>Upload an image to get started</h3>
+                    <p>Drag & drop your image here or click to browse</p>
+                    <input type="file" id="image-upload" accept="image/*" style={{ display: 'none' }} />
+                    <button className="btn btn-primary" style={{ marginTop: '15px' }}>
+                      Select Image
+                    </button>
+                  </div>
+                ) : (
+                  <div className="canvas-wrapper">
+                    <canvas
+                      ref={canvasRef}
+                      className="preview-canvas"
                     />
-                  ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Tools Section */}
+              <div className="tools-container">
+                <div className="tools-grid">
+                  <div className="tool-card">
+                    <i className="fas fa-crop-alt"></i>
+                    <h3>Crop & Rotate</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-adjust"></i>
+                    <h3>Filters</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-sliders-h"></i>
+                    <h3>Adjustments</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-paint-brush"></i>
+                    <h3>Brush</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-font"></i>
+                    <h3>Text</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-shapes"></i>
+                    <h3>Shapes</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-magic"></i>
+                    <h3>AI Enhance</h3>
+                  </div>
+                  <div className="tool-card">
+                    <i className="fas fa-stamp"></i>
+                    <h3>Stickers</h3>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* AI Tools Section */}
-          <div className="ai-tools-section">
-            <h3>AI Tools</h3>
-            <div className="ai-tools-grid">
-              <button className="ai-tool-btn">
-                <span className="ai-icon">🎨</span>
-                AI Enhance
-              </button>
-              <button className="ai-tool-btn">
-                <span className="ai-icon">🔍</span>
-                AI Background
-              </button>
-              <button className="ai-tool-btn">
-                <span className="ai-icon">✨</span>
-                AI Effects
-              </button>
-              <button className="ai-tool-btn">
-                <span className="ai-icon">🎭</span>
-                AI Portrait
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Editor Area */}
-        <main className="editor-content">
-          {/* Preview Canvas */}
-          <div className="preview-section">
-            <div className="preview-container">
-              {image ? (
-                <canvas
-                  ref={canvasRef}
-                  className="preview-canvas"
-                />
-              ) : (
-                <div className="empty-preview">
-                  <div className="empty-icon">🖼️</div>
-                  <h3>No Image Selected</h3>
-                  <p>Upload an image to start editing</p>
-                  <button 
-                    className="upload-prompt-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Upload Image
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Editing Controls */}
-          <div className="controls-section">
+          {/* Adjustments Panel */}
+          <div className="adjustments-panel">
+            <div className="panel-header">
+              <h3>Adjustments</h3>
+              <i className="fas fa-sliders-h"></i>
+            </div>
+            
             {/* Quick Presets */}
             <div className="presets-section">
-              <h3>Quick Adjustments</h3>
+              <h4>Quick Presets</h4>
               <div className="presets-grid">
-                {quickPresets.map((preset, index) => (
+                {Object.keys(quickPresets).map(preset => (
                   <button
-                    key={index}
-                    className="preset-btn"
+                    key={preset}
                     onClick={() => applyQuickPreset(preset)}
+                    className="preset-btn"
                   >
-                    <span className="preset-icon">{preset.icon}</span>
-                    {preset.name}
+                    {preset}
                   </button>
                 ))}
               </div>
@@ -460,153 +456,192 @@ const ImageEditor = () => {
             {/* Tab Navigation */}
             <div className="tabs-navigation">
               <button
-                className={`tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
                 onClick={() => setActiveTab('adjust')}
+                className={`tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
               >
-                🎛️ Adjust
+                Adjust
               </button>
               <button
-                className={`tab-btn ${activeTab === 'filters' ? 'active' : ''}`}
-                onClick={() => setActiveTab('filters')}
-              >
-                ✨ Filters
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'effects' ? 'active' : ''}`}
                 onClick={() => setActiveTab('effects')}
+                className={`tab-btn ${activeTab === 'effects' ? 'active' : ''}`}
               >
-                ⚡ Effects
+                Effects
+              </button>
+              <button
+                onClick={() => setActiveTab('background')}
+                className={`tab-btn ${activeTab === 'background' ? 'active' : ''}`}
+              >
+                Background
               </button>
             </div>
 
             {/* Controls Content */}
             <div className="controls-content">
+              {/* Adjust Tab */}
               {activeTab === 'adjust' && (
                 <div className="tab-panel">
-                  <h4>Basic Adjustments</h4>
-                  <div className="sliders-grid">
-                    <EditorSlider
-                      label="Brightness"
-                      value={adjustments.brightness}
-                      min={0}
-                      max={200}
-                      onChange={(value) => handleAdjustmentChange('brightness', value)}
-                      unit="%"
-                      icon="☀️"
-                    />
-                    <EditorSlider
-                      label="Contrast"
-                      value={adjustments.contrast}
-                      min={0}
-                      max={200}
-                      onChange={(value) => handleAdjustmentChange('contrast', value)}
-                      unit="%"
-                      icon="⚫"
-                    />
-                    <EditorSlider
-                      label="Saturation"
-                      value={adjustments.saturation}
-                      min={0}
-                      max={200}
-                      onChange={(value) => handleAdjustmentChange('saturation', value)}
-                      unit="%"
-                      icon="🎨"
-                    />
-                    <EditorSlider
-                      label="Exposure"
-                      value={adjustments.exposure}
-                      min={-100}
-                      max={100}
-                      onChange={(value) => handleAdjustmentChange('exposure', value)}
-                      icon="📷"
-                    />
-                    <EditorSlider
-                      label="Temperature"
-                      value={adjustments.temperature}
-                      min={-100}
-                      max={100}
-                      onChange={(value) => handleAdjustmentChange('temperature', value)}
-                      icon="🌡️"
-                    />
-                    <EditorSlider
-                      label="Vignette"
-                      value={adjustments.vignette}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleAdjustmentChange('vignette', value)}
-                      unit="%"
-                      icon="⭕"
-                    />
-                  </div>
+                  <DraggableSlider
+                    label="Brightness"
+                    value={adjustments.brightness}
+                    min={0}
+                    max={200}
+                    defaultValue={100}
+                    onChange={(value) => handleAdjustmentChange('brightness', value)}
+                    icon="fas fa-sun"
+                  />
+                  <DraggableSlider
+                    label="Contrast"
+                    value={adjustments.contrast}
+                    min={0}
+                    max={200}
+                    defaultValue={100}
+                    onChange={(value) => handleAdjustmentChange('contrast', value)}
+                    icon="fas fa-circle"
+                  />
+                  <DraggableSlider
+                    label="Saturation"
+                    value={adjustments.saturation}
+                    min={0}
+                    max={200}
+                    defaultValue={100}
+                    onChange={(value) => handleAdjustmentChange('saturation', value)}
+                    icon="fas fa-palette"
+                  />
+                  <DraggableSlider
+                    label="Exposure"
+                    value={adjustments.exposure}
+                    min={-100}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleAdjustmentChange('exposure', value)}
+                  />
+                  <DraggableSlider
+                    label="Vignette"
+                    value={adjustments.vignette}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleAdjustmentChange('vignette', value)}
+                  />
+                  <DraggableSlider
+                    label="Blur"
+                    value={adjustments.blur}
+                    min={0}
+                    max={20}
+                    unit="px"
+                    defaultValue={0}
+                    onChange={(value) => handleAdjustmentChange('blur', value)}
+                    icon="fas fa-eye"
+                  />
+                  <DraggableSlider
+                    label="Temperature"
+                    value={adjustments.temperature}
+                    min={-100}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleAdjustmentChange('temperature', value)}
+                    icon="fas fa-sync-alt"
+                  />
+                  <DraggableSlider
+                    label="Clarity"
+                    value={adjustments.clarity}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleAdjustmentChange('clarity', value)}
+                  />
                 </div>
               )}
 
-              {activeTab === 'filters' && (
-                <div className="tab-panel">
-                  <h4>Creative Filters</h4>
-                  <div className="sliders-grid">
-                    <EditorSlider
-                      label="Vintage"
-                      value={filters.vintage}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('vintage', value)}
-                      unit="%"
-                      icon="📻"
-                    />
-                    <EditorSlider
-                      label="Dramatic"
-                      value={filters.dramatic}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('dramatic', value)}
-                      unit="%"
-                      icon="🎭"
-                    />
-                    <EditorSlider
-                      label="Cinematic"
-                      value={filters.cinematic}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('cinematic', value)}
-                      unit="%"
-                      icon="🎬"
-                    />
-                    <EditorSlider
-                      label="Fade"
-                      value={filters.fade}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('fade', value)}
-                      unit="%"
-                      icon="🌫️"
-                    />
-                  </div>
-                </div>
-              )}
-
+              {/* Effects Tab */}
               {activeTab === 'effects' && (
                 <div className="tab-panel">
-                  <h4>Advanced Effects</h4>
-                  <div className="sliders-grid">
-                    <EditorSlider
-                      label="Blur"
-                      value={adjustments.blur}
-                      min={0}
-                      max={20}
-                      onChange={(value) => handleAdjustmentChange('blur', value)}
-                      unit="px"
-                      icon="🌀"
-                    />
-                    <EditorSlider
-                      label="Sharpen"
-                      value={adjustments.sharpen}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleAdjustmentChange('sharpen', value)}
-                      unit="%"
-                      icon="🔍"
-                    />
+                  <DraggableSlider
+                    label="Vintage"
+                    value={effects.vintage}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleEffectChange('vintage', value)}
+                  />
+                  <DraggableSlider
+                    label="Dramatic"
+                    value={effects.dramatic}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleEffectChange('dramatic', value)}
+                  />
+                  <DraggableSlider
+                    label="Cinematic"
+                    value={effects.cinematic}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleEffectChange('cinematic', value)}
+                  />
+                  <DraggableSlider
+                    label="Fade"
+                    value={effects.fade}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleEffectChange('fade', value)}
+                  />
+                  <DraggableSlider
+                    label="Glow"
+                    value={effects.glow}
+                    min={0}
+                    max={100}
+                    defaultValue={0}
+                    onChange={(value) => handleEffectChange('glow', value)}
+                  />
+                </div>
+              )}
+
+              {/* Background Tab */}
+              {activeTab === 'background' && (
+                <div className="tab-panel">
+                  <div className="background-options">
+                    <div className="option-group">
+                      <label>Background Type</label>
+                      <div className="type-buttons">
+                        <button
+                          onClick={() => handleBackgroundChange('type', 'transparent')}
+                          className={`type-btn ${background.type === 'transparent' ? 'active' : ''}`}
+                        >
+                          Transparent
+                        </button>
+                        <button
+                          onClick={() => handleBackgroundChange('type', 'color')}
+                          className={`type-btn ${background.type === 'color' ? 'active' : ''}`}
+                        >
+                          Solid Color
+                        </button>
+                      </div>
+                    </div>
+
+                    {background.type === 'color' && (
+                      <div className="color-picker">
+                        <label>Select Color</label>
+                        <input
+                          type="color"
+                          value={background.color}
+                          onChange={(e) => handleBackgroundChange('color', e.target.value)}
+                          className="color-input"
+                        />
+                        <div className="color-previews">
+                          {['#FFFFFF', '#000000', '#3B82F6', '#10B981', '#EF4444', '#F59E0B'].map(color => (
+                            <div
+                              key={color}
+                              onClick={() => handleBackgroundChange('color', color)}
+                              className={`color-swatch ${background.color === color ? 'active' : ''}`}
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -614,220 +649,165 @@ const ImageEditor = () => {
 
             {/* Action Buttons */}
             <div className="action-buttons">
-              <button className="action-btn reset" onClick={resetAll}>
-                ↺ Reset All
+              <button onClick={resetAll} className="btn btn-outline">
+                <i className="fas fa-redo"></i> Reset All
               </button>
-              <button 
-                className="action-btn download" 
-                onClick={handleDownload}
-                disabled={!image}
-              >
-                ⬇️ Download Image
+              <button onClick={handleDownload} className="btn btn-primary">
+                Download Image
               </button>
             </div>
           </div>
-        </main>
+        </div>
       </div>
 
       <style jsx>{`
-        .fotor-editor {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        :root {
+          --primary: #4361ee;
+          --primary-dark: #3a56d4;
+          --secondary: #7209b7;
+          --dark: #1a1a2e;
+          --light: #f8f9fa;
+          --gray: #6c757d;
+          --success: #4cc9f0;
+        }
+
+        .editor-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+          color: var(--light);
+        }
+
+        .editor-container {
+          background: var(--dark);
+          border-radius: 12px;
+          width: 100%;
+          max-width: 1400px;
+          height: 90vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         /* Header */
         .editor-header {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          padding: 16px 24px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+          padding: 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header-content {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          max-width: 1400px;
-          margin: 0 auto;
         }
 
-        .logo-section h1 {
-          margin: 0;
-          font-size: 28px;
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 24px;
           font-weight: 700;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .tagline {
-          color: #666;
-          font-size: 14px;
-          margin-left: 12px;
-        }
-
-        .premium-btn {
-          background: linear-gradient(135deg, #ff6b6b, #ee5a24);
           color: white;
-          border: none;
+        }
+
+        .logo i {
+          color: var(--primary);
+        }
+
+        .editor-actions {
+          display: flex;
+          gap: 15px;
+        }
+
+        .btn {
           padding: 10px 20px;
-          border-radius: 25px;
+          border-radius: 5px;
           font-weight: 600;
           cursor: pointer;
-          box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-          transition: all 0.3s ease;
-        }
-
-        .premium-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
-        }
-
-        /* Main Layout */
-        .editor-main {
+          transition: all 0.3s;
+          border: none;
           display: flex;
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 24px;
-          gap: 24px;
-          min-height: calc(100vh - 80px);
-        }
-
-        /* Sidebar */
-        .editor-sidebar {
-          width: 280px;
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .upload-section, .ai-tools-section {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 16px;
-          padding: 20px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .upload-section h3, .ai-tools-section h3 {
-          margin: 0 0 16px 0;
-          color: #333;
-          font-size: 18px;
-          font-weight: 600;
-        }
-
-        .upload-area {
-          border: 2px dashed #cbd5e1;
-          border-radius: 12px;
-          padding: 40px 20px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          background: #f8fafc;
-        }
-
-        .upload-area:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        .upload-icon {
-          font-size: 48px;
-          margin-bottom: 12px;
-          opacity: 0.7;
-        }
-
-        .uploaded-gallery {
-          margin-top: 20px;
-        }
-
-        .uploaded-gallery h4 {
-          margin: 0 0 12px 0;
-          color: #666;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .gallery-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-        }
-
-        .gallery-thumb {
-          width: 100%;
-          aspect-ratio: 1;
-          object-fit: cover;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: 2px solid transparent;
-        }
-
-        .gallery-thumb:hover {
-          transform: scale(1.05);
-          border-color: #667eea;
-        }
-
-        /* AI Tools */
-        .ai-tools-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .ai-tool-btn {
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 16px 12px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          flex-direction: column;
           align-items: center;
           gap: 8px;
-          font-size: 12px;
-          font-weight: 500;
         }
 
-        .ai-tool-btn:hover {
-          border-color: #667eea;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        .btn-outline {
+          background: transparent;
+          border: 1px solid var(--primary);
+          color: var(--primary);
         }
 
-        .ai-icon {
-          font-size: 20px;
+        .btn-primary {
+          background: var(--primary);
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background: var(--primary-dark);
+        }
+
+        .btn-outline:hover {
+          background: rgba(67, 97, 238, 0.1);
         }
 
         /* Main Content */
-        .editor-content {
+        .main-content {
+          display: flex;
+          flex: 1;
+          padding: 20px;
+          gap: 30px;
+          overflow: hidden;
+        }
+
+        /* Editor Section */
+        .editor-container-section {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 20px;
         }
 
-        /* Preview Section */
-        .preview-section {
-          flex: 1;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 16px;
-          padding: 24px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+        .editor-body {
           display: flex;
+          flex-direction: column;
+          gap: 20px;
+          height: 100%;
+        }
+
+        .image-container {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+          padding: 20px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          position: relative;
+          overflow: hidden;
         }
 
-        .preview-container {
+        .image-placeholder {
+          text-align: center;
+          color: var(--gray);
+        }
+
+        .image-placeholder i {
+          font-size: 60px;
+          margin-bottom: 15px;
+          color: var(--primary);
+        }
+
+        .canvas-wrapper {
           width: 100%;
           height: 100%;
           display: flex;
@@ -837,96 +817,120 @@ const ImageEditor = () => {
 
         .preview-canvas {
           max-width: 100%;
-          max-height: 500px;
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          max-height: 100%;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .empty-preview {
+        /* Tools Container */
+        .tools-container {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+          padding: 20px;
+        }
+
+        .tools-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 15px;
+        }
+
+        .tool-card {
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          padding: 15px;
           text-align: center;
-          color: #666;
-        }
-
-        .empty-icon {
-          font-size: 64px;
-          margin-bottom: 16px;
-          opacity: 0.5;
-        }
-
-        .upload-prompt-btn {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 25px;
-          font-weight: 600;
           cursor: pointer;
-          margin-top: 16px;
-          transition: all 0.3s ease;
+          transition: all 0.3s;
+          border: none;
+          color: var(--light);
         }
 
-        .upload-prompt-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        .tool-card:hover {
+          background: rgba(255, 255, 255, 0.12);
+          transform: translateY(-3px);
         }
 
-        /* Controls Section */
-        .controls-section {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 16px;
-          padding: 24px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+        .tool-card i {
+          font-size: 24px;
+          margin-bottom: 10px;
+          color: var(--primary);
         }
 
-        /* Presets */
-        .presets-section h3 {
-          margin: 0 0 16px 0;
-          color: #333;
+        .tool-card h3 {
+          font-size: 14px;
+          font-weight: 500;
+          margin: 0;
+        }
+
+        /* Adjustments Panel */
+        .adjustments-panel {
+          width: 350px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          overflow-y: auto;
+        }
+
+        .panel-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: 15px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-header h3 {
           font-size: 18px;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .panel-header i {
+          color: var(--primary);
+        }
+
+        /* Presets Section */
+        .presets-section {
+          padding-bottom: 15px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .presets-section h4 {
+          margin: 0 0 12px 0;
+          font-size: 16px;
           font-weight: 600;
         }
 
         .presets-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          gap: 12px;
-          margin-bottom: 24px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
         }
 
         .preset-btn {
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 16px 12px;
+          padding: 8px 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
           cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
           font-size: 12px;
-          font-weight: 500;
+          transition: all 0.2s;
+          color: var(--light);
         }
 
         .preset-btn:hover {
-          border-color: #667eea;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+          border-color: var(--primary);
+          background: rgba(67, 97, 238, 0.2);
         }
 
-        .preset-icon {
-          font-size: 20px;
-        }
-
-        /* Tabs */
+        /* Tabs Navigation */
         .tabs-navigation {
           display: flex;
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 4px;
-          margin-bottom: 24px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .tab-btn {
@@ -934,73 +938,98 @@ const ImageEditor = () => {
           padding: 12px 16px;
           border: none;
           background: none;
-          border-radius: 8px;
           cursor: pointer;
+          font-size: 14px;
           font-weight: 500;
-          color: #64748b;
-          transition: all 0.3s ease;
+          color: var(--gray);
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
         }
 
         .tab-btn.active {
-          background: white;
-          color: #667eea;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          color: var(--primary);
+          border-bottom-color: var(--primary);
         }
 
-        /* Sliders */
-        .sliders-grid {
+        .tab-btn:hover {
+          color: var(--primary);
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Controls Content */
+        .controls-content {
+          flex: 1;
+          overflow-y: auto;
+        }
+
+        .tab-panel {
           display: flex;
           flex-direction: column;
           gap: 20px;
         }
 
-        .editor-slider {
-          background: white;
-          padding: 16px;
-          border-radius: 12px;
-          border: 1px solid #f1f5f9;
+        /* Enhanced Slider Styles */
+        .adjustment-control {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
 
-        .slider-header {
+        .control-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 12px;
         }
 
-        .slider-label {
+        .control-header span:first-child {
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .value-display {
+          width: 50px;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--primary);
+          background: rgba(67, 97, 238, 0.2);
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .slider-container {
           display: flex;
           align-items: center;
-          gap: 8px;
-          font-weight: 500;
-          color: #334155;
+          gap: 10px;
         }
 
-        .slider-icon {
-          font-size: 16px;
-        }
-
-        .slider-value {
-          font-weight: 600;
-          color: #667eea;
-          background: #f0f4ff;
-          padding: 4px 8px;
-          border-radius: 6px;
-          font-size: 12px;
+        .slider-container i {
+          color: var(--primary);
+          font-size: 14px;
         }
 
         .slider-track {
           position: relative;
           height: 6px;
-          background: #e2e8f0;
+          background: rgba(255, 255, 255, 0.2);
           border-radius: 3px;
           cursor: pointer;
+          transition: background-color 0.2s;
+          flex: 1;
+        }
+
+        .slider-track:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .slider-track.dragging {
+          background: rgba(255, 255, 255, 0.4);
         }
 
         .slider-progress {
           position: absolute;
           height: 100%;
-          background: linear-gradient(90deg, #667eea, #764ba2);
+          background: linear-gradient(90deg, var(--primary), var(--secondary));
           border-radius: 3px;
           transition: width 0.1s ease;
         }
@@ -1009,123 +1038,161 @@ const ImageEditor = () => {
           position: absolute;
           top: 50%;
           transform: translate(-50%, -50%);
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           background: white;
-          border: 3px solid #667eea;
+          border: 2px solid var(--primary);
           border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
           cursor: grab;
+          transition: all 0.2s;
         }
 
         .slider-thumb:active {
           cursor: grabbing;
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Background Options */
+        .background-options {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .option-group label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+          font-size: 14px;
+        }
+
+        .type-buttons {
+          display: flex;
+          gap: 8px;
+        }
+
+        .type-btn {
+          flex: 1;
+          padding: 8px 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          transition: all 0.2s;
+          color: var(--light);
+        }
+
+        .type-btn.active {
+          background: var(--primary);
+          color: white;
+          border-color: var(--primary);
+        }
+
+        .color-picker {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .color-input {
+          width: 100%;
+          height: 40px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 6px;
+          cursor: pointer;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .color-previews {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 8px;
+        }
+
+        .color-swatch {
+          width: 100%;
+          aspect-ratio: 1;
+          border-radius: 4px;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: all 0.2s;
+        }
+
+        .color-swatch.active {
+          border-color: var(--primary);
+          transform: scale(1.1);
         }
 
         /* Action Buttons */
         .action-buttons {
           display: flex;
           gap: 12px;
-          margin-top: 24px;
+          padding-top: 15px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .action-btn {
+        .action-buttons .btn {
           flex: 1;
-          padding: 16px 24px;
-          border: none;
-          border-radius: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
         }
 
-        .action-btn.reset {
-          background: #f8fafc;
-          color: #64748b;
-          border: 1px solid #e2e8f0;
-        }
-
-        .action-btn.reset:hover {
-          background: #f1f5f9;
-        }
-
-        .action-btn.download {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .action-btn.download:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .action-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none !important;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-          .editor-main {
+        /* Mobile Optimizations */
+        @media (max-width: 992px) {
+          .main-content {
             flex-direction: column;
-            padding: 16px;
-            gap: 16px;
           }
-
-          .editor-sidebar {
+          
+          .adjustments-panel {
             width: 100%;
-            order: 2;
+            max-height: 400px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .editor-overlay {
+            padding: 0;
           }
 
-          .editor-content {
-            order: 1;
+          .editor-container {
+            height: 100vh;
+            border-radius: 0;
           }
 
-          .header-content {
-            flex-direction: column;
-            gap: 12px;
-            text-align: center;
+          .tools-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
           }
 
           .presets-grid {
             grid-template-columns: repeat(3, 1fr);
           }
 
-          .ai-tools-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-
-          .gallery-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-
-          .preview-section {
-            min-height: 300px;
-          }
-
-          .preview-canvas {
-            max-height: 300px;
+          .type-buttons {
+            flex-direction: column;
           }
         }
 
-        @media (max-width: 480px) {
-          .presets-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
+        /* Scrollbar Styling */
+        .adjustments-panel::-webkit-scrollbar,
+        .controls-content::-webkit-scrollbar {
+          width: 4px;
+        }
 
-          .ai-tools-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
+        .adjustments-panel::-webkit-scrollbar-track,
+        .controls-content::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+        }
 
-          .tabs-navigation {
-            flex-direction: column;
-          }
+        .adjustments-panel::-webkit-scrollbar-thumb,
+        .controls-content::-webkit-scrollbar-thumb {
+          background: var(--primary);
+          border-radius: 2px;
+        }
 
-          .action-buttons {
-            flex-direction: column;
-          }
+        .adjustments-panel::-webkit-scrollbar-thumb:hover,
+        .controls-content::-webkit-scrollbar-thumb:hover {
+          background: var(--primary-dark);
         }
       `}</style>
     </div>

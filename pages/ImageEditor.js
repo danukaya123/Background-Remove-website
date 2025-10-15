@@ -1,2211 +1,1308 @@
-import { useState, useRef, useEffect } from "react";
-import { Client } from "@gradio/client";
-import ImageEditor from './ImageEditor'; 
+import { useState, useRef, useEffect } from 'react';
 
-export default function Home() {
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [resultUrl, setResultUrl] = useState(null);
-  const [error, setError] = useState(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const fileInputRef = useRef(null);
-  const resultsSectionRef = useRef(null);
-  const [showEditor, setShowEditor] = useState(false);
-  const [editingImage, setEditingImage] = useState(null);
+const ImageEditor = ({ imageUrl, onClose, onSave }) => {
+  const [activeTab, setActiveTab] = useState('filters');
+  const [image, setImage] = useState(null);
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Add these functions with proper indentation
-  const handleEditImage = () => {
-    setEditingImage(resultUrl);
-    setShowEditor(true);
-  };
+  // Crop state and refs
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({
+    x: 50,
+    y: 50,
+    width: 200,
+    height: 200,
+    aspectRatio: 'free',
+    isDragging: false,
+    dragHandle: null
+  });
 
-  const handleCloseEditor = () => {
-    setShowEditor(false);
-    setEditingImage(null);
-  };
-
-  // Auto-scroll to results when processing is complete
+  // Detect mobile device
   useEffect(() => {
-    if (resultUrl && !loading) {
-      setTimeout(() => {
-        resultsSectionRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 300);
-    }
-  }, [resultUrl, loading]);
-
-  // Close mobile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (mobileMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.menu-toggle')) {
-        setMobileMenuOpen(false);
-      }
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
     };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [mobileMenuOpen]);
+  // Editing states
+  const [filters, setFilters] = useState({
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    hue: 0,
+    blur: 0,
+    sharpen: 0,
+    exposure: 0,
+    temperature: 0,
+    vignette: 0,
+    gamma: 100,
+    noise: 0,
+    sepia: 0,
+    invert: 0
+  });
 
-  // Drag and drop handlers
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+  const [background, setBackground] = useState({
+    type: 'transparent',
+    color: '#ffffff',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  });
+
+  const [effects, setEffects] = useState({
+    tiltShift: 0,
+    lensBlur: 0,
+    pixelate: 1,
+    glow: 0,
+    shadow: 0,
+    filmGrain: 0
+  });
+
+  // Load image and initialize canvas
+  useEffect(() => {
+    if (imageUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        setImage(img);
+        initializeCanvas(img);
+      };
+      img.src = imageUrl;
     }
+  }, [imageUrl]);
+
+  const initializeCanvas = (img) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !img) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    drawImageOnCanvas(img);
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const drawImageOnCanvas = (img, applyFilters = true) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !img) return;
+
+    const ctx = canvas.getContext('2d');
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const uploaded = e.dataTransfer.files[0];
-      if (uploaded.type.startsWith('image/')) {
-        setFile(uploaded);
-        setResultUrl(null);
-        setError(null);
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Apply background
+    if (background.type !== 'transparent') {
+      if (background.type === 'color') {
+        ctx.fillStyle = background.color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else if (background.type === 'gradient') {
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        const colors = background.gradient.match(/#[a-fA-F0-9]{6}/g);
+        if (colors) {
+          gradient.addColorStop(0, colors[0]);
+          gradient.addColorStop(1, colors[1] || colors[0]);
+        }
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
+
+    // Apply filters
+    if (applyFilters) {
+      ctx.filter = `
+        brightness(${filters.brightness}%)
+        contrast(${filters.contrast}%)
+        saturate(${filters.saturation}%)
+        hue-rotate(${filters.hue}deg)
+        blur(${filters.blur}px)
+        sepia(${filters.sepia}%)
+        invert(${filters.invert}%)
+      `;
+    }
+
+    // Draw image
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Apply advanced effects
+    applyAdvancedEffects(ctx, canvas.width, canvas.height);
   };
 
-  // File selection handler
-  const handleFileChange = (e) => {
-    const uploaded = e.target.files[0];
-    if (uploaded) {
-      setFile(uploaded);
-      setResultUrl(null);
-      setError(null);
+  const applyAdvancedEffects = (ctx, width, height) => {
+    // Vignette effect
+    if (filters.vignette > 0) {
+      const gradient = ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) / 2
+      );
+      gradient.addColorStop(0, 'rgba(0,0,0,0)');
+      gradient.addColorStop(1, `rgba(0,0,0,${filters.vignette / 100})`);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // Film grain effect
+    if (effects.filmGrain > 0) {
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      const intensity = effects.filmGrain / 100;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const grain = (Math.random() - 0.5) * 255 * intensity;
+        data[i] = Math.max(0, Math.min(255, data[i] + grain));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + grain));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + grain));
+      }
+      ctx.putImageData(imageData, 0, 0);
     }
   };
 
-  // Background removal function
-  const handleRemoveBackground = async () => {
-    if (!file) return;
-    
-    setLoading(true);
-    setError(null);
+  // Update canvas when filters change
+  useEffect(() => {
+    if (image) {
+      drawImageOnCanvas(image);
+    }
+  }, [filters, background, effects, image]);
 
-    try {
-      const client = await Client.connect("Jonny001/Background-Remover-C1");
-      console.log("✅ Connected to HF Space");
+  // Crop functionality
+  const startCrop = () => {
+    setIsCropping(true);
+    if (image) {
+      setCrop(prev => ({
+        ...prev,
+        x: 50,
+        y: 50,
+        width: Math.min(200, image.width - 100),
+        height: Math.min(200, image.height - 100)
+      }));
+    }
+  };
 
-      const result = await client.predict("/image", { image: file });
+  const handleCropMouseDown = (e, handle) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCrop(prev => ({ ...prev, isDragging: true, dragHandle: handle }));
+  };
 
-      let processedObj = null;
-      if (Array.isArray(result.data) && Array.isArray(result.data[0])) {
-        const outputs = result.data[0];
-        processedObj = outputs[1];
-      } else if (Array.isArray(result.data)) {
-        processedObj = result.data[1] || result.data[0];
+  const handleCropMouseMove = (e) => {
+    if (!crop.isDragging || !image) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    const mouseY = (e.clientY - rect.top) * scaleY;
+
+    setCrop(prev => {
+      const newCrop = { ...prev };
+      const minSize = 20;
+
+      switch (prev.dragHandle) {
+        case 'top-left':
+          newCrop.width += prev.x - mouseX;
+          newCrop.height += prev.y - mouseY;
+          newCrop.x = Math.max(0, mouseX);
+          newCrop.y = Math.max(0, mouseY);
+          newCrop.width = Math.max(minSize, newCrop.width);
+          newCrop.height = Math.max(minSize, newCrop.height);
+          break;
+        case 'top-right':
+          newCrop.width = Math.max(minSize, mouseX - prev.x);
+          newCrop.height += prev.y - mouseY;
+          newCrop.y = Math.max(0, mouseY);
+          break;
+        case 'bottom-left':
+          newCrop.width += prev.x - mouseX;
+          newCrop.height = Math.max(minSize, mouseY - prev.y);
+          newCrop.x = Math.max(0, mouseX);
+          break;
+        case 'bottom-right':
+          newCrop.width = Math.max(minSize, mouseX - prev.x);
+          newCrop.height = Math.max(minSize, mouseY - prev.y);
+          break;
+        case 'move':
+          newCrop.x = Math.max(0, Math.min(canvas.width - newCrop.width, mouseX - newCrop.width / 2));
+          newCrop.y = Math.max(0, Math.min(canvas.height - newCrop.height, mouseY - newCrop.height / 2));
+          break;
       }
 
-      if (!processedObj?.url)
-        throw new Error("No processed image URL found in response.");
+      return newCrop;
+    });
+  };
 
-      setResultUrl(processedObj.url);
-    } catch (err) {
-      console.error("❌ Error during background removal:", err);
-      setError(err.message || "Unknown error occurred");
-    } finally {
-      setLoading(false);
+  const handleCropMouseUp = () => {
+    setCrop(prev => ({ ...prev, isDragging: false, dragHandle: null }));
+  };
+
+  const applyCrop = () => {
+    if (!image || !isCropping) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const croppedImageData = ctx.getImageData(crop.x, crop.y, crop.width, crop.height);
+
+    // Create new canvas with cropped dimensions
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = crop.width;
+    newCanvas.height = crop.height;
+    const newCtx = newCanvas.getContext('2d');
+    newCtx.putImageData(croppedImageData, 0, 0);
+
+    // Update the main canvas
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(newCanvas, 0, 0);
+
+    setIsCropping(false);
+    setImage(newCanvas);
+  };
+
+  const cancelCrop = () => {
+    setIsCropping(false);
+    if (image) {
+      drawImageOnCanvas(image);
     }
   };
 
-  // Download function
-  const downloadImage = async () => {
-    if (!resultUrl) return;
-    
-    try {
-      const response = await fetch(resultUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `background-removed-${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Download failed:", err);
-      setError("Download failed. Please try again.");
+  // Event listeners for crop
+  useEffect(() => {
+    if (isCropping) {
+      document.addEventListener('mousemove', handleCropMouseMove);
+      document.addEventListener('mouseup', handleCropMouseUp);
+      document.addEventListener('touchmove', handleCropMouseMove);
+      document.addEventListener('touchend', handleCropMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleCropMouseMove);
+        document.removeEventListener('mouseup', handleCropMouseUp);
+        document.removeEventListener('touchmove', handleCropMouseMove);
+        document.removeEventListener('touchend', handleCropMouseUp);
+      };
     }
+  }, [isCropping, crop.isDragging]);
+
+  const handleFilterChange = (filter, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filter]: value
+    }));
   };
 
-  // Reset function
-  const resetAll = () => {
-    setFile(null);
-    setResultUrl(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleEffectChange = (effect, value) => {
+    setEffects(prev => ({
+      ...prev,
+      [effect]: value
+    }));
   };
 
-  // Toggle mobile menu
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+  const handleBackgroundChange = (type, value) => {
+    setBackground(prev => ({
+      ...prev,
+      type,
+      [type]: value
+    }));
   };
+
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const link = document.createElement('a');
+    link.download = `professional-edit-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      hue: 0,
+      blur: 0,
+      sharpen: 0,
+      exposure: 0,
+      temperature: 0,
+      vignette: 0,
+      gamma: 100,
+      noise: 0,
+      sepia: 0,
+      invert: 0
+    });
+    setEffects({
+      tiltShift: 0,
+      lensBlur: 0,
+      pixelate: 1,
+      glow: 0,
+      shadow: 0,
+      filmGrain: 0
+    });
+  };
+
+  const presetFilters = {
+    vintage: { brightness: 90, contrast: 110, saturation: 80, hue: -30, vignette: 20, sepia: 30 },
+    dramatic: { brightness: 80, contrast: 120, saturation: 90, vignette: 30 },
+    bright: { brightness: 120, contrast: 110, saturation: 110 },
+    bw: { brightness: 100, contrast: 120, saturation: 0 },
+    cinematic: { brightness: 85, contrast: 115, saturation: 95, vignette: 25, temperature: 15 },
+    soft: { brightness: 105, contrast: 95, saturation: 90, blur: 0.5 },
+    vibrant: { brightness: 105, contrast: 110, saturation: 130, hue: 10 }
+  };
+
+  const applyPreset = (preset) => {
+    setFilters(prev => ({ ...prev, ...presetFilters[preset] }));
+  };
+
+  const gradientPresets = [
+    { name: 'Sunset', value: 'linear-gradient(135deg, #667eea, #764ba2)' },
+    { name: 'Coral', value: 'linear-gradient(135deg, #f093fb, #f5576c)' },
+    { name: 'Ocean', value: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
+    { name: 'Emerald', value: 'linear-gradient(135deg, #43e97b, #38f9d7)' },
+    { name: 'Fire', value: 'linear-gradient(135deg, #fa709a, #fee140)' },
+    { name: 'Royal', value: 'linear-gradient(135deg, #667eea, #764ba2)' }
+  ];
+
+  const FilterSlider = ({ label, value, min, max, onChange, unit = '%' }) => (
+    <div className="filter-slider">
+      <div className="slider-header">
+        <span className="slider-label">{label}</span>
+        <span className="slider-value">{value}{unit}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="slider-input"
+      />
+    </div>
+  );
+
+  const CropOverlay = () => (
+    <>
+      {/* Crop rectangle */}
+      <div
+        className="crop-rectangle"
+        style={{
+          left: `${crop.x}px`,
+          top: `${crop.y}px`,
+          width: `${crop.width}px`,
+          height: `${crop.height}px`
+        }}
+        onMouseDown={(e) => handleCropMouseDown(e, 'move')}
+        onTouchStart={(e) => handleCropMouseDown(e, 'move')}
+      >
+        {/* Crop handles */}
+        <div className="crop-handle top-left" onMouseDown={(e) => handleCropMouseDown(e, 'top-left')} />
+        <div className="crop-handle top-right" onMouseDown={(e) => handleCropMouseDown(e, 'top-right')} />
+        <div className="crop-handle bottom-left" onMouseDown={(e) => handleCropMouseDown(e, 'bottom-left')} />
+        <div className="crop-handle bottom-right" onMouseDown={(e) => handleCropMouseDown(e, 'bottom-right')} />
+      </div>
+      
+      {/* Crop overlay */}
+      <div className="crop-overlay" />
+    </>
+  );
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%)",
-        color: "#1e293b",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        padding: "0",
-        margin: "0",
-      }}
-    >
-      {/* Global Styles */}
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        * {
-          box-sizing: border-box;
-        }
-        
-        body {
-          margin: 0;
-          padding: 0;
-          background: #ffffff;
-          font-family: 'Inter', sans-serif;
-          scroll-behavior: smooth;
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-          50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
-        }
-        
-        @keyframes neuralOrbit {
-          0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
-          100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
-        }
-        
-        @keyframes neuralOrbitReverse {
-          0% { transform: rotate(0deg) translateX(25px) rotate(0deg); }
-          100% { transform: rotate(-360deg) translateX(25px) rotate(360deg); }
-        }
-        
-        @keyframes aiCorePulse {
-          0%, 100% { 
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-          }
-          50% { 
-            transform: scale(1.1);
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-          }
-        }
-        
-        @keyframes dataFlow {
-          0% { stroke-dashoffset: 100; }
-          100% { stroke-dashoffset: 0; }
-        }
-        
-        @keyframes particleFloat {
-          0%, 100% { 
-            transform: translate(0, 0) rotate(0deg);
-            opacity: 0;
-          }
-          10%, 90% { opacity: 1; }
-          50% { 
-            transform: translate(100px, -50px) rotate(180deg);
-          }
-        }
-        
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes textGlow {
-          0%, 100% { opacity: 0.8; }
-          50% { opacity: 1; }
-        }
-        
-        @keyframes slideInFromRight {
-          from { 
-            opacity: 0;
-            transform: translateX(100%);
-          }
-          to { 
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        
-        .float-animation {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        
-        .bounce-subtle {
-          animation: bounce-subtle 2s infinite;
-        }
-        
-        .slide-up {
-          animation: slideUp 0.6s ease-out;
-        }
-        
-        .text-glow {
-          animation: textGlow 2s ease-in-out infinite;
-        }
-        
-        .slide-in-right {
-          animation: slideInFromRight 0.3s ease-out;
-        }
-        
-        @keyframes bounce-subtle {
-          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-          40% { transform: translateY(-5px); }
-          60% { transform: translateY(-3px); }
-        }
-        
-        /* Responsive design helper classes */
-        .desktop-only {
-          display: flex;
-        }
-        
-        .mobile-only {
-          display: none;
-        }
-        
-        /* Hero section responsive styles */
-        .hero-container {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 4rem;
-          align-items: center;
-        }
-        
-        .hero-text h1,
-        .hero-text p {
-          text-align: left;
-        }
-        
-        .feature-points {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        
-        .cta-buttons {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        
-        .floating-badge {
-          position: absolute;
-          z-index: 4;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        
-        @media (max-width: 768px) {
-          .desktop-only {
-            display: none !important;
-          }
-          
-          .mobile-only {
-            display: flex !important;
-          }
-          
-          .hero-container {
-            grid-template-columns: 1fr !important;
-            gap: 3rem !important;
-            text-align: center;
-          }
-          
-          .hero-text h1,
-          .hero-text p {
-            text-align: center !important;
-          }
-          
-          .cta-buttons {
-            justify-content: center !important;
-          }
-          
-          .feature-points {
-            align-items: center !important;
-          }
-          
-          /* FIX: Text first, then image below on mobile */
-          .hero-text {
-            order: 1; /* Text appears first */
-          }
-          
-          .hero-image {
-            order: 2; /* Image appears second (below text) */
-          }
-          
-          .floating-badge {
-            font-size: 12px !important;
-            padding: 8px 16px !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .cta-buttons button {
-            padding: 12px 20px !important;
-            font-size: 14px !important;
-            width: 100%;
-            justify-content: center;
-          }
-          
-          .cta-buttons {
-            flex-direction: column;
-          }
-        }
-      `}</style>
-
-      {/* Navigation */}
-      <nav
-        style={{
-          borderBottom: "1px solid #e2e8f0",
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "1rem 2rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "white",
-              }}
-            >
-              BG
+    <div className="image-editor-overlay">
+      <div className="image-editor-container" ref={containerRef}>
+        {/* Header */}
+        <div className="editor-header">
+          <div className="header-left">
+            <div className="editor-logo">
+              <span className="logo-icon">✎</span>
             </div>
-            <span
-              style={{
-                fontSize: "24px",
-                fontWeight: "800",
-                color: "#1e293b",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              remove<span style={{ color: "#3b82f6" }}>BG</span>
-            </span>
-          </div>
-          
-          {/* Desktop Navigation Links */}
-          <div className="desktop-only" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  transition: "all 0.3s",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#3b82f6";
-                  e.currentTarget.style.background = "#f1f5f9";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#64748b";
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                {item}
-              </a>
-            ))}
-            
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
-              <button
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  padding: "6px 16px",
-                  borderRadius: "6px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                }}
-              >
-                Log in
-              </button>
-              <button
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  border: "none",
-                  padding: "6px 16px",
-                  borderRadius: "6px",
-                  color: "white",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                  boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
-                }}
-              >
-                Sign up
-              </button>
+            <div className="header-text">
+              <h2>Professional Editor</h2>
+              <p>Edit your image with premium tools</p>
             </div>
           </div>
-
-          {/* Mobile Menu Toggle */}
-          <div className="mobile-only">
-            <button
-              className="menu-toggle"
-              onClick={toggleMobileMenu}
-              style={{
-                background: "transparent",
-                border: "none",
-                padding: "8px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-              }}
-            >
-              <span style={{ 
-                width: "24px", 
-                height: "2px", 
-                background: "#1e293b",
-                transition: "all 0.3s",
-                transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
-              }}></span>
-              <span style={{ 
-                width: "24px", 
-                height: "2px", 
-                background: "#1e293b",
-                transition: "all 0.3s",
-                opacity: mobileMenuOpen ? "0" : "1"
-              }}></span>
-              <span style={{ 
-                width: "24px", 
-                height: "2px", 
-                background: "#1e293b",
-                transition: "all 0.3s",
-                transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
-              }}></span>
-            </button>
-          </div>
+          <button className="close-button" onClick={onClose}>
+            <span>×</span>
+          </button>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        {mobileMenuOpen && (
-          <div 
-            className="mobile-menu"
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              background: "rgba(255, 255, 255, 0.98)",
-              backdropFilter: "blur(10px)",
-              borderTop: "1px solid #e2e8f0",
-              padding: "1rem 2rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.75rem",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-              zIndex: 1000,
-            }}
-          >
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "16px", 
-                  fontWeight: "500", 
-                  padding: "10px 0",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item}
-              </a>
-            ))}
-            
-            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-              <button
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  padding: "10px 16px",
-                  borderRadius: "6px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  flex: 1,
-                }}
-              >
-                Log in
-              </button>
-              <button
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  border: "none",
-                  padding: "10px 16px",
-                  borderRadius: "6px",
-                  color: "white",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  flex: 1,
-                }}
-              >
-                Sign up
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
-
-      {/* Hero Section - Left Text, Right Image Layout */}
-      <section
-        style={{
-          padding: "6rem 1rem",
-          background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Background Decorative Elements */}
-        <div
-          style={{
-            position: "absolute",
-            top: "-10%",
-            right: "-5%",
-            width: "400px",
-            height: "400px",
-            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
-            borderRadius: "50%",
-            filter: "blur(60px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-10%",
-            left: "-5%",
-            width: "300px",
-            height: "300px",
-            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
-            borderRadius: "50%",
-            filter: "blur(50px)",
-          }}
-        />
-        
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 2,
-          }}
-          className="hero-container"
-        >
-          {/* Left Content - Text */}
-          <div className="hero-text">
-            <h1
-              style={{
-                fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
-                fontWeight: "800",
-                lineHeight: "1.1",
-                marginBottom: "1.5rem",
-                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                letterSpacing: "-1px",
-              }}
-            >
-              Remove Image
-              <br />
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Background
-              </span>
-            </h1>
-            
-            <p
-              style={{
-                fontSize: "clamp(1.1rem, 2vw, 1.25rem)",
-                color: "#64748b",
-                marginBottom: "0.5rem",
-                fontWeight: "600",
-              }}
-            >
-              100% Automatically and Free
-            </p>
-            
-            <p
-              style={{
-                fontSize: "clamp(1rem, 1.5vw, 1.1rem)",
-                color: "#64748b",
-                marginBottom: "2.5rem",
-                lineHeight: "1.7",
-                maxWidth: "500px",
-              }}
-            >
-              Transform your images with AI-powered background removal. 
-              Perfect for product photos, portraits, and creative projects. 
-              No manual work, no credit card required.
-            </p>
-
-            {/* Feature Points */}
-            <div style={{ marginBottom: "2.5rem" }} className="feature-points">
-              {[
-                { icon: "✓", text: "AI-powered instant processing" },
-                { icon: "✓", text: "No manual editing required" },
-                { icon: "✓", text: "Preserves original image quality" },
-                { icon: "✓", text: "Works with any image format" }
-              ].map((feature, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      background: "linear-gradient(135deg, #10b981, #059669)",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      color: "white",
-                      flexShrink: 0,
-                    }}
+        {/* Main Content */}
+        <div className="editor-main">
+          {/* Sidebar - Editing Tools */}
+          <div className="editor-sidebar">
+            {/* Desktop Tab Navigation */}
+            {!isMobile && (
+              <div className="tab-navigation">
+                {[
+                  { id: 'filters', icon: '🎨', label: 'Filters' },
+                  { id: 'adjust', icon: '⚙️', label: 'Adjust' },
+                  { id: 'crop', icon: '✂️', label: 'Crop' },
+                  { id: 'background', icon: '🖼️', label: 'Background' },
+                  { id: 'effects', icon: '✨', label: 'Effects' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
                   >
-                    {feature.icon}
-                  </div>
-                  <span
-                    style={{
-                      color: "#475569",
-                      fontSize: "1rem",
-                      fontWeight: "500",
-                    }}
+                    <span className="tab-icon">{tab.icon}</span>
+                    <span className="tab-label">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Mobile Tab Navigation */}
+            {isMobile && (
+              <div className="mobile-tab-navigation">
+                {[
+                  { id: 'filters', icon: '🎨', label: 'Filters' },
+                  { id: 'adjust', icon: '⚙️', label: 'Adjust' },
+                  { id: 'crop', icon: '✂️', label: 'Crop' },
+                  { id: 'background', icon: '🖼️', label: 'Background' },
+                  { id: 'effects', icon: '✨', label: 'Effects' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`mobile-tab-button ${activeTab === tab.id ? 'active' : ''}`}
                   >
-                    {feature.text}
-                  </span>
-                </div>
-              ))}
-            </div>
+                    <span className="mobile-tab-icon">{tab.icon}</span>
+                    <span className="mobile-tab-label">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
-            {/* CTA Buttons */}
-            <div className="cta-buttons">
-              <button
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  color: "white",
-                  border: "none",
-                  padding: "14px 32px",
-                  borderRadius: "12px",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Try It Now
-              </button>
-              
-              <button
-                style={{
-                  background: "transparent",
-                  color: "#64748b",
-                  border: "1px solid #d1d5db",
-                  padding: "14px 24px",
-                  borderRadius: "12px",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                  e.currentTarget.style.color = "#374151";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                  e.currentTarget.style.color = "#64748b";
-                }}
-                onClick={() => {
-                  document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                View Examples
-              </button>
-            </div>
-          </div>
-
-          {/* Right Content - Image */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              position: "relative",
-            }}
-            className="hero-image"
-          >
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: "500px",
-              }}
-            >
-              {/* Main Image Container */}
-              <div
-                style={{
-                  background: "white",
-                  borderRadius: "20px",
-                  padding: "1.5rem",
-                  boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
-                  position: "relative",
-                  zIndex: 3,
-                  transform: "rotate(2deg)",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true"
-                  alt="Before and after background removal example"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-                  }}
-                />
-              </div>
-              
-              {/* Floating Element 1 */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-20px",
-                  right: "-20px",
-                  background: "linear-gradient(135deg, #10b981, #059669)",
-                  color: "white",
-                  padding: "12px 20px",
-                  borderRadius: "50px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
-                  zIndex: 4,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-                className="floating-badge"
-              >
-                <span>After</span>
-              </div>
-              
-              {/* Floating Element 2 */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "-15px",
-                  left: "-15px",
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  color: "white",
-                  padding: "12px 20px",
-                  borderRadius: "50px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
-                  zIndex: 4,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-                className="floating-badge"
-              >
-                <span>Before</span>
-              </div>
-              
-              {/* Background Decorative Card */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "30px",
-                  left: "30px",
-                  right: "-30px",
-                  bottom: "-30px",
-                  background: "linear-gradient(135deg, #e2e8f0, #cbd5e1)",
-                  borderRadius: "20px",
-                  zIndex: 1,
-                  transform: "rotate(-2deg)",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Upload Section - Positioned below hero */}
-      <section
-        id="upload-section"
-        style={{
-          padding: "2rem 1rem 6rem",
-          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto",
-          }}
-        >
-          <div
-            style={{
-              background: "white",
-              borderRadius: "20px",
-              padding: "clamp(1.5rem, 4vw, 2.5rem)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-              border: dragActive ? "2px dashed #3b82f6" : "2px dashed #e2e8f0",
-              transition: "all 0.3s ease",
-              position: "relative",
-              zIndex: 10,
-            }}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            {!file ? (
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: "clamp(60px, 10vw, 80px)",
-                    height: "clamp(60px, 10vw, 80px)",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    borderRadius: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 1.5rem",
-                    boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
-                  }}
-                  className="bounce-subtle"
-                >
-                  <svg 
-                    width="clamp(24px, 4vw, 32px)" 
-                    height="clamp(24px, 4vw, 32px)" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                    style={{ color: "white" }}
-                  >
-                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                
-                <h3 style={{ 
-                  fontSize: "clamp(1.25rem, 3vw, 1.5rem)", 
-                  fontWeight: "600", 
-                  color: "#1e293b", 
-                  marginBottom: "0.5rem" 
-                }}>
-                  Upload image
-                </h3>
-                <p style={{ 
-                  color: "#64748b", 
-                  marginBottom: "2rem", 
-                  fontSize: "clamp(0.9rem, 2vw, 1rem)" 
-                }}>
-                  Drag & drop or click to browse
-                </p>
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  style={{ display: "none" }}
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    color: "white",
-                    padding: "clamp(10px, 2vw, 12px) clamp(24px, 4vw, 32px)",
-                    borderRadius: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-                    fontSize: "clamp(14px, 2vw, 16px)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 4v16m8-8H4" />
-                  </svg>
-                  Upload Image
-                </label>
-                
-                <p style={{ 
-                  color: "#94a3b8", 
-                  fontSize: "clamp(12px, 2vw, 14px)", 
-                  marginTop: "1rem" 
-                }}>
-                  No images? Try our sample images
-                </p>
-              </div>
-            ) : (
-              <div style={{ textAlign: "center" }}>
-                <div style={{ position: "relative", display: "inline-block" }}>
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    style={{
-                      maxWidth: "min(400px, 90vw)",
-                      width: "100%",
-                      maxHeight: "400px",
-                      borderRadius: "15px",
-                      boxShadow: "0 15px 35px rgba(0,0,0,0.15)",
-                      filter: loading ? "blur(4px) brightness(0.95)" : "none",
-                      transition: "all 0.4s ease",
-                      objectFit: "contain",
-                    }}
-                  />
+            {/* Tools Content */}
+            <div className="tools-content">
+              {/* Filter Tools */}
+              {activeTab === 'filters' && (
+                <div className="tools-section">
+                  <h3>Filters & Effects</h3>
                   
-                  {/* Enhanced AI Loading Animation */}
-                  {loading && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: "rgba(255,255,255,0.98)",
-                        borderRadius: "15px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        gap: "2rem",
-                        padding: "2rem",
-                      }}
+                  {/* Preset Filters */}
+                  <div className="presets-section">
+                    <h4>Quick Presets</h4>
+                    <div className="presets-grid">
+                      {Object.entries(presetFilters).map(([preset, config]) => (
+                        <button
+                          key={preset}
+                          onClick={() => applyPreset(preset)}
+                          className="preset-button"
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filter Sliders */}
+                  <div className="sliders-container">
+                    {[
+                      { key: 'brightness', label: 'Brightness', min: 0, max: 200 },
+                      { key: 'contrast', label: 'Contrast', min: 0, max: 200 },
+                      { key: 'saturation', label: 'Saturation', min: 0, max: 200 },
+                      { key: 'hue', label: 'Hue Rotation', min: -180, max: 180, unit: '°' },
+                      { key: 'blur', label: 'Blur', min: 0, max: 20, unit: 'px' },
+                      { key: 'vignette', label: 'Vignette', min: 0, max: 50 }
+                    ].map(({ key, label, min, max, unit }) => (
+                      <FilterSlider
+                        key={key}
+                        label={label}
+                        value={filters[key]}
+                        min={min}
+                        max={max}
+                        unit={unit}
+                        onChange={(value) => handleFilterChange(key, value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Adjust Tools */}
+              {activeTab === 'adjust' && (
+                <div className="tools-section">
+                  <h3>Fine Tune</h3>
+                  <div className="sliders-container">
+                    {[
+                      { key: 'exposure', label: 'Exposure', min: -100, max: 100 },
+                      { key: 'temperature', label: 'Temperature', min: -100, max: 100 },
+                      { key: 'sharpen', label: 'Sharpen', min: 0, max: 100 },
+                      { key: 'gamma', label: 'Gamma', min: 50, max: 200 }
+                    ].map(({ key, label, min, max }) => (
+                      <FilterSlider
+                        key={key}
+                        label={label}
+                        value={filters[key]}
+                        min={min}
+                        max={max}
+                        onChange={(value) => handleFilterChange(key, value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Background Tools */}
+              {activeTab === 'background' && (
+                <div className="tools-section">
+                  <h3>Background</h3>
+                  
+                  <div className="background-type">
+                    <label>Background Type</label>
+                    <select
+                      value={background.type}
+                      onChange={(e) => handleBackgroundChange('type', e.target.value)}
+                      className="background-select"
                     >
-                      {/* Advanced Neural Network Animation */}
-                      <div style={{ 
-                        position: "relative", 
-                        width: "120px", 
-                        height: "120px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}>
-                        {/* Outer Orbit */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            width: "100px",
-                            height: "100px",
-                            border: "2px solid #e2e8f0",
-                            borderRadius: "50%",
-                          }}
-                        />
-                        
-                        {/* Orbiting Particles */}
-                        {[0, 1, 2].map((i) => (
+                      <option value="transparent">Transparent</option>
+                      <option value="color">Solid Color</option>
+                      <option value="gradient">Gradient</option>
+                    </select>
+                  </div>
+
+                  {background.type === 'color' && (
+                    <div className="color-picker-section">
+                      <label>Color Picker</label>
+                      <input
+                        type="color"
+                        value={background.color}
+                        onChange={(e) => handleBackgroundChange('color', e.target.value)}
+                        className="color-picker"
+                      />
+                    </div>
+                  )}
+
+                  {background.type === 'gradient' && (
+                    <div className="gradient-section">
+                      <h4>Gradient Presets</h4>
+                      <div className="gradients-grid">
+                        {gradientPresets.map((gradient, index) => (
                           <div
-                            key={i}
-                            style={{
-                              position: "absolute",
-                              width: "8px",
-                              height: "8px",
-                              background: "#3b82f6",
-                              borderRadius: "50%",
-                              animation: `neuralOrbit ${2 + i * 0.5}s linear infinite`,
-                              animationDelay: `${i * 0.3}s`,
-                            }}
+                            key={index}
+                            onClick={() => handleBackgroundChange('gradient', gradient.value)}
+                            className={`gradient-preset ${background.gradient === gradient.value ? 'active' : ''}`}
+                            style={{ background: gradient.value }}
+                            title={gradient.name}
                           />
                         ))}
-                        
-                        {/* Inner Orbit */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            width: "60px",
-                            height: "60px",
-                            border: "2px solid #e2e8f0",
-                            borderRadius: "50%",
-                          }}
-                        />
-                        
-                        {/* Inner Orbiting Particles */}
-                        {[0, 1].map((i) => (
-                          <div
-                            key={i}
-                            style={{
-                              position: "absolute",
-                              width: "6px",
-                              height: "6px",
-                              background: "#10b981",
-                              borderRadius: "50%",
-                              animation: `neuralOrbitReverse ${1.5 + i * 0.4}s linear infinite`,
-                              animationDelay: `${i * 0.2}s`,
-                            }}
-                          />
-                        ))}
-                        
-                        {/* AI Core */}
-                        <div
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            background: "linear-gradient(135deg, #3b82f6, #10b981)",
-                            borderRadius: "50%",
-                            animation: "aiCorePulse 2s ease-in-out infinite",
-                          }}
-                        />
-                        
-                        {/* Floating Particles */}
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <div
-                            key={i}
-                            style={{
-                              position: "absolute",
-                              width: "4px",
-                              height: "4px",
-                              background: "#8b5cf6",
-                              borderRadius: "50%",
-                              animation: `particleFloat ${3 + i * 0.5}s ease-in-out infinite`,
-                              animationDelay: `${i * 0.6}s`,
-                              left: "50%",
-                              top: "50%",
-                            }}
-                          />
-                        ))}
-                      </div>
-                      
-                      {/* Enhanced Text Content */}
-                      <div style={{ 
-                        textAlign: "center",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.5rem"
-                      }}>
-                        <h3 style={{ 
-                          color: "#1e293b", 
-                          fontWeight: "700", 
-                          fontSize: "clamp(1.25rem, 3vw, 1.5rem)", 
-                          margin: 0,
-                          animation: "textGlow 2s ease-in-out infinite"
-                        }}>
-                          AI Processing
-                        </h3>
-                        <p style={{ 
-                          color: "#64748b", 
-                          fontSize: "clamp(0.9rem, 2vw, 1rem)", 
-                          margin: 0,
-                          lineHeight: "1.5"
-                        }}>
-                          Analyzing image patterns...
-                        </p>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "0.5rem",
-                          marginTop: "0.5rem"
-                        }}>
-                          <div style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            background: "#3b82f6",
-                            animation: "textGlow 1.4s ease-in-out infinite"
-                          }}></div>
-                          <div style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            background: "#10b981",
-                            animation: "textGlow 1.4s ease-in-out infinite 0.2s"
-                          }}></div>
-                          <div style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            background: "#8b5cf6",
-                            animation: "textGlow 1.4s ease-in-out infinite 0.4s"
-                          }}></div>
-                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-                
-                <div style={{ 
-                  marginTop: "2rem", 
-                  display: "flex", 
-                  gap: "1rem", 
-                  justifyContent: "center", 
-                  flexWrap: "wrap" 
-                }}>
-                  {!loading && !resultUrl && (
+              )}
+
+              {/* Effects Tools */}
+              {activeTab === 'effects' && (
+                <div className="tools-section">
+                  <h3>Advanced Effects</h3>
+                  <div className="sliders-container">
+                    {[
+                      { key: 'filmGrain', label: 'Film Grain', min: 0, max: 100 },
+                      { key: 'glow', label: 'Glow Effect', min: 0, max: 50 },
+                      { key: 'shadow', label: 'Drop Shadow', min: 0, max: 50 },
+                      { key: 'pixelate', label: 'Pixelate', min: 1, max: 20, unit: 'px' }
+                    ].map(({ key, label, min, max, unit }) => (
+                      <FilterSlider
+                        key={key}
+                        label={label}
+                        value={effects[key]}
+                        min={min}
+                        max={max}
+                        unit={unit}
+                        onChange={(value) => handleEffectChange(key, value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Crop Tools */}
+              {activeTab === 'crop' && (
+                <div className="tools-section">
+                  <h3>Crop & Resize</h3>
+                  
+                  {!isCropping ? (
                     <>
-                      <button
-                        onClick={handleRemoveBackground}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          background: "linear-gradient(135deg, #10b981, #059669)",
-                          color: "white",
-                          border: "none",
-                          padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
-                          borderRadius: "12px",
-                          fontWeight: "600",
-                          fontSize: "clamp(14px, 2vw, 16px)",
-                          cursor: "pointer",
-                          transition: "all 0.3s ease",
-                          boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-2px)";
-                          e.currentTarget.style.boxShadow = "0 8px 25px rgba(16, 185, 129, 0.4)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "0 4px 15px rgba(16, 185, 129, 0.3)";
-                        }}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Remove Background
+                      <div className="crop-instructions">
+                        <p>Click "Start Cropping" to begin cropping your image. Drag the corners to adjust the crop area.</p>
+                      </div>
+                      <button onClick={startCrop} className="crop-start-button">
+                        Start Cropping
                       </button>
-                      
-                      <button
-                        onClick={resetAll}
-                        style={{
-                          background: "transparent",
-                          color: "#64748b",
-                          border: "1px solid #d1d5db",
-                          padding: "clamp(12px, 2vw, 14px) clamp(20px, 3vw, 24px)",
-                          borderRadius: "12px",
-                          fontWeight: "600",
-                          fontSize: "clamp(14px, 2vw, 16px)",
-                          cursor: "pointer",
-                          transition: "all 0.3s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#f8fafc";
-                          e.currentTarget.style.borderColor = "#9ca3af";
-                          e.currentTarget.style.color = "#374151";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.borderColor = "#d1d5db";
-                          e.currentTarget.style.color = "#64748b";
-                        }}
-                      >
-                        Choose Different
-                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="crop-controls">
+                        <p>Drag the corners or edges to adjust the crop area</p>
+                        <div className="crop-actions">
+                          <button onClick={applyCrop} className="crop-apply-button">
+                            Apply Crop
+                          </button>
+                          <button onClick={cancelCrop} className="crop-cancel-button">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     </>
                   )}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* Error Display */}
-          {error && (
-            <div
-              style={{
-                marginTop: "2rem",
-                padding: "1rem 1.5rem",
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "12px",
-                color: "#dc2626",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                maxWidth: "500px",
-                margin: "2rem auto 0",
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {error}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Results Section */}
-      {resultUrl && (
-        <section
-          ref={resultsSectionRef}
-          style={{
-            padding: "4rem 1rem",
-            background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            minHeight: "50vh",
-            display: "flex",
-            alignItems: "center",
-          }}
-          className="slide-up"
-        >
-          <div
-            style={{
-              maxWidth: "1200px",
-              margin: "0 auto",
-              width: "100%",
-            }}
-          >
-            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-              <h2 style={{ 
-                fontSize: "clamp(2rem, 4vw, 3rem)", 
-                fontWeight: "700", 
-                color: "#1e293b", 
-                marginBottom: "1rem",
-                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}>
-                Background Removed! 🎉
-              </h2>
-              <p style={{ 
-                fontSize: "clamp(1rem, 2vw, 1.2rem)", 
-                color: "#64748b",
-                maxWidth: "600px",
-                margin: "0 auto",
-              }}>
-                Your image has been processed successfully. Download the result or remove another background.
-              </p>
-            </div>
-            
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(400px, 100%), 1fr))",
-                gap: "clamp(2rem, 4vw, 4rem)",
-                alignItems: "start",
-              }}
-            >
-              {/* Original Image */}
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ 
-                  fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
-                  fontWeight: "600", 
-                  color: "#64748b", 
-                  marginBottom: "1.5rem" 
-                }}>
-                  Original Image
-                </h3>
-                <div
-                  style={{
-                    background: "white",
-                    padding: "1.5rem",
-                    borderRadius: "20px",
-                    boxShadow: "0 15px 35px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Original"
-                    style={{
-                      width: "100%",
-                      maxWidth: "500px",
-                      borderRadius: "12px",
-                      boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Processed Image */}
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ 
-                  fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
-                  fontWeight: "600", 
-                  color: "#64748b", 
-                  marginBottom: "1.5rem" 
-                }}>
-                  Background Removed
-                </h3>
-                <div
-                  style={{
-                    background: "white",
-                    padding: "1.5rem",
-                    borderRadius: "20px",
-                    boxShadow: "0 15px 35px rgba(59, 130, 246, 0.15)",
-                    position: "relative",
-                  }}
-                >
-                  <img
-                    src={resultUrl}
-                    alt="Background removed"
-                    style={{
-                      width: "100%",
-                      maxWidth: "500px",
-                      borderRadius: "12px",
-                      background: "linear-gradient(45deg, #f8fafc, #e2e8f0)",
-                      padding: "1rem",
-                    }}
-                  />
-                </div>
-                
-                <div style={{ 
-                  marginTop: "2rem", 
-                  display: "flex", 
-                  gap: "1rem", 
-                  justifyContent: "center", 
-                  flexWrap: "wrap" 
-                }}>
-                  <button
-                    onClick={handleEditImage}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                      color: "white",
-                      border: "none",
-                      padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
-                      borderRadius: "12px",
-                      fontWeight: "600",
-                      fontSize: "clamp(14px, 2vw, 16px)",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(139, 92, 246, 0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(139, 92, 246, 0.3)";
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                    Edit Image
-                  </button>
-                  
-                  <button
-                    onClick={downloadImage}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                      color: "white",
-                      border: "none",
-                      padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
-                      borderRadius: "12px",
-                      fontWeight: "600",
-                      fontSize: "clamp(14px, 2vw, 16px)",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download Image
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ marginTop: "3rem", textAlign: "center" }}>
-              <button
-                onClick={resetAll}
-                style={{
-                  background: "transparent",
-                  color: "#64748b",
-                  border: "1px solid #d1d5db",
-                  padding: "clamp(10px, 2vw, 12px) clamp(20px, 3vw, 28px)",
-                  borderRadius: "10px",
-                  fontWeight: "600",
-                  fontSize: "clamp(14px, 2vw, 16px)",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                  e.currentTarget.style.color = "#374151";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                  e.currentTarget.style.color = "#64748b";
-                }}
-              >
-                Remove Another Background
+              {/* Reset Button */}
+              <button onClick={resetFilters} className="reset-button">
+                Reset All Changes
               </button>
             </div>
           </div>
-        </section>
-      )}
 
-      {/* Features Section */}
-      <section
-        style={{
-          padding: "4rem 1rem",
-          background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2
-              style={{
-                fontSize: "clamp(2rem, 4vw, 2.5rem)",
-                fontWeight: "700",
-                color: "#1e293b",
-                marginBottom: "1rem",
-              }}
-            >
-              Why Choose RemoveBG?
-            </h2>
-            <p
-              style={{
-                fontSize: "clamp(1rem, 2vw, 1.1rem)",
-                color: "#64748b",
-                maxWidth: "600px",
-                margin: "0 auto",
-                lineHeight: "1.6",
-              }}
-            >
-              Experience the power of AI with our advanced background removal technology
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",
-              gap: "clamp(1.5rem, 3vw, 2rem)",
-            }}
-          >
-            {[
-              {
-                icon: "⚡",
-                title: "Lightning Fast",
-                description: "Get results in seconds with our optimized AI processing engine"
-              },
-              {
-                icon: "🎯",
-                title: "Pixel Perfect",
-                description: "Crisp, clean edges with professional-grade accuracy every time"
-              },
-              {
-                icon: "🆓",
-                title: "Completely Free",
-                description: "No hidden costs, no watermarks, no subscription required"
-              },
-              {
-                icon: "🔒",
-                title: "Privacy First",
-                description: "Your images are processed securely and never stored on our servers"
-              },
-              {
-                icon: "🎨",
-                title: "High Quality",
-                description: "Maintain original image quality with lossless background removal"
-              },
-              {
-                icon: "🌐",
-                title: "Universal Support",
-                description: "Works with all image formats and sizes up to 25MB"
-              }
-            ].map((feature, index) => (
-              <div
-                key={index}
-                style={{
-                  background: "white",
-                  padding: "clamp(1.5rem, 3vw, 2.5rem)",
-                  borderRadius: "20px",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                  textAlign: "center",
-                  transition: "all 0.3s ease",
-                  border: "1px solid #f1f5f9",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-8px)";
-                  e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.12)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)";
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "clamp(2.5rem, 5vw, 3rem)",
-                    marginBottom: "1.5rem",
-                  }}
-                >
-                  {feature.icon}
-                </div>
-                <h3
-                  style={{
-                    fontSize: "clamp(1.25rem, 2.5vw, 1.5rem)",
-                    fontWeight: "600",
-                    color: "#1e293b",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  {feature.title}
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    margin: 0,
-                    fontSize: "clamp(0.9rem, 1.5vw, 1rem)",
-                  }}
-                >
-                  {feature.description}
-                </p>
+          {/* Preview Area */}
+          <div className="editor-preview">
+            <div className="preview-container">
+              <div className="canvas-wrapper">
+                <canvas
+                  ref={canvasRef}
+                  className="preview-canvas"
+                />
+                {isCropping && <CropOverlay />}
               </div>
-            ))}
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Examples Section */}
-      <section
-        id="examples"
-        style={{
-          padding: "6rem 1rem",
-          background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
-          position: "relative",
-        }}
-      >
-        {/* Background Decorative Elements */}
-        <div
-          style={{
-            position: "absolute",
-            top: "10%",
-            right: "-5%",
-            width: "300px",
-            height: "300px",
-            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
-            borderRadius: "50%",
-            filter: "blur(50px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "10%",
-            left: "-5%",
-            width: "250px",
-            height: "250px",
-            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
-            borderRadius: "50%",
-            filter: "blur(40px)",
-          }}
-        />
-        
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 2,
-          }}
-        >
-          {/* Section Header */}
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <h2
-              style={{
-                fontSize: "clamp(2rem, 4vw, 3rem)",
-                fontWeight: "800",
-                color: "#1e293b",
-                marginBottom: "1rem",
-                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              See Amazing Results
-            </h2>
-            <p
-              style={{
-                fontSize: "clamp(1rem, 2vw, 1.2rem)",
-                color: "#64748b",
-                maxWidth: "600px",
-                margin: "0 auto",
-                lineHeight: "1.6",
-              }}
-            >
-              Check out these stunning transformations powered by our AI technology
-            </p>
-          </div>
-
-          {/* Examples Grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(350px, 100%), 1fr))",
-              gap: "clamp(2rem, 4vw, 3rem)",
-              alignItems: "start",
-            }}
-          >
-            {/* Example 1 - Product Photography */}
-            <div
-              style={{
-                background: "white",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: "250px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760539834260.png?raw=true"
-                  alt="Shoes product photo"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    right: "15px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-                  }}
-                >
-                  Background Removed
-                </div>
-              </div>
-              <div style={{ padding: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  E-commerce Products
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Perfect for online stores. Create clean, professional product images that convert better.
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "#10b981",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                  Perfect for online stores
-                </div>
-              </div>
-            </div>
-
-            {/* Example 2 - Portrait Photography */}
-            <div
-              style={{
-                background: "white",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: "250px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542319588.png?raw=true"
-                  alt="Portrait photography"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    right: "15px",
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-                  }}
-                >
-                  Professional Results
-                </div>
-              </div>
-              <div style={{ padding: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  Portrait Photography
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Create stunning portraits with clean backgrounds. Perfect for professional headshots and social media.
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "#10b981",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                  Ideal for professional photos
-                </div>
-              </div>
-            </div>
-
-            {/* Example 3 - Creative Projects */}
-            <div
-              style={{
-                background: "white",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: "250px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542234326.png?raw=true"
-                  alt="Creative pet photography"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    right: "15px",
-                    background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
-                  }}
-                >
-                  Creative Projects
-                </div>
-              </div>
-              <div style={{ padding: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  Pet & Animal Photos
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Remove distracting backgrounds from pet photos. Perfect for creating clean, professional-looking animal portraits.
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "#10b981",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                  Great for pet photography
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div style={{ textAlign: "center", marginTop: "4rem" }}>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                color: "#64748b",
-                marginBottom: "2rem",
-                fontWeight: "500",
-              }}
-            >
-              Ready to transform your images?
-            </p>
-            <button
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                color: "white",
-                border: "none",
-                padding: "14px 32px",
-                borderRadius: "12px",
-                fontWeight: "600",
-                fontSize: "1rem",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-              }}
-              onClick={() => {
-                // Scroll to upload section
-                document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              Try It Now - It's Free!
-            </button>
-          </div>
+        {/* Footer Actions */}
+        <div className="editor-footer">
+          <button onClick={onClose} className="footer-button cancel">
+            Cancel
+          </button>
+          <button onClick={handleDownload} className="footer-button download">
+            Download Image
+          </button>
         </div>
-      </section>
+      </div>
 
-      {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1px solid #e2e8f0",
-          padding: "3rem 1rem",
-          background: "#f8fafc",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            textAlign: "center",
-          }}
-        >
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center", 
-            gap: "8px", 
-            marginBottom: "1rem",
-            flexWrap: "wrap"
-          }}>
-            <div
-              style={{
-                width: "24px",
-                height: "24px",
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                borderRadius: "6px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                fontSize: "12px",
-                color: "white",
-              }}
-            >
-              BG
-            </div>
-            <span
-              style={{
-                fontSize: "18px",
-                fontWeight: "700",
-                color: "#1e293b",
-              }}
-            >
-              remove<span style={{ color: "#3b82f6" }}>BG</span>
-            </span>
-          </div>
-          <p style={{ 
-            color: "#64748b", 
-            margin: "0.5rem 0", 
-            fontSize: "14px",
-            lineHeight: "1.5"
-          }}>
-            AI-powered background removal made simple and free
-          </p>
-          <p style={{ 
-            color: "#94a3b8", 
-            margin: 0, 
-            fontSize: "12px",
-            marginTop: "1rem"
-          }}>
-            &copy; {new Date().getFullYear()} removeBG. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <style jsx>{`
+        .image-editor-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
 
-      {/* Image Editor Modal - Add this at the very end */}
-      {showEditor && (
-        <ImageEditor
-          imageUrl={editingImage}
-          onClose={handleCloseEditor}
-          onSave={handleCloseEditor}
-        />
-      )}
+        .image-editor-container {
+          background: white;
+          border-radius: 24px;
+          width: 95%;
+          max-width: 1400px;
+          height: 90%;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 
+            0 32px 64px rgba(0, 0, 0, 0.08),
+            0 16px 32px rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          overflow: hidden;
+        }
+
+        /* Header */
+        .editor-header {
+          padding: 24px 32px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .editor-logo {
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          color: white;
+          font-weight: bold;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .header-text h2 {
+          margin: 0;
+          color: #1a1a1a;
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
+
+        .header-text p {
+          margin: 4px 0 0 0;
+          color: #666;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .close-button {
+          background: rgba(0, 0, 0, 0.04);
+          border: none;
+          padding: 12px;
+          border-radius: 12px;
+          font-size: 20px;
+          cursor: pointer;
+          color: #666;
+          font-weight: bold;
+          min-width: 48px;
+          min-height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .close-button:hover {
+          background: rgba(0, 0, 0, 0.08);
+          color: #333;
+        }
+
+        /* Main Content */
+        .editor-main {
+          display: flex;
+          flex: 1;
+          overflow: hidden;
+          ${isMobile ? 'flex-direction: column;' : ''}
+        }
+
+        /* Sidebar */
+        .editor-sidebar {
+          width: ${isMobile ? '100%' : '380px'};
+          border-right: ${isMobile ? 'none' : '1px solid rgba(0, 0, 0, 0.06)'};
+          padding: ${isMobile ? '20px' : '24px'};
+          overflow-y: auto;
+          background: ${isMobile ? 'rgba(250, 251, 252, 0.8)' : 'linear-gradient(180deg, #fafbfc 0%, #ffffff 100%)'};
+          
+          /* Hide scrollbar for desktop */
+          ${!isMobile ? `
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            &::-webkit-scrollbar { display: none; }
+          ` : ''}
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 24px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .tab-button {
+          background: transparent;
+          color: #666;
+          border: 1px solid transparent;
+          padding: 16px 20px;
+          border-radius: 16px;
+          cursor: pointer;
+          font-size: 15px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          text-align: left;
+        }
+
+        .tab-button:hover {
+          background: rgba(102, 126, 234, 0.08);
+          color: #667eea;
+          border-color: rgba(102, 126, 234, 0.2);
+          transform: translateX(4px);
+        }
+
+        .tab-button.active {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border-color: transparent;
+          box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+          transform: translateX(4px);
+        }
+
+        .tab-icon {
+          font-size: 18px;
+          width: 24px;
+          text-align: center;
+        }
+
+        .mobile-tab-navigation {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 20px;
+          padding: 8px;
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .mobile-tab-button {
+          flex: 1;
+          background: transparent;
+          color: #666;
+          border: none;
+          padding: 12px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .mobile-tab-button.active {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .mobile-tab-icon {
+          font-size: 16px;
+        }
+
+        /* Tools Content */
+        .tools-content {
+          flex: 1;
+        }
+
+        .tools-section {
+          margin-bottom: 24px;
+        }
+
+        .tools-section h3 {
+          color: #1a1a1a;
+          margin: 0 0 20px 0;
+          font-size: 18px;
+          font-weight: 700;
+        }
+
+        .tools-section h4 {
+          color: #666;
+          font-size: 14px;
+          margin: 0 0 12px 0;
+          font-weight: 600;
+        }
+
+        /* Filter Sliders */
+        .filter-slider {
+          margin-bottom: 20px;
+        }
+
+        .slider-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+
+        .slider-label {
+          color: #333;
+          font-size: 14px;
+          font-weight: 600;
+          text-transform: capitalize;
+        }
+
+        .slider-value {
+          color: #667eea;
+          font-size: 12px;
+          font-weight: 700;
+          background: rgba(102, 126, 234, 0.1);
+          padding: 4px 8px;
+          border-radius: 8px;
+        }
+
+        .slider-input {
+          width: 100%;
+          height: 6px;
+          border-radius: 10px;
+          background: linear-gradient(90deg, #e5e7eb 0%, #667eea 100%);
+          outline: none;
+          -webkit-appearance: none;
+          cursor: pointer;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: white;
+          border: 2px solid #667eea;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          cursor: grab;
+        }
+
+        .slider-input::-webkit-slider-thumb:active {
+          cursor: grabbing;
+          transform: scale(1.1);
+        }
+
+        /* Presets */
+        .presets-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+
+        .preset-button {
+          background: white;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          padding: 12px 8px;
+          border-radius: 12px;
+          font-size: 13px;
+          cursor: pointer;
+          text-transform: capitalize;
+          font-weight: 600;
+          color: #333;
+          transition: all 0.2s ease;
+        }
+
+        .preset-button:hover {
+          border-color: #667eea;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Background Tools */
+        .background-type, .color-picker-section {
+          margin-bottom: 20px;
+        }
+
+        .background-type label, .color-picker-section label {
+          display: block;
+          color: #333;
+          margin-bottom: 8px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .background-select, .color-picker {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          border-radius: 12px;
+          font-size: 14px;
+          background: white;
+          cursor: pointer;
+          transition: border-color 0.2s ease;
+        }
+
+        .background-select:focus, .color-picker:focus {
+          border-color: #667eea;
+          outline: none;
+        }
+
+        .color-picker {
+          height: 60px;
+          padding: 8px;
+        }
+
+        .gradients-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+        }
+
+        .gradient-preset {
+          width: 100%;
+          aspect-ratio: 1;
+          border-radius: 10px;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: all 0.2s ease;
+        }
+
+        .gradient-preset.active {
+          border-color: #667eea;
+          transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .gradient-preset:hover {
+          transform: scale(1.05);
+        }
+
+        /* Crop Tools */
+        .crop-instructions, .crop-controls {
+          margin-bottom: 20px;
+        }
+
+        .crop-instructions p, .crop-controls p {
+          color: #666;
+          font-size: 14px;
+          line-height: 1.5;
+          margin: 0 0 16px 0;
+        }
+
+        .crop-start-button, .crop-apply-button, .crop-cancel-button {
+          width: 100%;
+          padding: 14px 24px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          border: none;
+        }
+
+        .crop-start-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .crop-start-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .crop-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .crop-apply-button {
+          flex: 2;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+        }
+
+        .crop-cancel-button {
+          flex: 1;
+          background: rgba(0, 0, 0, 0.06);
+          color: #666;
+        }
+
+        /* Reset Button */
+        .reset-button {
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: white;
+          border: none;
+          padding: 14px 24px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          width: 100%;
+          margin-top: 20px;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          transition: all 0.2s ease;
+        }
+
+        .reset-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Preview Area */
+        .editor-preview {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: ${isMobile ? '20px' : '32px'};
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          ${isMobile ? 'min-height: 50vh;' : ''}
+        }
+
+        .preview-container {
+          max-width: 100%;
+          max-height: 100%;
+          overflow: auto;
+          background: white;
+          border-radius: 20px;
+          box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.08),
+            0 8px 16px rgba(0, 0, 0, 0.04);
+          padding: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .canvas-wrapper {
+          position: relative;
+          display: inline-block;
+        }
+
+        .preview-canvas {
+          max-width: 100%;
+          max-height: ${isMobile ? '40vh' : '60vh'};
+          display: block;
+          border-radius: 12px;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Crop Overlay */
+        .crop-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.3);
+          pointer-events: none;
+        }
+
+        .crop-rectangle {
+          position: absolute;
+          border: 2px solid #667eea;
+          background: rgba(102, 126, 234, 0.1);
+          cursor: move;
+          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+        }
+
+        .crop-handle {
+          position: absolute;
+          width: 12px;
+          height: 12px;
+          background: #667eea;
+          border: 2px solid white;
+          border-radius: 2px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .crop-handle.top-left {
+          top: -6px;
+          left: -6px;
+          cursor: nw-resize;
+        }
+
+        .crop-handle.top-right {
+          top: -6px;
+          right: -6px;
+          cursor: ne-resize;
+        }
+
+        .crop-handle.bottom-left {
+          bottom: -6px;
+          left: -6px;
+          cursor: sw-resize;
+        }
+
+        .crop-handle.bottom-right {
+          bottom: -6px;
+          right: -6px;
+          cursor: se-resize;
+        }
+
+        /* Footer */
+        .editor-footer {
+          padding: 24px 32px;
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+          background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+        }
+
+        .footer-button {
+          padding: 14px 32px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 15px;
+          font-weight: 600;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border: none;
+          min-width: 140px;
+        }
+
+        .footer-button.cancel {
+          background: transparent;
+          color: #666;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-button.cancel:hover {
+          background: rgba(0, 0, 0, 0.04);
+          color: #333;
+          border-color: rgba(0, 0, 0, 0.2);
+          transform: translateY(-1px);
+        }
+
+        .footer-button.download {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .footer-button.download:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 767px) {
+          .image-editor-overlay {
+            padding: 0;
+          }
+
+          .image-editor-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+          }
+
+          .editor-header {
+            padding: 20px;
+          }
+
+          .editor-sidebar {
+            max-height: 40vh;
+          }
+
+          .preview-container {
+            padding: 16px;
+          }
+
+          .editor-footer {
+            padding: 20px;
+            flex-direction: column;
+          }
+
+          .footer-button {
+            width: 100%;
+          }
+        }
+      `}</style>
     </div>
   );
-}
+};
+
+export default ImageEditor;

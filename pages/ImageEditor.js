@@ -1,27 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 
 const ImageEditor = ({ imageUrl, onClose, onSave }) => {
-  const [activeTab, setActiveTab] = useState('filters');
+  const [activeTab, setActiveTab] = useState('adjust');
   const [image, setImage] = useState(null);
   const canvasRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [draggingSlider, setDraggingSlider] = useState(null);
 
-  // Editing states
-  const [filters, setFilters] = useState({
+  // Enhanced editing states with proper ranges
+  const [adjustments, setAdjustments] = useState({
     brightness: 100,
     contrast: 100,
     saturation: 100,
-    hue: 0,
-    blur: 0,
     exposure: 0,
     vignette: 0,
-    sepia: 0,
-    noise: 0,
+    blur: 0,
     temperature: 0,
-    sharpen: 0,
-    clarity: 0,
-    vibrance: 0
+    clarity: 0
   });
 
   const [effects, setEffects] = useState({
@@ -29,8 +23,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     dramatic: 0,
     cinematic: 0,
     nostalgic: 0,
-    lomo: 0,
-    clarity: 0,
     fade: 0,
     glow: 0
   });
@@ -51,14 +43,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Prevent body scroll when editor is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, []);
 
   // Load image and initialize canvas
@@ -109,20 +93,15 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
         }
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-      } else if (background.type === 'custom') {
-        ctx.fillStyle = background.customColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
 
-    // Apply all filters and effects
+    // Apply filters
     const filterString = `
-      brightness(${filters.brightness}%)
-      contrast(${filters.contrast}%)
-      saturate(${filters.saturation}%)
-      hue-rotate(${filters.hue}deg)
-      blur(${filters.blur}px)
-      sepia(${filters.sepia}%)
+      brightness(${adjustments.brightness}%)
+      contrast(${adjustments.contrast}%)
+      saturate(${adjustments.saturation}%)
+      blur(${adjustments.blur}px)
     `;
 
     ctx.filter = filterString;
@@ -134,28 +113,27 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
   const applyAdvancedEffects = (ctx, width, height) => {
     // Vignette effect
-    if (filters.vignette > 0) {
+    if (adjustments.vignette > 0) {
       const gradient = ctx.createRadialGradient(
         width / 2, height / 2, 0,
         width / 2, height / 2, Math.max(width, height) / 2
       );
       gradient.addColorStop(0, 'rgba(0,0,0,0)');
-      gradient.addColorStop(1, `rgba(0,0,0,${filters.vignette / 100})`);
+      gradient.addColorStop(1, `rgba(0,0,0,${adjustments.vignette / 100})`);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Noise effect
-    if (filters.noise > 0) {
+    // Temperature effect (warm/cool)
+    if (adjustments.temperature !== 0) {
       const imageData = ctx.getImageData(0, 0, width, height);
       const data = imageData.data;
-      const intensity = filters.noise / 100;
+      const temp = adjustments.temperature / 100;
       
       for (let i = 0; i < data.length; i += 4) {
-        const grain = (Math.random() - 0.5) * 255 * intensity;
-        data[i] = Math.max(0, Math.min(255, data[i] + grain));
-        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + grain));
-        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + grain));
+        // Warm (positive temp) adds red, cool (negative temp) adds blue
+        data[i] = Math.min(255, data[i] + (temp > 0 ? temp * 50 : 0)); // Red
+        data[i + 2] = Math.min(255, data[i + 2] + (temp < 0 ? -temp * 50 : 0)); // Blue
       }
       ctx.putImageData(imageData, 0, 0);
     }
@@ -172,8 +150,9 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       const intensity = effects.vintage / 100;
       
       for (let i = 0; i < data.length; i += 4) {
-        // Add warm tone
+        // Add warm brown tone
         data[i] = Math.min(255, data[i] + 20 * intensity);
+        data[i + 1] = Math.min(255, data[i + 1] + 10 * intensity);
         data[i + 2] = Math.max(0, data[i + 2] - 10 * intensity);
       }
       ctx.putImageData(imageData, 0, 0);
@@ -186,40 +165,25 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       const intensity = effects.dramatic / 100;
       
       for (let i = 0; i < data.length; i += 4) {
-        // Increase contrast
-        const factor = (259 * (intensity * 100 + 255)) / (255 * (259 - intensity * 100));
+        // Increase contrast dramatically
+        const factor = (259 * (intensity * 150 + 255)) / (255 * (259 - intensity * 150));
         data[i] = factor * (data[i] - 128) + 128;
         data[i + 1] = factor * (data[i + 1] - 128) + 128;
         data[i + 2] = factor * (data[i + 2] - 128) + 128;
       }
       ctx.putImageData(imageData, 0, 0);
     }
-
-    // Fade effect
-    if (effects.fade > 0) {
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const data = imageData.data;
-      const intensity = effects.fade / 100;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        // Reduce contrast and saturation
-        data[i] = data[i] * (1 - intensity * 0.3) + 128 * intensity * 0.3;
-        data[i + 1] = data[i + 1] * (1 - intensity * 0.3) + 128 * intensity * 0.3;
-        data[i + 2] = data[i + 2] * (1 - intensity * 0.3) + 128 * intensity * 0.3;
-      }
-      ctx.putImageData(imageData, 0, 0);
-    }
   };
 
-  // Update canvas when filters change
+  // Update canvas when adjustments change
   useEffect(() => {
     if (image) {
       drawImageOnCanvas(image);
     }
-  }, [filters, effects, background, image]);
+  }, [adjustments, effects, background, image]);
 
-  const handleFilterChange = (filter, value) => {
-    setFilters(prev => ({ ...prev, [filter]: value }));
+  const handleAdjustmentChange = (adjustment, value) => {
+    setAdjustments(prev => ({ ...prev, [adjustment]: value }));
   };
 
   const handleEffectChange = (effect, value) => {
@@ -235,34 +199,27 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     if (!canvas) return;
 
     const link = document.createElement('a');
-    link.download = `premium-edit-${Date.now()}.png`;
+    link.download = `edited-image-${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
 
   const resetAll = () => {
-    setFilters({
+    setAdjustments({
       brightness: 100,
       contrast: 100,
       saturation: 100,
-      hue: 0,
-      blur: 0,
       exposure: 0,
       vignette: 0,
-      sepia: 0,
-      noise: 0,
+      blur: 0,
       temperature: 0,
-      sharpen: 0,
-      clarity: 0,
-      vibrance: 0
+      clarity: 0
     });
     setEffects({
       vintage: 0,
       dramatic: 0,
       cinematic: 0,
       nostalgic: 0,
-      lomo: 0,
-      clarity: 0,
       fade: 0,
       glow: 0
     });
@@ -274,47 +231,39 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
     });
   };
 
+  // Quick presets data
   const quickPresets = {
     enhance: { brightness: 110, contrast: 110, saturation: 110, clarity: 30 },
-    portrait: { brightness: 105, contrast: 105, saturation: 95, sharpen: 20 },
-    landscape: { brightness: 105, contrast: 115, saturation: 120, vibrance: 30 },
+    portrait: { brightness: 105, contrast: 105, saturation: 95 },
+    landscape: { brightness: 105, contrast: 115, saturation: 120 },
     moody: { brightness: 85, contrast: 120, saturation: 90, vignette: 40 },
-    vibrant: { brightness: 110, contrast: 110, saturation: 130, hue: 5 },
+    vibrant: { brightness: 110, contrast: 110, saturation: 130 },
     cinematic: { brightness: 90, contrast: 120, saturation: 95, vignette: 25 },
-    vintage: { brightness: 95, contrast: 105, saturation: 85, sepia: 25 },
+    vintage: { brightness: 95, contrast: 105, saturation: 85, temperature: 25 },
     dramatic: { brightness: 80, contrast: 130, saturation: 95, vignette: 35 },
-    clean: { brightness: 105, contrast: 105, saturation: 100, clarity: 20 },
+    clean: { brightness: 105, contrast: 105, saturation: 100 },
     warm: { brightness: 105, contrast: 105, saturation: 110, temperature: 15 }
   };
 
   const applyQuickPreset = (preset) => {
-    setFilters(prev => ({ ...prev, ...quickPresets[preset] }));
+    setAdjustments(prev => ({ ...prev, ...quickPresets[preset] }));
   };
 
-  const gradientPresets = [
-    { name: 'Sunset', value: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)' },
-    { name: 'Ocean', value: 'linear-gradient(135deg, #667eea, #764ba2)' },
-    { name: 'Forest', value: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
-    { name: 'Sunrise', value: 'linear-gradient(135deg, #fa709a, #fee140)' },
-    { name: 'Royal', value: 'linear-gradient(135deg, #a8edea, #fed6e3)' },
-    { name: 'Mystic', value: 'linear-gradient(135deg, #cd9cf2, #f6f3ff)' },
-    { name: 'Fire', value: 'linear-gradient(135deg, #ff9a9e, #fecfef)' },
-    { name: 'Sky', value: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)' }
-  ];
-
-  const solidColors = [
-    '#FFFFFF', '#000000', '#3B82F6', '#10B981', '#EF4444', '#F59E0B',
-    '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#64748B', '#F97316'
-  ];
-
-  // Draggable Slider Component
-  const DraggableSlider = ({ label, value, min, max, onChange, unit = '%' }) => {
+  // Enhanced Draggable Slider Component
+  const DraggableSlider = ({ 
+    label, 
+    value, 
+    min, 
+    max, 
+    onChange, 
+    unit = '%',
+    defaultValue = 0 
+  }) => {
     const sliderRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const handleMouseDown = (e) => {
       setIsDragging(true);
-      setDraggingSlider(label);
       updateValue(e);
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -322,8 +271,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
     const handleTouchStart = (e) => {
       setIsDragging(true);
-      setDraggingSlider(label);
-      updateValue(e);
+      updateValue(e.touches[0]);
       document.addEventListener('touchmove', handleTouchMove);
       document.addEventListener('touchend', handleTouchEnd);
     };
@@ -340,14 +288,12 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      setDraggingSlider(null);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
     const handleTouchEnd = () => {
       setIsDragging(false);
-      setDraggingSlider(null);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
@@ -361,13 +307,26 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       onChange(newValue);
     };
 
+    const resetToDefault = () => {
+      onChange(defaultValue);
+    };
+
     const progress = ((value - min) / (max - min)) * 100;
 
     return (
-      <div className="draggable-slider">
+      <div className="slider-container">
         <div className="slider-header">
           <span className="slider-label">{label}</span>
-          <span className="slider-value">{value}{unit}</span>
+          <div className="slider-controls">
+            <span className="slider-value">{value}{unit}</span>
+            <button 
+              className="reset-slider-btn"
+              onClick={resetToDefault}
+              title="Reset to default"
+            >
+              ↺
+            </button>
+          </div>
         </div>
         <div 
           ref={sliderRef}
@@ -389,19 +348,14 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
   };
 
   return (
-    <div className="premium-editor-overlay">
-      <div className="premium-editor-container">
+    <div className="editor-overlay">
+      <div className="editor-container">
         {/* Header */}
         <div className="editor-header">
           <div className="header-content">
-            <div className="logo-section">
-              <div className="editor-logo">
-                <span className="logo-icon">🎨</span>
-              </div>
-              <div className="header-text">
-                <h1>Premium Editor</h1>
-                <p>Professional photo editing tools</p>
-              </div>
+            <div className="header-text">
+              <h1>Premium Editor</h1>
+              <p>Professional photo editing tools</p>
             </div>
             <button className="close-btn" onClick={onClose}>
               <span>×</span>
@@ -410,20 +364,18 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
         </div>
 
         {/* Main Content */}
-        <div className="editor-content">
-          {/* Preview Section - Always Visible */}
+        <div className="editor-main">
+          {/* Preview Section */}
           <div className="preview-section">
             <div className="preview-container">
-              <div className="canvas-frame">
+              <div className="preview-label">
+                <span>Live Preview</span>
+              </div>
+              <div className="canvas-wrapper">
                 <canvas
                   ref={canvasRef}
                   className="preview-canvas"
                 />
-              </div>
-              <div className="preview-overlay">
-                <div className="preview-info">
-                  <span>Live Preview</span>
-                </div>
               </div>
             </div>
           </div>
@@ -431,7 +383,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           {/* Controls Section */}
           <div className="controls-section">
             {/* Quick Presets */}
-            <div className="presets-panel">
+            <div className="presets-section">
               <h3>Quick Presets</h3>
               <div className="presets-grid">
                 {Object.keys(quickPresets).map(preset => (
@@ -440,7 +392,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                     onClick={() => applyQuickPreset(preset)}
                     className="preset-btn"
                   >
-                    <span className="preset-icon">✨</span>
                     {preset}
                   </button>
                 ))}
@@ -449,85 +400,97 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
             {/* Tab Navigation */}
             <div className="tabs-navigation">
-              {[
-                { id: 'filters', icon: '🔧', label: 'Adjust' },
-                { id: 'effects', icon: '🌟', label: 'Effects' },
-                { id: 'background', icon: '🎨', label: 'Background' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                >
-                  <span className="tab-icon">{tab.icon}</span>
-                  <span className="tab-label">{tab.label}</span>
-                </button>
-              ))}
+              <button
+                onClick={() => setActiveTab('adjust')}
+                className={`tab-btn ${activeTab === 'adjust' ? 'active' : ''}`}
+              >
+                Adjust
+              </button>
+              <button
+                onClick={() => setActiveTab('effects')}
+                className={`tab-btn ${activeTab === 'effects' ? 'active' : ''}`}
+              >
+                Effects
+              </button>
+              <button
+                onClick={() => setActiveTab('background')}
+                className={`tab-btn ${activeTab === 'background' ? 'active' : ''}`}
+              >
+                Background
+              </button>
             </div>
 
             {/* Controls Content */}
             <div className="controls-content">
-              {/* Filters Tab */}
-              {activeTab === 'filters' && (
+              {/* Adjust Tab */}
+              {activeTab === 'adjust' && (
                 <div className="tab-panel">
                   <h4>Image Adjustments</h4>
-                  <div className="sliders-grid">
+                  <div className="sliders-container">
                     <DraggableSlider
                       label="Brightness"
-                      value={filters.brightness}
+                      value={adjustments.brightness}
                       min={0}
                       max={200}
-                      onChange={(value) => handleFilterChange('brightness', value)}
+                      defaultValue={100}
+                      onChange={(value) => handleAdjustmentChange('brightness', value)}
                     />
                     <DraggableSlider
                       label="Contrast"
-                      value={filters.contrast}
+                      value={adjustments.contrast}
                       min={0}
                       max={200}
-                      onChange={(value) => handleFilterChange('contrast', value)}
+                      defaultValue={100}
+                      onChange={(value) => handleAdjustmentChange('contrast', value)}
                     />
                     <DraggableSlider
                       label="Saturation"
-                      value={filters.saturation}
+                      value={adjustments.saturation}
                       min={0}
                       max={200}
-                      onChange={(value) => handleFilterChange('saturation', value)}
+                      defaultValue={100}
+                      onChange={(value) => handleAdjustmentChange('saturation', value)}
                     />
                     <DraggableSlider
                       label="Exposure"
-                      value={filters.exposure}
+                      value={adjustments.exposure}
                       min={-100}
                       max={100}
-                      onChange={(value) => handleFilterChange('exposure', value)}
+                      defaultValue={0}
+                      onChange={(value) => handleAdjustmentChange('exposure', value)}
                     />
                     <DraggableSlider
                       label="Vignette"
-                      value={filters.vignette}
+                      value={adjustments.vignette}
                       min={0}
                       max={100}
-                      onChange={(value) => handleFilterChange('vignette', value)}
+                      defaultValue={0}
+                      onChange={(value) => handleAdjustmentChange('vignette', value)}
                     />
                     <DraggableSlider
                       label="Blur"
-                      value={filters.blur}
+                      value={adjustments.blur}
                       min={0}
                       max={20}
                       unit="px"
-                      onChange={(value) => handleFilterChange('blur', value)}
+                      defaultValue={0}
+                      onChange={(value) => handleAdjustmentChange('blur', value)}
                     />
                     <DraggableSlider
                       label="Temperature"
-                      value={filters.temperature}
+                      value={adjustments.temperature}
                       min={-100}
                       max={100}
-                      onChange={(value) => handleFilterChange('temperature', value)}
+                      defaultValue={0}
+                      onChange={(value) => handleAdjustmentChange('temperature', value)}
                     />
                     <DraggableSlider
                       label="Clarity"
-                      value={filters.clarity}
+                      value={adjustments.clarity}
                       min={0}
                       max={100}
-                      onChange={(value) => handleFilterChange('clarity', value)}
+                      defaultValue={0}
+                      onChange={(value) => handleAdjustmentChange('clarity', value)}
                     />
                   </div>
                 </div>
@@ -537,12 +500,13 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
               {activeTab === 'effects' && (
                 <div className="tab-panel">
                   <h4>Creative Effects</h4>
-                  <div className="sliders-grid">
+                  <div className="sliders-container">
                     <DraggableSlider
                       label="Vintage"
                       value={effects.vintage}
                       min={0}
                       max={100}
+                      defaultValue={0}
                       onChange={(value) => handleEffectChange('vintage', value)}
                     />
                     <DraggableSlider
@@ -550,6 +514,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                       value={effects.dramatic}
                       min={0}
                       max={100}
+                      defaultValue={0}
                       onChange={(value) => handleEffectChange('dramatic', value)}
                     />
                     <DraggableSlider
@@ -557,6 +522,7 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                       value={effects.cinematic}
                       min={0}
                       max={100}
+                      defaultValue={0}
                       onChange={(value) => handleEffectChange('cinematic', value)}
                     />
                     <DraggableSlider
@@ -564,35 +530,16 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                       value={effects.fade}
                       min={0}
                       max={100}
+                      defaultValue={0}
                       onChange={(value) => handleEffectChange('fade', value)}
-                    />
-                    <DraggableSlider
-                      label="Sepia"
-                      value={filters.sepia}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('sepia', value)}
-                    />
-                    <DraggableSlider
-                      label="Noise"
-                      value={filters.noise}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('noise', value)}
                     />
                     <DraggableSlider
                       label="Glow"
                       value={effects.glow}
                       min={0}
                       max={100}
+                      defaultValue={0}
                       onChange={(value) => handleEffectChange('glow', value)}
-                    />
-                    <DraggableSlider
-                      label="Vibrance"
-                      value={filters.vibrance}
-                      min={0}
-                      max={100}
-                      onChange={(value) => handleFilterChange('vibrance', value)}
                     />
                   </div>
                 </div>
@@ -602,7 +549,6 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
               {activeTab === 'background' && (
                 <div className="tab-panel">
                   <h4>Background Options</h4>
-                  
                   <div className="background-options">
                     <div className="option-group">
                       <label>Background Type</label>
@@ -619,42 +565,25 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
                         >
                           Solid Color
                         </button>
-                        <button
-                          onClick={() => handleBackgroundChange('type', 'gradient')}
-                          className={`type-btn ${background.type === 'gradient' ? 'active' : ''}`}
-                        >
-                          Gradient
-                        </button>
                       </div>
                     </div>
 
                     {background.type === 'color' && (
-                      <div className="color-picker-section">
-                        <label>Solid Colors</label>
-                        <div className="color-grid">
-                          {solidColors.map(color => (
+                      <div className="color-picker">
+                        <label>Select Color</label>
+                        <input
+                          type="color"
+                          value={background.color}
+                          onChange={(e) => handleBackgroundChange('color', e.target.value)}
+                          className="color-input"
+                        />
+                        <div className="color-previews">
+                          {['#FFFFFF', '#000000', '#3B82F6', '#10B981', '#EF4444', '#F59E0B'].map(color => (
                             <div
                               key={color}
                               onClick={() => handleBackgroundChange('color', color)}
                               className={`color-swatch ${background.color === color ? 'active' : ''}`}
                               style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {background.type === 'gradient' && (
-                      <div className="gradient-section">
-                        <label>Gradient Presets</label>
-                        <div className="gradient-grid">
-                          {gradientPresets.map((gradient, index) => (
-                            <div
-                              key={index}
-                              onClick={() => handleBackgroundChange('gradient', gradient.value)}
-                              className={`gradient-preset ${background.gradient === gradient.value ? 'active' : ''}`}
-                              style={{ background: gradient.value }}
-                              title={gradient.name}
                             />
                           ))}
                         </div>
@@ -668,11 +597,9 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
             {/* Action Buttons */}
             <div className="action-buttons">
               <button onClick={resetAll} className="reset-btn">
-                <span>🔄</span>
                 Reset All
               </button>
               <button onClick={handleDownload} className="download-btn">
-                <span>💾</span>
                 Download Image
               </button>
             </div>
@@ -681,40 +608,36 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
       </div>
 
       <style jsx>{`
-        .premium-editor-overlay {
+        .editor-overlay {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: rgba(0, 0, 0, 0.8);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
           padding: 20px;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          overflow: hidden;
         }
 
-        .premium-editor-container {
+        .editor-container {
           background: white;
-          border-radius: 24px;
-          width: 95%;
-          max-width: 1400px;
-          height: 95%;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 1200px;
+          height: 90vh;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 32px 64px rgba(0,0,0,0.3);
           overflow: hidden;
         }
 
         /* Header */
         .editor-header {
-          padding: 24px 32px;
-          background: linear-gradient(135deg, #1e293b 0%, #374151 100%);
+          padding: 20px;
+          background: #1a1a1a;
           color: white;
-          flex-shrink: 0;
         }
 
         .header-content {
@@ -723,56 +646,34 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           align-items: center;
         }
 
-        .logo-section {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .editor-logo {
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-        }
-
         .header-text h1 {
           margin: 0;
           font-size: 24px;
-          font-weight: 700;
-          background: linear-gradient(135deg, #60a5fa, #a78bfa);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          font-weight: 600;
         }
 
         .header-text p {
           margin: 4px 0 0 0;
-          color: #d1d5db;
+          color: #ccc;
           font-size: 14px;
         }
 
         .close-btn {
-          background: rgba(255,255,255,0.1);
+          background: none;
           border: none;
-          padding: 12px;
-          border-radius: 12px;
-          font-size: 20px;
-          cursor: pointer;
           color: white;
-          transition: all 0.3s ease;
+          font-size: 24px;
+          cursor: pointer;
+          padding: 8px;
+          border-radius: 4px;
         }
 
         .close-btn:hover {
-          background: rgba(255,255,255,0.2);
-          transform: rotate(90deg);
+          background: rgba(255, 255, 255, 0.1);
         }
 
         /* Main Content */
-        .editor-content {
+        .editor-main {
           display: flex;
           flex: 1;
           overflow: hidden;
@@ -781,14 +682,12 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
         /* Preview Section */
         .preview-section {
-          flex: ${isMobile ? '1' : '1.5'};
+          flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: ${isMobile ? '20px' : '40px'};
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          position: relative;
-          min-height: ${isMobile ? '40vh' : 'auto'};
+          padding: 20px;
+          background: #f5f5f5;
         }
 
         .preview-container {
@@ -797,129 +696,102 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           max-height: 100%;
         }
 
-        .canvas-frame {
+        .preview-label {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          background: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          z-index: 2;
+        }
+
+        .canvas-wrapper {
           background: white;
-          border-radius: 20px;
           padding: 20px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .preview-canvas {
           max-width: 100%;
-          max-height: ${isMobile ? '35vh' : '70vh'};
+          max-height: 60vh;
           display: block;
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        }
-
-        .preview-overlay {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-        }
-
-        .preview-info {
-          background: rgba(0,0,0,0.7);
-          color: white;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
         }
 
         /* Controls Section */
         .controls-section {
-          flex: 1;
+          width: ${isMobile ? '100%' : '400px'};
+          background: white;
+          border-left: ${isMobile ? 'none' : '1px solid #e0e0e0'};
           display: flex;
           flex-direction: column;
-          background: white;
-          border-left: ${isMobile ? 'none' : '1px solid #e5e7eb'};
-          border-top: ${isMobile ? '1px solid #e5e7eb' : 'none'};
-          max-height: ${isMobile ? '60vh' : 'none'};
-          overflow-y: auto;
-          overflow-x: hidden;
+          overflow: hidden;
         }
 
-        /* Presets Panel */
-        .presets-panel {
-          padding: 24px;
-          border-bottom: 1px solid #f3f4f6;
-          flex-shrink: 0;
+        /* Presets Section */
+        .presets-section {
+          padding: 20px;
+          border-bottom: 1px solid #e0e0e0;
         }
 
-        .presets-panel h3 {
-          margin: 0 0 16px 0;
-          color: #1f2937;
-          font-size: 18px;
-          font-weight: 700;
+        .presets-section h3 {
+          margin: 0 0 12px 0;
+          font-size: 16px;
+          font-weight: 600;
         }
 
         .presets-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          grid-template-columns: repeat(2, 1fr);
           gap: 8px;
         }
 
         .preset-btn {
+          padding: 8px 12px;
+          border: 1px solid #e0e0e0;
           background: white;
-          border: 2px solid #e5e7eb;
-          padding: 10px 6px;
-          border-radius: 10px;
+          border-radius: 6px;
           cursor: pointer;
-          font-size: 11px;
-          font-weight: 600;
-          color: #374151;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          transition: all 0.3s ease;
+          font-size: 12px;
+          transition: all 0.2s;
         }
 
         .preset-btn:hover {
           border-color: #3b82f6;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-        }
-
-        .preset-icon {
-          font-size: 12px;
+          background: #f8fafc;
         }
 
         /* Tabs Navigation */
         .tabs-navigation {
           display: flex;
-          padding: 0 24px;
-          border-bottom: 1px solid #f3f4f6;
-          flex-shrink: 0;
+          padding: 0 20px;
+          border-bottom: 1px solid #e0e0e0;
         }
 
         .tab-btn {
           flex: 1;
-          background: transparent;
+          padding: 12px 16px;
           border: none;
-          padding: 14px 12px;
+          background: none;
           cursor: pointer;
-          font-size: 13px;
-          font-weight: 600;
-          color: #6b7280;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          transition: all 0.3s ease;
-          border-bottom: 3px solid transparent;
+          font-size: 14px;
+          font-weight: 500;
+          color: #666;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
         }
 
         .tab-btn.active {
           color: #3b82f6;
           border-bottom-color: #3b82f6;
-          background: linear-gradient(135deg, #eff6ff, #f0f9ff);
         }
 
         .tab-btn:hover {
           color: #3b82f6;
-          background: #f9fafb;
+          background: #f8fafc;
         }
 
         /* Controls Content */
@@ -927,24 +799,22 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           flex: 1;
           padding: 20px;
           overflow-y: auto;
-          overflow-x: hidden;
         }
 
         .tab-panel h4 {
           margin: 0 0 16px 0;
-          color: #1f2937;
           font-size: 16px;
-          font-weight: 700;
+          font-weight: 600;
         }
 
-        .sliders-grid {
+        .sliders-container {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
 
-        /* Draggable Slider */
-        .draggable-slider {
+        /* Enhanced Slider Styles */
+        .slider-container {
           margin-bottom: 8px;
         }
 
@@ -952,35 +822,54 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
         .slider-label {
-          color: #374151;
           font-size: 14px;
-          font-weight: 600;
-          text-transform: capitalize;
+          font-weight: 500;
+          color: #333;
+        }
+
+        .slider-controls {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .slider-value {
-          color: #3b82f6;
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 600;
+          color: #3b82f6;
           background: #eff6ff;
-          padding: 4px 8px;
-          border-radius: 8px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          min-width: 40px;
+          text-align: center;
+        }
+
+        .reset-slider-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 12px;
+          color: #666;
+          padding: 2px;
+          border-radius: 2px;
+        }
+
+        .reset-slider-btn:hover {
+          background: #f3f4f6;
+          color: #333;
         }
 
         .slider-track {
           position: relative;
-          height: 8px;
+          height: 6px;
           background: #e5e7eb;
-          border-radius: 10px;
+          border-radius: 3px;
           cursor: pointer;
-          transition: all 0.3s ease;
-          user-select: none;
-          -webkit-user-select: none;
-          touch-action: none;
+          transition: background-color 0.2s;
         }
 
         .slider-track:hover {
@@ -994,8 +883,8 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
         .slider-progress {
           position: absolute;
           height: 100%;
-          background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-          border-radius: 10px;
+          background: linear-gradient(90deg, #3b82f6, #60a5fa);
+          border-radius: 3px;
           transition: width 0.1s ease;
         }
 
@@ -1003,35 +892,33 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           position: absolute;
           top: 50%;
           transform: translate(-50%, -50%);
-          width: 20px;
-          height: 20px;
+          width: 16px;
+          height: 16px;
           background: white;
-          border: 3px solid #3b82f6;
+          border: 2px solid #3b82f6;
           border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
           cursor: grab;
-          transition: all 0.2s ease;
-          z-index: 10;
+          transition: all 0.2s;
         }
 
         .slider-thumb:active {
           cursor: grabbing;
-          transform: translate(-50%, -50%) scale(1.2);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
         }
 
         /* Background Options */
         .background-options {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 16px;
         }
 
         .option-group label {
           display: block;
-          color: #374151;
-          margin-bottom: 12px;
-          font-weight: 600;
+          margin-bottom: 8px;
+          font-weight: 500;
           font-size: 14px;
         }
 
@@ -1042,15 +929,13 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
         .type-btn {
           flex: 1;
+          padding: 8px 12px;
+          border: 1px solid #e0e0e0;
           background: white;
-          border: 2px solid #e5e7eb;
-          padding: 10px 6px;
-          border-radius: 8px;
+          border-radius: 6px;
           cursor: pointer;
-          font-size: 11px;
-          font-weight: 600;
-          color: #374151;
-          transition: all 0.3s ease;
+          font-size: 12px;
+          transition: all 0.2s;
         }
 
         .type-btn.active {
@@ -1059,19 +944,33 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           border-color: #3b82f6;
         }
 
-        .color-grid {
+        .color-picker {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .color-input {
+          width: 100%;
+          height: 40px;
+          border: 1px solid #e0e0e0;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+
+        .color-previews {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(6, 1fr);
           gap: 8px;
         }
 
         .color-swatch {
           width: 100%;
           aspect-ratio: 1;
-          border-radius: 8px;
+          border-radius: 4px;
           cursor: pointer;
-          border: 3px solid transparent;
-          transition: all 0.3s ease;
+          border: 2px solid transparent;
+          transition: all 0.2s;
         }
 
         .color-swatch.active {
@@ -1079,48 +978,23 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
           transform: scale(1.1);
         }
 
-        .gradient-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-        }
-
-        .gradient-preset {
-          width: 100%;
-          aspect-ratio: 1;
-          border-radius: 8px;
-          cursor: pointer;
-          border: 3px solid transparent;
-          transition: all 0.3s ease;
-        }
-
-        .gradient-preset.active {
-          border-color: #3b82f6;
-          transform: scale(1.05);
-        }
-
         /* Action Buttons */
         .action-buttons {
           padding: 20px;
-          border-top: 1px solid #f3f4f6;
+          border-top: 1px solid #e0e0e0;
           display: flex;
           gap: 12px;
-          flex-shrink: 0;
         }
 
         .reset-btn, .download-btn {
           flex: 1;
-          padding: 14px 20px;
-          border-radius: 12px;
+          padding: 12px 16px;
+          border: none;
+          border-radius: 6px;
           cursor: pointer;
           font-size: 14px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-          border: none;
+          font-weight: 500;
+          transition: all 0.2s;
         }
 
         .reset-btn {
@@ -1130,114 +1004,73 @@ const ImageEditor = ({ imageUrl, onClose, onSave }) => {
 
         .reset-btn:hover {
           background: #e5e7eb;
-          transform: translateY(-2px);
         }
 
         .download-btn {
-          background: linear-gradient(135deg, #10b981, #059669);
+          background: #3b82f6;
           color: white;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .download-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+          background: #2563eb;
         }
 
         /* Mobile Optimizations */
         @media (max-width: 767px) {
-          .premium-editor-overlay {
+          .editor-overlay {
             padding: 0;
           }
 
-          .premium-editor-container {
-            width: 100%;
-            height: 100%;
+          .editor-container {
+            height: 100vh;
             border-radius: 0;
           }
 
           .editor-header {
-            padding: 16px 20px;
-          }
-
-          .header-text h1 {
-            font-size: 20px;
+            padding: 16px;
           }
 
           .preview-section {
             padding: 16px;
           }
 
-          .canvas-frame {
+          .canvas-wrapper {
             padding: 16px;
           }
 
-          .presets-panel, .controls-content {
+          .presets-section, .controls-content {
             padding: 16px;
           }
 
           .action-buttons {
             padding: 16px;
-            flex-direction: column;
-          }
-
-          .type-buttons {
-            flex-direction: column;
-          }
-
-          .color-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-
-          .gradient-grid {
-            grid-template-columns: repeat(2, 1fr);
           }
 
           .presets-grid {
             grid-template-columns: repeat(3, 1fr);
           }
 
-          .preset-btn {
-            font-size: 10px;
-            padding: 8px 4px;
-          }
-
-          .tab-btn {
-            padding: 12px 8px;
-            font-size: 12px;
-          }
-
-          /* Enable scrolling on mobile */
-          .controls-section {
-            -webkit-overflow-scrolling: touch;
-            overflow-y: scroll;
+          .type-buttons {
+            flex-direction: column;
           }
         }
 
         /* Scrollbar Styling */
-        .controls-section::-webkit-scrollbar {
-          width: 6px;
+        .controls-content::-webkit-scrollbar {
+          width: 4px;
         }
 
-        .controls-section::-webkit-scrollbar-track {
-          background: #f1f5f9;
+        .controls-content::-webkit-scrollbar-track {
+          background: #f1f1f1;
         }
 
-        .controls-section::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 3px;
+        .controls-content::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 2px;
         }
 
-        .controls-section::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-
-        /* Prevent text selection while dragging */
-        .slider-track {
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
+        .controls-content::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
         }
       `}</style>
     </div>

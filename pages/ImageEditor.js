@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const FotorImageEditor = () => {
+const ImageEditor = () => {
   const [image, setImage] = useState(null);
   const [originalImage, setOriginalImage] = useState(null);
   const canvasRef = useRef(null);
@@ -1132,4 +1132,4 @@ const FotorImageEditor = () => {
   );
 };
 
-export default FotorImageEditor;
+export default ImageEditor;

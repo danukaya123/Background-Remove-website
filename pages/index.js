@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Client } from "@gradio/client";
-import ImageEditor from './ImageEditor'; 
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -11,19 +10,6 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const fileInputRef = useRef(null);
   const resultsSectionRef = useRef(null);
-  const [showEditor, setShowEditor] = useState(false);
-  const [editingImage, setEditingImage] = useState(null);
-
-  // Add these functions with proper indentation
-  const handleEditImage = () => {
-    setEditingImage(resultUrl);
-    setShowEditor(true);
-  };
-
-  const handleCloseEditor = () => {
-    setShowEditor(false);
-    setEditingImage(null);
-  };
 
   // Auto-scroll to results when processing is complete
   useEffect(() => {
@@ -166,472 +152,473 @@ export default function Home() {
       }}
     >
       {/* Global Styles */}
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        * {
-          box-sizing: border-box;
-        }
-        
-        body {
-          margin: 0;
-          padding: 0;
-          background: #ffffff;
-          font-family: 'Inter', sans-serif;
-          scroll-behavior: smooth;
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-          50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
-        }
-        
-        @keyframes neuralOrbit {
-          0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
-          100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
-        }
-        
-        @keyframes neuralOrbitReverse {
-          0% { transform: rotate(0deg) translateX(25px) rotate(0deg); }
-          100% { transform: rotate(-360deg) translateX(25px) rotate(360deg); }
-        }
-        
-        @keyframes aiCorePulse {
-          0%, 100% { 
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-          }
-          50% { 
-            transform: scale(1.1);
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-          }
-        }
-        
-        @keyframes dataFlow {
-          0% { stroke-dashoffset: 100; }
-          100% { stroke-dashoffset: 0; }
-        }
-        
-        @keyframes particleFloat {
-          0%, 100% { 
-            transform: translate(0, 0) rotate(0deg);
-            opacity: 0;
-          }
-          10%, 90% { opacity: 1; }
-          50% { 
-            transform: translate(100px, -50px) rotate(180deg);
-          }
-        }
-        
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes textGlow {
-          0%, 100% { opacity: 0.8; }
-          50% { opacity: 1; }
-        }
-        
-        @keyframes slideInFromRight {
-          from { 
-            opacity: 0;
-            transform: translateX(100%);
-          }
-          to { 
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        
-        .float-animation {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        
-        .bounce-subtle {
-          animation: bounce-subtle 2s infinite;
-        }
-        
-        .slide-up {
-          animation: slideUp 0.6s ease-out;
-        }
-        
-        .text-glow {
-          animation: textGlow 2s ease-in-out infinite;
-        }
-        
-        .slide-in-right {
-          animation: slideInFromRight 0.3s ease-out;
-        }
-        
-        @keyframes bounce-subtle {
-          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-          40% { transform: translateY(-5px); }
-          60% { transform: translateY(-3px); }
-        }
-        
-        /* Responsive design helper classes */
-        .desktop-only {
-          display: flex;
-        }
-        
-        .mobile-only {
-          display: none;
-        }
-        
-        /* Hero section responsive styles */
-        .hero-container {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 4rem;
-          align-items: center;
-        }
-        
-        .hero-text h1,
-        .hero-text p {
-          text-align: left;
-        }
-        
-        .feature-points {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        
-        .cta-buttons {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        
-        .floating-badge {
-          position: absolute;
-          z-index: 4;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        
-        @media (max-width: 768px) {
-          .desktop-only {
-            display: none !important;
-          }
-          
-          .mobile-only {
-            display: flex !important;
-          }
-          
-          .hero-container {
-            grid-template-columns: 1fr !important;
-            gap: 3rem !important;
-            text-align: center;
-          }
-          
-          .hero-text h1,
-          .hero-text p {
-            text-align: center !important;
-          }
-          
-          .cta-buttons {
-            justify-content: center !important;
-          }
-          
-          .feature-points {
-            align-items: center !important;
-          }
-          
-          /* FIX: Text first, then image below on mobile */
-          .hero-text {
-            order: 1; /* Text appears first */
-          }
-          
-          .hero-image {
-            order: 2; /* Image appears second (below text) */
-          }
-          
-          .floating-badge {
-            font-size: 12px !important;
-            padding: 8px 16px !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .cta-buttons button {
-            padding: 12px 20px !important;
-            font-size: 14px !important;
-            width: 100%;
-            justify-content: center;
-          }
-          
-          .cta-buttons {
-            flex-direction: column;
-          }
-        }
-      `}</style>
+<style jsx global>{`
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+    50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+  }
+  
+  @keyframes neuralOrbit {
+    0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+    100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+  }
+  
+  @keyframes neuralOrbitReverse {
+    0% { transform: rotate(0deg) translateX(25px) rotate(0deg); }
+    100% { transform: rotate(-360deg) translateX(25px) rotate(360deg); }
+  }
+  
+  @keyframes aiCorePulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+  }
+  
+  @keyframes dataFlow {
+    0% { stroke-dashoffset: 100; }
+    100% { stroke-dashoffset: 0; }
+  }
+  
+  @keyframes particleFloat {
+    0%, 100% { 
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 0;
+    }
+    10%, 90% { opacity: 1; }
+    50% { 
+      transform: translate(100px, -50px) rotate(180deg);
+    }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes textGlow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+  
+  @keyframes slideInFromRight {
+    from { 
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to { 
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .bounce-subtle {
+    animation: bounce-subtle 2s infinite;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .text-glow {
+    animation: textGlow 2s ease-in-out infinite;
+  }
+  
+  .slide-in-right {
+    animation: slideInFromRight 0.3s ease-out;
+  }
+  
+  @keyframes bounce-subtle {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-5px); }
+    60% { transform: translateY(-3px); }
+  }
+  
+  /* Responsive design helper classes */
+  .desktop-only {
+    display: flex;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+  
+  /* Hero section responsive styles */
+  .hero-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+  
+  .hero-text h1,
+  .hero-text p {
+    text-align: left;
+  }
+  
+  .feature-points {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .floating-badge {
+    position: absolute;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  @media (max-width: 768px) {
+    .desktop-only {
+      display: none !important;
+    }
+    
+    .mobile-only {
+      display: flex !important;
+    }
+    
+    .hero-container {
+      grid-template-columns: 1fr !important;
+      gap: 3rem !important;
+      text-align: center;
+    }
+    
+    .hero-text h1,
+    .hero-text p {
+      text-align: center !important;
+    }
+    
+    .cta-buttons {
+      justify-content: center !important;
+    }
+    
+    .feature-points {
+      align-items: center !important;
+    }
+    
+    /* FIX: Text first, then image below on mobile */
+    .hero-text {
+      order: 1; /* Text appears first */
+    }
+    
+    .hero-image {
+      order: 2; /* Image appears second (below text) */
+    }
+    
+    .floating-badge {
+      font-size: 12px !important;
+      padding: 8px 16px !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .cta-buttons button {
+      padding: 12px 20px !important;
+      font-size: 14px !important;
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .cta-buttons {
+      flex-direction: column;
+    }
+  }
+`}</style>
 
       {/* Navigation */}
-      <nav
+{/* Navigation */}
+<nav
+  style={{
+    borderBottom: "1px solid #e2e8f0",
+    background: "rgba(255, 255, 255, 0.95)",
+    backdropFilter: "blur(10px)",
+    position: "sticky",
+    top: 0,
+    zIndex: 100,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+  }}
+>
+  <div
+    style={{
+      maxWidth: "1200px",
+      margin: "0 auto",
+      padding: "1rem 2rem",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    {/* Logo */}
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div
         style={{
-          borderBottom: "1px solid #e2e8f0",
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          width: "32px",
+          height: "32px",
+          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+          borderRadius: "8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: "bold",
+          fontSize: "16px",
+          color: "white",
         }}
       >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "1rem 2rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+        BG
+      </div>
+      <span
+        style={{
+          fontSize: "24px",
+          fontWeight: "800",
+          color: "#1e293b",
+          letterSpacing: "-0.5px",
+        }}
+      >
+        remove<span style={{ color: "#3b82f6" }}>BG</span>
+      </span>
+    </div>
+    
+    {/* Desktop Navigation Links */}
+    <div className="desktop-only" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+      {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+        <a 
+          key={item}
+          href="#" 
+          style={{ 
+            color: "#64748b", 
+            textDecoration: "none", 
+            fontSize: "14px", 
+            fontWeight: "500", 
+            transition: "all 0.3s",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            whiteSpace: "nowrap",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "#3b82f6";
+            e.currentTarget.style.background = "#f1f5f9";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "#64748b";
+            e.currentTarget.style.background = "transparent";
           }}
         >
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "white",
-              }}
-            >
-              BG
-            </div>
-            <span
-              style={{
-                fontSize: "24px",
-                fontWeight: "800",
-                color: "#1e293b",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              remove<span style={{ color: "#3b82f6" }}>BG</span>
-            </span>
-          </div>
-          
-          {/* Desktop Navigation Links */}
-          <div className="desktop-only" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  transition: "all 0.3s",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#3b82f6";
-                  e.currentTarget.style.background = "#f1f5f9";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#64748b";
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                {item}
-              </a>
-            ))}
-            
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
-              <button
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  padding: "6px 16px",
-                  borderRadius: "6px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                }}
-              >
-                Log in
-              </button>
-              <button
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  border: "none",
-                  padding: "6px 16px",
-                  borderRadius: "6px",
-                  color: "white",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                  boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
-                }}
-              >
-                Sign up
-              </button>
-            </div>
-          </div>
+          {item}
+        </a>
+      ))}
+      
+      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
+        <button
+          style={{
+            background: "transparent",
+            border: "1px solid #d1d5db",
+            padding: "6px 16px",
+            borderRadius: "6px",
+            color: "#374151",
+            fontWeight: "600",
+            fontSize: "14px",
+            cursor: "pointer",
+            transition: "all 0.3s",
+            whiteSpace: "nowrap",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#f8fafc";
+            e.currentTarget.style.borderColor = "#9ca3af";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "#d1d5db";
+          }}
+        >
+          Log in
+        </button>
+        <button
+          style={{
+            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+            border: "none",
+            padding: "6px 16px",
+            borderRadius: "6px",
+            color: "white",
+            fontWeight: "600",
+            fontSize: "14px",
+            cursor: "pointer",
+            transition: "all 0.3s",
+            boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+            whiteSpace: "nowrap",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+          }}
+        >
+          Sign up
+        </button>
+      </div>
+    </div>
 
-          {/* Mobile Menu Toggle */}
-          <div className="mobile-only">
-            <button
-              className="menu-toggle"
-              onClick={toggleMobileMenu}
-              style={{
-                background: "transparent",
-                border: "none",
-                padding: "8px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-              }}
-            >
-              <span style={{ 
-                width: "24px", 
-                height: "2px", 
-                background: "#1e293b",
-                transition: "all 0.3s",
-                transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
-              }}></span>
-              <span style={{ 
-                width: "24px", 
-                height: "2px", 
-                background: "#1e293b",
-                transition: "all 0.3s",
-                opacity: mobileMenuOpen ? "0" : "1"
-              }}></span>
-              <span style={{ 
-                width: "24px", 
-                height: "2px", 
-                background: "#1e293b",
-                transition: "all 0.3s",
-                transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
-              }}></span>
-            </button>
-          </div>
-        </div>
+    {/* Mobile Menu Toggle */}
+    <div className="mobile-only">
+      <button
+        className="menu-toggle"
+        onClick={toggleMobileMenu}
+        style={{
+          background: "transparent",
+          border: "none",
+          padding: "8px",
+          borderRadius: "6px",
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+        }}
+      >
+        <span style={{ 
+          width: "24px", 
+          height: "2px", 
+          background: "#1e293b",
+          transition: "all 0.3s",
+          transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+        }}></span>
+        <span style={{ 
+          width: "24px", 
+          height: "2px", 
+          background: "#1e293b",
+          transition: "all 0.3s",
+          opacity: mobileMenuOpen ? "0" : "1"
+        }}></span>
+        <span style={{ 
+          width: "24px", 
+          height: "2px", 
+          background: "#1e293b",
+          transition: "all 0.3s",
+          transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+        }}></span>
+      </button>
+    </div>
+  </div>
 
-        {/* Mobile Navigation Menu */}
-        {mobileMenuOpen && (
-          <div 
-            className="mobile-menu"
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              background: "rgba(255, 255, 255, 0.98)",
-              backdropFilter: "blur(10px)",
-              borderTop: "1px solid #e2e8f0",
-              padding: "1rem 2rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.75rem",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-              zIndex: 1000,
-            }}
-          >
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "16px", 
-                  fontWeight: "500", 
-                  padding: "10px 0",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item}
-              </a>
-            ))}
-            
-            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-              <button
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  padding: "10px 16px",
-                  borderRadius: "6px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  flex: 1,
-                }}
-              >
-                Log in
-              </button>
-              <button
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  border: "none",
-                  padding: "10px 16px",
-                  borderRadius: "6px",
-                  color: "white",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  flex: 1,
-                }}
-              >
-                Sign up
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
+  {/* Mobile Navigation Menu */}
+  {mobileMenuOpen && (
+    <div 
+      className="mobile-menu"
+      style={{
+        position: "absolute",
+        top: "100%",
+        left: 0,
+        right: 0,
+        background: "rgba(255, 255, 255, 0.98)",
+        backdropFilter: "blur(10px)",
+        borderTop: "1px solid #e2e8f0",
+        padding: "1rem 2rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.75rem",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        zIndex: 1000,
+      }}
+    >
+      {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+        <a 
+          key={item}
+          href="#" 
+          style={{ 
+            color: "#64748b", 
+            textDecoration: "none", 
+            fontSize: "16px", 
+            fontWeight: "500", 
+            padding: "10px 0",
+            borderBottom: "1px solid #f1f5f9",
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          {item}
+        </a>
+      ))}
+      
+      <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+        <button
+          style={{
+            background: "transparent",
+            border: "1px solid #d1d5db",
+            padding: "10px 16px",
+            borderRadius: "6px",
+            color: "#374151",
+            fontWeight: "600",
+            fontSize: "14px",
+            cursor: "pointer",
+            flex: 1,
+          }}
+        >
+          Log in
+        </button>
+        <button
+          style={{
+            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+            border: "none",
+            padding: "10px 16px",
+            borderRadius: "6px",
+            color: "white",
+            fontWeight: "600",
+            fontSize: "14px",
+            cursor: "pointer",
+            flex: 1,
+          }}
+        >
+          Sign up
+        </button>
+      </div>
+    </div>
+  )}
+</nav>
 
       {/* Hero Section - Left Text, Right Image Layout */}
       <section
@@ -811,34 +798,34 @@ export default function Home() {
                 Try It Now
               </button>
               
-              <button
-                style={{
-                  background: "transparent",
-                  color: "#64748b",
-                  border: "1px solid #d1d5db",
-                  padding: "14px 24px",
-                  borderRadius: "12px",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                  e.currentTarget.style.color = "#374151";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                  e.currentTarget.style.color = "#64748b";
-                }}
-                onClick={() => {
-                  document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                View Examples
-              </button>
+<button
+  style={{
+    background: "transparent",
+    color: "#64748b",
+    border: "1px solid #d1d5db",
+    padding: "14px 24px",
+    borderRadius: "12px",
+    fontWeight: "600",
+    fontSize: "1rem",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.background = "#f8fafc";
+    e.currentTarget.style.borderColor = "#9ca3af";
+    e.currentTarget.style.color = "#374151";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.background = "transparent";
+    e.currentTarget.style.borderColor = "#d1d5db";
+    e.currentTarget.style.color = "#64748b";
+  }}
+  onClick={() => {
+    document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' });
+  }}
+>
+  View Examples
+</button>
             </div>
           </div>
 
@@ -950,7 +937,6 @@ export default function Home() {
 
       {/* Upload Section - Positioned below hero */}
       <section
-        id="upload-section"
         style={{
           padding: "2rem 1rem 6rem",
           background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
@@ -1473,78 +1459,38 @@ export default function Home() {
                   />
                 </div>
                 
-                <div style={{ 
-                  marginTop: "2rem", 
-                  display: "flex", 
-                  gap: "1rem", 
-                  justifyContent: "center", 
-                  flexWrap: "wrap" 
-                }}>
-                  <button
-                    onClick={handleEditImage}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                      color: "white",
-                      border: "none",
-                      padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
-                      borderRadius: "12px",
-                      fontWeight: "600",
-                      fontSize: "clamp(14px, 2vw, 16px)",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(139, 92, 246, 0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(139, 92, 246, 0.3)";
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                    Edit Image
-                  </button>
-                  
-                  <button
-                    onClick={downloadImage}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                      color: "white",
-                      border: "none",
-                      padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
-                      borderRadius: "12px",
-                      fontWeight: "600",
-                      fontSize: "clamp(14px, 2vw, 16px)",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download Image
-                  </button>
-                </div>
+                <button
+                  onClick={downloadImage}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    color: "white",
+                    border: "none",
+                    padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    fontSize: "clamp(14px, 2vw, 16px)",
+                    cursor: "pointer",
+                    marginTop: "2rem",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Image
+                </button>
               </div>
             </div>
             
@@ -1710,425 +1656,426 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Examples Section */}
-      <section
-        id="examples"
+
+{/* Examples Section */}
+<section
+  id="examples"
+  style={{
+    padding: "6rem 1rem",
+    background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
+    position: "relative",
+  }}
+>
+  {/* Background Decorative Elements */}
+  <div
+    style={{
+      position: "absolute",
+      top: "10%",
+      right: "-5%",
+      width: "300px",
+      height: "300px",
+      background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
+      borderRadius: "50%",
+      filter: "blur(50px)",
+    }}
+  />
+  <div
+    style={{
+      position: "absolute",
+      bottom: "10%",
+      left: "-5%",
+      width: "250px",
+      height: "250px",
+      background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
+      borderRadius: "50%",
+      filter: "blur(40px)",
+    }}
+  />
+  
+  <div
+    style={{
+      maxWidth: "1200px",
+      margin: "0 auto",
+      position: "relative",
+      zIndex: 2,
+    }}
+  >
+    {/* Section Header */}
+    <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+      <h2
         style={{
-          padding: "6rem 1rem",
-          background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
-          position: "relative",
+          fontSize: "clamp(2rem, 4vw, 3rem)",
+          fontWeight: "800",
+          color: "#1e293b",
+          marginBottom: "1rem",
+          background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
         }}
       >
-        {/* Background Decorative Elements */}
+        See Amazing Results
+      </h2>
+      <p
+        style={{
+          fontSize: "clamp(1rem, 2vw, 1.2rem)",
+          color: "#64748b",
+          maxWidth: "600px",
+          margin: "0 auto",
+          lineHeight: "1.6",
+        }}
+      >
+        Check out these stunning transformations powered by our AI technology
+      </p>
+    </div>
+
+    {/* Examples Grid */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(350px, 100%), 1fr))",
+        gap: "clamp(2rem, 4vw, 3rem)",
+        alignItems: "start",
+      }}
+    >
+      {/* Example 1 - Product Photography */}
+      <div
+        style={{
+          background: "white",
+          borderRadius: "20px",
+          overflow: "hidden",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+          transition: "all 0.3s ease",
+          border: "1px solid #f1f5f9",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-8px)";
+          e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
+        }}
+      >
         <div
           style={{
-            position: "absolute",
-            top: "10%",
-            right: "-5%",
-            width: "300px",
-            height: "300px",
-            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
-            borderRadius: "50%",
-            filter: "blur(50px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "10%",
-            left: "-5%",
-            width: "250px",
-            height: "250px",
-            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
-            borderRadius: "50%",
-            filter: "blur(40px)",
-          }}
-        />
-        
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
             position: "relative",
-            zIndex: 2,
+            height: "250px",
+            overflow: "hidden",
           }}
         >
-          {/* Section Header */}
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <h2
-              style={{
-                fontSize: "clamp(2rem, 4vw, 3rem)",
-                fontWeight: "800",
-                color: "#1e293b",
-                marginBottom: "1rem",
-                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              See Amazing Results
-            </h2>
-            <p
-              style={{
-                fontSize: "clamp(1rem, 2vw, 1.2rem)",
-                color: "#64748b",
-                maxWidth: "600px",
-                margin: "0 auto",
-                lineHeight: "1.6",
-              }}
-            >
-              Check out these stunning transformations powered by our AI technology
-            </p>
-          </div>
-
-          {/* Examples Grid */}
+          <img
+            src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760539834260.png?raw=true"
+            alt="Shoes product photo"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "transform 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          />
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(350px, 100%), 1fr))",
-              gap: "clamp(2rem, 4vw, 3rem)",
-              alignItems: "start",
+              position: "absolute",
+              top: "15px",
+              right: "15px",
+              background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+              color: "white",
+              padding: "6px 12px",
+              borderRadius: "15px",
+              fontSize: "11px",
+              fontWeight: "700",
+              boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
             }}
           >
-            {/* Example 1 - Product Photography */}
-            <div
-              style={{
-                background: "white",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: "250px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760539834260.png?raw=true"
-                  alt="Shoes product photo"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    right: "15px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-                  }}
-                >
-                  Background Removed
-                </div>
-              </div>
-              <div style={{ padding: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  E-commerce Products
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Perfect for online stores. Create clean, professional product images that convert better.
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "#10b981",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                  Perfect for online stores
-                </div>
-              </div>
-            </div>
-
-            {/* Example 2 - Portrait Photography */}
-            <div
-              style={{
-                background: "white",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: "250px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542319588.png?raw=true"
-                  alt="Portrait photography"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    right: "15px",
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-                  }}
-                >
-                  Professional Results
-                </div>
-              </div>
-              <div style={{ padding: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  Portrait Photography
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Create stunning portraits with clean backgrounds. Perfect for professional headshots and social media.
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "#10b981",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                  Ideal for professional photos
-                </div>
-              </div>
-            </div>
-
-            {/* Example 3 - Creative Projects */}
-            <div
-              style={{
-                background: "white",
-                borderRadius: "20px",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  height: "250px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542234326.png?raw=true"
-                  alt="Creative pet photography"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    right: "15px",
-                    background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
-                  }}
-                >
-                  Creative Projects
-                </div>
-              </div>
-              <div style={{ padding: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "700",
-                    color: "#1e293b",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  Pet & Animal Photos
-                </h3>
-                <p
-                  style={{
-                    color: "#64748b",
-                    lineHeight: "1.6",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Remove distracting backgrounds from pet photos. Perfect for creating clean, professional-looking animal portraits.
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "#10b981",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                  Great for pet photography
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div style={{ textAlign: "center", marginTop: "4rem" }}>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                color: "#64748b",
-                marginBottom: "2rem",
-                fontWeight: "500",
-              }}
-            >
-              Ready to transform your images?
-            </p>
-            <button
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                color: "white",
-                border: "none",
-                padding: "14px 32px",
-                borderRadius: "12px",
-                fontWeight: "600",
-                fontSize: "1rem",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-              }}
-              onClick={() => {
-                // Scroll to upload section
-                document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              Try It Now - It's Free!
-            </button>
+            Background Removed
           </div>
         </div>
-      </section>
+        <div style={{ padding: "2rem" }}>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "700",
+              color: "#1e293b",
+              marginBottom: "0.75rem",
+            }}
+          >
+            E-commerce Products
+          </h3>
+          <p
+            style={{
+              color: "#64748b",
+              lineHeight: "1.6",
+              marginBottom: "1.5rem",
+              fontSize: "0.95rem",
+            }}
+          >
+            Perfect for online stores. Create clean, professional product images that convert better.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              color: "#10b981",
+              fontSize: "14px",
+              fontWeight: "600",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+            Perfect for online stores
+          </div>
+        </div>
+      </div>
+
+      {/* Example 2 - Portrait Photography */}
+      <div
+        style={{
+          background: "white",
+          borderRadius: "20px",
+          overflow: "hidden",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+          transition: "all 0.3s ease",
+          border: "1px solid #f1f5f9",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-8px)";
+          e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            height: "250px",
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542319588.png?raw=true"
+            alt="Portrait photography"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "transform 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "15px",
+              right: "15px",
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              color: "white",
+              padding: "6px 12px",
+              borderRadius: "15px",
+              fontSize: "11px",
+              fontWeight: "700",
+              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+            }}
+          >
+            Professional Results
+          </div>
+        </div>
+        <div style={{ padding: "2rem" }}>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "700",
+              color: "#1e293b",
+              marginBottom: "0.75rem",
+            }}
+          >
+            Portrait Photography
+          </h3>
+          <p
+            style={{
+              color: "#64748b",
+              lineHeight: "1.6",
+              marginBottom: "1.5rem",
+              fontSize: "0.95rem",
+            }}
+          >
+            Create stunning portraits with clean backgrounds. Perfect for professional headshots and social media.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              color: "#10b981",
+              fontSize: "14px",
+              fontWeight: "600",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+            Ideal for professional photos
+          </div>
+        </div>
+      </div>
+
+      {/* Example 3 - Creative Projects */}
+      <div
+        style={{
+          background: "white",
+          borderRadius: "20px",
+          overflow: "hidden",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+          transition: "all 0.3s ease",
+          border: "1px solid #f1f5f9",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-8px)";
+          e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            height: "250px",
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542234326.png?raw=true"
+            alt="Creative pet photography"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "transform 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "15px",
+              right: "15px",
+              background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+              color: "white",
+              padding: "6px 12px",
+              borderRadius: "15px",
+              fontSize: "11px",
+              fontWeight: "700",
+              boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
+            }}
+          >
+            Creative Projects
+          </div>
+        </div>
+        <div style={{ padding: "2rem" }}>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "700",
+              color: "#1e293b",
+              marginBottom: "0.75rem",
+            }}
+          >
+            Pet & Animal Photos
+          </h3>
+          <p
+            style={{
+              color: "#64748b",
+              lineHeight: "1.6",
+              marginBottom: "1.5rem",
+              fontSize: "0.95rem",
+            }}
+          >
+            Remove distracting backgrounds from pet photos. Perfect for creating clean, professional-looking animal portraits.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              color: "#10b981",
+              fontSize: "14px",
+              fontWeight: "600",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+            Great for pet photography
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* CTA Section */}
+    <div style={{ textAlign: "center", marginTop: "4rem" }}>
+      <p
+        style={{
+          fontSize: "1.1rem",
+          color: "#64748b",
+          marginBottom: "2rem",
+          fontWeight: "500",
+        }}
+      >
+        Ready to transform your images?
+      </p>
+      <button
+        style={{
+          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+          color: "white",
+          border: "none",
+          padding: "14px 32px",
+          borderRadius: "12px",
+          fontWeight: "600",
+          fontSize: "1rem",
+          cursor: "pointer",
+          transition: "all 0.3s ease",
+          boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+        }}
+        onClick={() => {
+          // Scroll to upload section
+          document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+      >
+        Try It Now - It's Free!
+      </button>
+    </div>
+  </div>
+</section>
 
       {/* Footer */}
       <footer
@@ -2197,15 +2144,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-
-      {/* Image Editor Modal - Add this at the very end */}
-      {showEditor && (
-        <ImageEditor
-          imageUrl={editingImage}
-          onClose={handleCloseEditor}
-          onSave={handleCloseEditor}
-        />
-      )}
     </div>
   );
 }

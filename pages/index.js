@@ -121,6 +121,13 @@ export default function Home() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const uploaded = e.dataTransfer.files[0];
       if (uploaded.type.startsWith('image/')) {
+        if (!currentUser) {
+          setError("Please log in to upload and process images");
+          setTimeout(() => {
+            router.push('/login');
+          }, 1500);
+          return;
+        }
         setFile(uploaded);
         setResultUrl(null);
         setError(null);
@@ -132,6 +139,13 @@ export default function Home() {
   const handleFileChange = (e) => {
     const uploaded = e.target.files[0];
     if (uploaded) {
+      if (!currentUser) {
+        setError("Please log in to upload and process images");
+        setTimeout(() => {
+          router.push('/login');
+        }, 1500);
+        return;
+      }
       setFile(uploaded);
       setResultUrl(null);
       setError(null);
@@ -141,6 +155,14 @@ export default function Home() {
   // Background removal function
   const handleRemoveBackground = async () => {
     if (!file) return;
+    
+    if (!currentUser) {
+      setError("Please log in to process images");
+      setTimeout(() => {
+        router.push('/login');
+      }, 1500);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -232,34 +254,86 @@ export default function Home() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
+        * {
+          box-sizing: border-box;
+        }
+        
+        body {
+          margin: 0;
+          padding: 0;
+          background: #ffffff;
+          font-family: 'Inter', sans-serif;
+          scroll-behavior: smooth;
+          overflow-x: hidden;
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+          50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        }
+        
         @keyframes neuralOrbit {
-          0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
-          100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+          0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+          100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
         }
         
         @keyframes neuralOrbitReverse {
-          0% { transform: rotate(0deg) translateX(30px) rotate(0deg); }
-          100% { transform: rotate(-360deg) translateX(30px) rotate(360deg); }
+          0% { transform: rotate(0deg) translateX(25px) rotate(0deg); }
+          100% { transform: rotate(-360deg) translateX(25px) rotate(360deg); }
         }
         
         @keyframes aiCorePulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.1); opacity: 0.8; }
+          0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+          }
+          50% { 
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+          }
         }
         
         @keyframes particleFloat {
-          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
-          50% { transform: translate(20px, -20px) scale(1.5); opacity: 1; }
+          0%, 100% { 
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+          }
+          10%, 90% { opacity: 1; }
+          50% { 
+            transform: translate(100px, -50px) rotate(180deg);
+          }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         @keyframes textGlow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 1; }
+        }
+        
+        @keyframes bounce-subtle {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-5px); }
+          60% { transform: translateY(-3px); }
         }
         
         @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
         }
         
         @keyframes shimmer {
@@ -267,37 +341,34 @@ export default function Home() {
           100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
-        @keyframes pulse-glow {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.2); opacity: 0.7; }
+        .float-animation {
+          animation: float 3s ease-in-out infinite;
         }
         
-        @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes slide-up {
-          0% { transform: translateY(30px); opacity: 0; }
-          100% { transform: translateY(0); opacity: 1; }
+        .pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
         }
         
         .bounce-subtle {
-          animation: bounce-subtle 2s ease-in-out infinite;
+          animation: bounce-subtle 2s infinite;
         }
         
         .slide-up {
-          animation: slide-up 0.6s ease-out;
+          animation: slideUp 0.6s ease-out;
         }
         
+        .text-glow {
+          animation: textGlow 2s ease-in-out infinite;
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
           .desktop-only {
             display: none !important;
+          }
+          
+          .mobile-only {
+            display: flex !important;
           }
         }
         
@@ -307,6 +378,7 @@ export default function Home() {
           }
         }
         
+        /* Hero Section Responsive */
         .hero-container {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -330,12 +402,26 @@ export default function Home() {
           }
         }
         
+        @media (max-width: 480px) {
+          .hero-container {
+            gap: 2rem;
+          }
+        }
+        
+        /* Feature Points */
         .feature-points {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
         }
         
+        @media (max-width: 768px) {
+          .feature-points {
+            align-items: center;
+          }
+        }
+        
+        /* CTA Buttons */
         .cta-buttons {
           display: flex;
           gap: 1rem;
@@ -345,19 +431,100 @@ export default function Home() {
         @media (max-width: 480px) {
           .cta-buttons {
             flex-direction: column;
+            width: 100%;
           }
           
           .cta-buttons button {
             width: 100%;
+            justify-content: center;
           }
         }
         
+        /* Floating Badges */
         .floating-badge {
           animation: bounce-subtle 3s ease-in-out infinite;
         }
+        
+        @media (max-width: 768px) {
+          .floating-badge {
+            font-size: 12px !important;
+            padding: 8px 16px !important;
+          }
+        }
+        
+        /* Grid Layouts */
+        .responsive-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+          gap: 2rem;
+        }
+        
+        @media (max-width: 480px) {
+          .responsive-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+        }
+        
+        /* Image Responsive */
+        .responsive-image {
+          width: 100%;
+          height: auto;
+          max-width: 100%;
+        }
+        
+        /* Text Responsive */
+        .responsive-text {
+          font-size: clamp(1rem, 2vw, 1.2rem);
+        }
+        
+        .responsive-heading {
+          font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+        
+        /* Button Responsive */
+        .responsive-button {
+          padding: clamp(12px, 2vw, 16px) clamp(24px, 4vw, 32px);
+          font-size: clamp(14px, 2vw, 16px);
+        }
+        
+        /* Section Padding */
+        .responsive-section {
+          padding: clamp(2rem, 4vw, 4rem) clamp(1rem, 3vw, 2rem);
+        }
+        
+        /* Navigation Responsive */
+        @media (max-width: 768px) {
+          .nav-container {
+            padding: 1rem !important;
+          }
+          
+          .nav-links {
+            gap: 1rem !important;
+          }
+        }
+        
+        /* Results Grid */
+        .results-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+          gap: clamp(1.5rem, 3vw, 3rem);
+        }
+        
+        @media (max-width: 480px) {
+          .results-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        
+        /* Upload Section */
+        .upload-container {
+          max-width: min(800px, 90vw);
+          margin: 0 auto;
+        }
       `}</style>
 
-      {/* Navigation */}
+      {/* Navigation - Keep your current navigation */}
       <nav
         style={{
           borderBottom: "1px solid #e2e8f0",
@@ -370,6 +537,7 @@ export default function Home() {
         }}
       >
         <div
+          className="nav-container"
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
@@ -410,7 +578,7 @@ export default function Home() {
           </div>
           
           {/* Desktop Navigation Links */}
-          <div className="desktop-only" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
             {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
               <a 
                 key={item}
@@ -775,8 +943,8 @@ export default function Home() {
 
       {/* Hero Section */}
       <section
+        className="responsive-section"
         style={{
-          padding: "6rem 1rem",
           background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
           position: "relative",
           overflow: "hidden",
@@ -820,8 +988,8 @@ export default function Home() {
           {/* Left Content - Text */}
           <div className="hero-text">
             <h1
+              className="responsive-heading"
               style={{
-                fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
                 fontWeight: "800",
                 lineHeight: "1.1",
                 marginBottom: "0.5rem",
@@ -847,8 +1015,8 @@ export default function Home() {
             </h1>
             
             <p
+              className="responsive-text"
               style={{
-                fontSize: "clamp(1.1rem, 2vw, 1.25rem)",
                 color: "#64748b",
                 marginBottom: "0.5rem",
                 fontWeight: "600",
@@ -858,8 +1026,8 @@ export default function Home() {
             </p>
             
             <p
+              className="responsive-text"
               style={{
-                fontSize: "clamp(1rem, 1.5vw, 1.1rem)",
                 color: "#64748b",
                 marginBottom: "2.5rem",
                 lineHeight: "1.7",
@@ -919,14 +1087,13 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="cta-buttons">
               <button
+                className="responsive-button"
                 style={{
                   background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                   color: "white",
                   border: "none",
-                  padding: "14px 32px",
                   borderRadius: "12px",
                   fontWeight: "600",
-                  fontSize: "1rem",
                   cursor: "pointer",
                   transition: "all 0.3s ease",
                   boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
@@ -957,14 +1124,13 @@ export default function Home() {
               </button>
               
               <button
+                className="responsive-button"
                 style={{
                   background: "transparent",
                   color: "#64748b",
                   border: "1px solid #d1d5db",
-                  padding: "14px 24px",
                   borderRadius: "12px",
                   fontWeight: "600",
-                  fontSize: "1rem",
                   cursor: "pointer",
                   transition: "all 0.3s ease",
                 }}
@@ -1021,9 +1187,8 @@ export default function Home() {
                 <img
                   src="https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true"
                   alt="Before and after background removal example"
+                  className="responsive-image"
                   style={{
-                    width: "100%",
-                    height: "auto",
                     borderRadius: "12px",
                     boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
                   }}
@@ -1044,7 +1209,6 @@ export default function Home() {
                   fontWeight: "600",
                   boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
                   zIndex: 7,
-                  animation: "bounce-subtle 3s ease-in-out infinite",
                 }}
                 className="floating-badge"
               >
@@ -1126,508 +1290,584 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Upload Section */}
-      {currentUser && (
-        <section
-          id="upload-section"
-          style={{
-            padding: "4rem 1rem",
-            background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-          }}
-        >
+      {/* Upload Section - ALWAYS VISIBLE */}
+      <section
+        id="upload-section"
+        className="responsive-section"
+        style={{
+          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+        }}
+      >
+        <div className="upload-container">
           <div
             style={{
-              maxWidth: "800px",
-              margin: "0 auto",
               background: "white",
               borderRadius: "20px",
-              padding: "3rem",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-              border: "1px solid rgba(255, 255, 255, 0.3)",
+              padding: "clamp(1.5rem, 4vw, 2.5rem)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+              border: dragActive ? "2px dashed #3b82f6" : "2px dashed #e2e8f0",
+              transition: "all 0.3s ease",
+              position: "relative",
+              zIndex: 10,
             }}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
           >
-            <h2
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                textAlign: "center",
-                marginBottom: "0.5rem",
-                color: "#1e293b",
-              }}
-            >
-              Remove Background
-            </h2>
-            <p
-              style={{
-                textAlign: "center",
-                color: "#64748b",
-                marginBottom: "2.5rem",
-                fontSize: "1.1rem",
-              }}
-            >
-              Upload an image to automatically remove its background
-            </p>
-
-            {/* Upload Area */}
-            <div
-              style={{
-                border: dragActive ? "2px dashed #3b82f6" : "2px dashed #d1d5db",
-                borderRadius: "16px",
-                padding: "3rem 2rem",
-                textAlign: "center",
-                background: dragActive ? "#f0f9ff" : "#fafafa",
-                transition: "all 0.3s ease",
-                marginBottom: "2rem",
-                cursor: "pointer",
-                position: "relative",
-              }}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                style={{ display: "none" }}
-              />
-              
-              <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  background: "linear-gradient(135deg, #f1f5f9, #e2e8f0)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto 1.5rem",
-                  transition: "all 0.3s ease",
-                }}
-              >
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#64748b"
-                  strokeWidth="2"
-                >
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                </svg>
-              </div>
-              
-              <h3
-                style={{
-                  fontSize: "1.25rem",
-                  fontWeight: "600",
-                  color: "#1e293b",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {file ? file.name : "Drop your image here"}
-              </h3>
-              
-              <p
-                style={{
-                  color: "#64748b",
-                  marginBottom: "1rem",
-                }}
-              >
-                {file
-                  ? "Click to change or drop another image"
-                  : "or click to browse files"}
-              </p>
-              
-              <div
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#94a3b8",
-                }}
-              >
-                Supports: JPG, PNG, WEBP (Max 10MB)
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                onClick={handleRemoveBackground}
-                disabled={!file || loading}
-                style={{
-                  background: loading 
-                    ? "#9ca3af" 
-                    : "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  color: "white",
-                  border: "none",
-                  padding: "12px 32px",
-                  borderRadius: "10px",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  transition: "all 0.3s ease",
-                  opacity: loading ? 0.7 : 1,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  minWidth: "160px",
-                  justifyContent: "center",
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.4)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }
-                }}
-              >
-                {loading ? (
-                  <>
-                    <div
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        border: "2px solid transparent",
-                        borderTop: "2px solid white",
-                        borderRadius: "50%",
-                        animation: "spin 1s linear infinite",
-                      }}
-                    />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                    </svg>
-                    Remove Background
-                  </>
-                )}
-              </button>
-
-              {file && (
-                <button
-                  onClick={resetAll}
-                  disabled={loading}
+            {!file ? (
+              <div style={{ textAlign: "center" }}>
+                <div
                   style={{
-                    background: "transparent",
-                    color: "#64748b",
-                    border: "1px solid #d1d5db",
-                    padding: "12px 24px",
-                    borderRadius: "10px",
+                    width: "clamp(60px, 10vw, 80px)",
+                    height: "clamp(60px, 10vw, 80px)",
+                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    borderRadius: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 1.5rem",
+                    boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
+                  }}
+                  className="bounce-subtle"
+                >
+                  <svg 
+                    width="clamp(24px, 4vw, 32px)" 
+                    height="clamp(24px, 4vw, 32px)" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    style={{ color: "white" }}
+                  >
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                
+                <h3 style={{ 
+                  fontSize: "clamp(1.25rem, 3vw, 1.5rem)", 
+                  fontWeight: "600", 
+                  color: "#1e293b", 
+                  marginBottom: "0.5rem" 
+                }}>
+                  Upload image
+                </h3>
+                <p style={{ 
+                  color: "#64748b", 
+                  marginBottom: "2rem", 
+                  fontSize: "clamp(0.9rem, 2vw, 1rem)" 
+                }}>
+                  Drag & drop or click to browse
+                </p>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="responsive-button"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    color: "white",
+                    borderRadius: "12px",
                     fontWeight: "600",
-                    fontSize: "1rem",
-                    cursor: loading ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                     transition: "all 0.3s ease",
-                    opacity: loading ? 0.5 : 1,
+                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
                   }}
                   onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.background = "#f8fafc";
-                      e.currentTarget.style.borderColor = "#9ca3af";
-                      e.currentTarget.style.color = "#374151";
-                    }
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
                   }}
                   onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.borderColor = "#d1d5db";
-                      e.currentTarget.style.color = "#64748b";
-                    }
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
                   }}
                 >
-                  Reset
-                </button>
-              )}
-            </div>
-
-            {/* Error Display */}
-            {error && (
-              <div
-                style={{
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  color: "#dc2626",
-                  padding: "1rem",
-                  borderRadius: "8px",
-                  marginTop: "1.5rem",
-                  textAlign: "center",
-                }}
-              >
-                <strong>Error:</strong> {error}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
+                  Upload Image
+                </label>
+                
+                <p style={{ 
+                  color: "#94a3b8", 
+                  fontSize: "clamp(12px, 2vw, 14px)", 
+                  marginTop: "1rem" 
+                }}>
+                  {!currentUser ? "Log in to start processing images" : "No images? Try our sample images"}
+                </p>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ position: "relative", display: "inline-block" }}>
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Preview"
+                    className="responsive-image"
+                    style={{
+                      maxWidth: "min(400px, 90vw)",
+                      maxHeight: "400px",
+                      borderRadius: "15px",
+                      boxShadow: "0 15px 35px rgba(0,0,0,0.15)",
+                      filter: loading ? "blur(4px) brightness(0.95)" : "none",
+                      transition: "all 0.4s ease",
+                      objectFit: "contain",
+                    }}
+                  />
+                  
+                  {/* Enhanced AI Loading Animation */}
+                  {loading && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(255,255,255,0.98)",
+                        borderRadius: "15px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        gap: "2rem",
+                        padding: "2rem",
+                      }}
+                    >
+                      {/* Advanced Neural Network Animation */}
+                      <div style={{ 
+                        position: "relative", 
+                        width: "120px", 
+                        height: "120px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        {/* Outer Orbit */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            width: "100px",
+                            height: "100px",
+                            border: "2px solid #e2e8f0",
+                            borderRadius: "50%",
+                          }}
+                        />
+                        
+                        {/* Orbiting Particles */}
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            style={{
+                              position: "absolute",
+                              width: "8px",
+                              height: "8px",
+                              background: "#3b82f6",
+                              borderRadius: "50%",
+                              animation: `neuralOrbit ${2 + i * 0.5}s linear infinite`,
+                              animationDelay: `${i * 0.3}s`,
+                            }}
+                          />
+                        ))}
+                        
+                        {/* Inner Orbit */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            width: "60px",
+                            height: "60px",
+                            border: "2px solid #e2e8f0",
+                            borderRadius: "50%",
+                          }}
+                        />
+                        
+                        {/* Inner Orbiting Particles */}
+                        {[0, 1].map((i) => (
+                          <div
+                            key={i}
+                            style={{
+                              position: "absolute",
+                              width: "6px",
+                              height: "6px",
+                              background: "#10b981",
+                              borderRadius: "50%",
+                              animation: `neuralOrbitReverse ${1.5 + i * 0.4}s linear infinite`,
+                              animationDelay: `${i * 0.2}s`,
+                            }}
+                          />
+                        ))}
+                        
+                        {/* AI Core */}
+                        <div
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            background: "linear-gradient(135deg, #3b82f6, #10b981)",
+                            borderRadius: "50%",
+                            animation: "aiCorePulse 2s ease-in-out infinite",
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Enhanced Text Content */}
+                      <div style={{ 
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.5rem"
+                      }}>
+                        <h3 style={{ 
+                          color: "#1e293b", 
+                          fontWeight: "700", 
+                          fontSize: "clamp(1.25rem, 3vw, 1.5rem)", 
+                          margin: 0,
+                          animation: "textGlow 2s ease-in-out infinite"
+                        }}>
+                          AI Processing
+                        </h3>
+                        <p style={{ 
+                          color: "#64748b", 
+                          fontSize: "clamp(0.9rem, 2vw, 1rem)", 
+                          margin: 0,
+                          lineHeight: "1.5"
+                        }}>
+                          Analyzing image patterns...
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div style={{ 
+                  marginTop: "2rem", 
+                  display: "flex", 
+                  gap: "1rem", 
+                  justifyContent: "center", 
+                  flexWrap: "wrap" 
+                }}>
+                  {!loading && !resultUrl && (
+                    <>
+                      <button
+                        onClick={handleRemoveBackground}
+                        className="responsive-button"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          background: "linear-gradient(135deg, #10b981, #059669)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                          boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 8px 25px rgba(16, 185, 129, 0.4)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 4px 15px rgba(16, 185, 129, 0.3)";
+                        }}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Remove Background
+                      </button>
+                      
+                      <button
+                        onClick={resetAll}
+                        className="responsive-button"
+                        style={{
+                          background: "transparent",
+                          color: "#64748b",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#f8fafc";
+                          e.currentTarget.style.borderColor = "#9ca3af";
+                          e.currentTarget.style.color = "#374151";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.borderColor = "#d1d5db";
+                          e.currentTarget.style.color = "#64748b";
+                        }}
+                      >
+                        Choose Different
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        </section>
-      )}
+
+          {/* Error Display */}
+          {error && (
+            <div
+              style={{
+                marginTop: "2rem",
+                padding: "1rem 1.5rem",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "12px",
+                color: "#dc2626",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                maxWidth: "500px",
+                margin: "2rem auto 0",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Results Section */}
       {(resultUrl || editingMode) && (
         <section
           ref={resultsSectionRef}
+          className="responsive-section"
           style={{
-            padding: "4rem 1rem",
-            background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
+            background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+            minHeight: "50vh",
+            display: "flex",
+            alignItems: "center",
           }}
+          className="slide-up"
         >
           <div
             style={{
               maxWidth: "1200px",
               margin: "0 auto",
+              width: "100%",
             }}
           >
-            <h2
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                textAlign: "center",
-                marginBottom: "3rem",
-                color: "#1e293b",
-              }}
-            >
-              {editingMode ? "Edit Your Image" : "Background Removed Successfully!"}
-            </h2>
-
-            {editingMode ? (
-              <ImageEditor
-                imageUrl={resultUrl}
-                onSave={handleDownloadEdited}
-                onCancel={() => setEditingMode(false)}
-              />
-            ) : (
-              <div
+            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+              <h2 style={{ 
+                fontSize: "clamp(2rem, 4vw, 3rem)", 
+                fontWeight: "700", 
+                color: "#1e293b", 
+                marginBottom: "1rem",
+                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>
+                Background Removed! 🎉
+              </h2>
+              <p style={{ 
+                fontSize: "clamp(1rem, 2vw, 1.2rem)", 
+                color: "#64748b",
+                maxWidth: "600px",
+                margin: "0 auto",
+              }}>
+                Your image has been processed successfully. Download the result or edit it further.
+              </p>
+            </div>
+            
+            {/* Edit Button */}
+            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+              <button
+                onClick={() => setEditingMode(true)}
+                className="responsive-button"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "3rem",
-                  alignItems: "start",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
+                  marginBottom: "1rem",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 8px 25px rgba(139, 92, 246, 0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(139, 92, 246, 0.3)";
                 }}
               >
-                {/* Original Image */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                Edit Image
+              </button>
+            </div>
+            
+            {/* Results Grid */}
+            <div className="results-grid">
+              {/* Original Image */}
+              <div style={{ textAlign: "center" }}>
+                <h3 style={{ 
+                  fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
+                  fontWeight: "600", 
+                  color: "#64748b", 
+                  marginBottom: "1.5rem" 
+                }}>
+                  Original Image
+                </h3>
                 <div
                   style={{
-                    textAlign: "center",
+                    background: "white",
+                    padding: "1.5rem",
+                    borderRadius: "20px",
+                    boxShadow: "0 15px 35px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <h3
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Original"
+                    className="responsive-image"
                     style={{
-                      fontSize: "1.25rem",
-                      fontWeight: "600",
-                      color: "#64748b",
-                      marginBottom: "1rem",
+                      maxWidth: "500px",
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
                     }}
-                  >
-                    Original Image
-                  </h3>
-                  <div
-                    style={{
-                      background: "white",
-                      borderRadius: "16px",
-                      padding: "1.5rem",
-                      boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt="Original"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        borderRadius: "8px",
-                        maxHeight: "400px",
-                        objectFit: "contain",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Processed Image */}
-                <div
-                  style={{
-                    textAlign: "center",
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: "1.25rem",
-                      fontWeight: "600",
-                      color: "#64748b",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    Background Removed
-                  </h3>
-                  <div
-                    style={{
-                      background: "white",
-                      borderRadius: "16px",
-                      padding: "1.5rem",
-                      boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
-                      position: "relative",
-                    }}
-                  >
-                    <img
-                      src={resultUrl}
-                      alt="Background removed"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        borderRadius: "8px",
-                        maxHeight: "400px",
-                        objectFit: "contain",
-                      }}
-                    />
-                    
-                    {/* Success Badge */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "-10px",
-                        right: "-10px",
-                        background: "linear-gradient(135deg, #10b981, #059669)",
-                        color: "white",
-                        padding: "8px 16px",
-                        borderRadius: "50px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
-                      }}
-                    >
-                      ✓ Success
-                    </div>
-                  </div>
+                  />
                 </div>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            {!editingMode && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  justifyContent: "center",
-                  marginTop: "3rem",
-                  flexWrap: "wrap",
-                }}
-              >
+              {/* Processed Image */}
+              <div style={{ textAlign: "center" }}>
+                <h3 style={{ 
+                  fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
+                  fontWeight: "600", 
+                  color: "#64748b", 
+                  marginBottom: "1.5rem" 
+                }}>
+                  Background Removed
+                </h3>
+                <div
+                  style={{
+                    background: "white",
+                    padding: "1.5rem",
+                    borderRadius: "20px",
+                    boxShadow: "0 15px 35px rgba(59, 130, 246, 0.15)",
+                    position: "relative",
+                  }}
+                >
+                  <img
+                    src={resultUrl}
+                    alt="Background removed"
+                    className="responsive-image"
+                    style={{
+                      maxWidth: "500px",
+                      borderRadius: "12px",
+                      background: "linear-gradient(45deg, #f8fafc, #e2e8f0)",
+                      padding: "1rem",
+                    }}
+                  />
+                </div>
+                
                 <button
                   onClick={downloadImage}
+                  className="responsive-button"
                   style={{
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "white",
-                    border: "none",
-                    padding: "12px 32px",
-                    borderRadius: "10px",
-                    fontWeight: "600",
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
                     gap: "8px",
-                    boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
+                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    marginTop: "2rem",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(16, 185, 129, 0.4)";
+                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(16, 185, 129, 0.3)";
+                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   Download Image
                 </button>
-
-                <button
-                  onClick={() => setEditingMode(true)}
-                  style={{
-                    background: "transparent",
-                    color: "#3b82f6",
-                    border: "1px solid #3b82f6",
-                    padding: "12px 24px",
-                    borderRadius: "10px",
-                    fontWeight: "600",
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#3b82f6";
-                    e.currentTarget.style.color = "white";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "#3b82f6";
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                  Edit Image
-                </button>
-
-                <button
-                  onClick={resetAll}
-                  style={{
-                    background: "transparent",
-                    color: "#64748b",
-                    border: "1px solid #d1d5db",
-                    padding: "12px 24px",
-                    borderRadius: "10px",
-                    fontWeight: "600",
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#9ca3af";
-                    e.currentTarget.style.color = "#374151";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "#d1d5db";
-                    e.currentTarget.style.color = "#64748b";
-                  }}
-                >
-                  Process New Image
-                </button>
               </div>
-            )}
+            </div>
+            
+            <div style={{ marginTop: "3rem", textAlign: "center" }}>
+              <button
+                onClick={resetAll}
+                className="responsive-button"
+                style={{
+                  background: "transparent",
+                  color: "#64748b",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "10px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#9ca3af";
+                  e.currentTarget.style.color = "#374151";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                  e.currentTarget.style.color = "#64748b";
+                }}
+              >
+                Remove Another Background
+              </button>
+            </div>
           </div>
         </section>
       )}
 
-      {/* Examples Section */}
+      {/* Image Editor Component */}
+      {editingMode && resultUrl && (
+        <ImageEditor 
+          resultUrl={resultUrl}
+          onClose={() => setEditingMode(false)}
+          onDownloadEdited={handleDownloadEdited}
+        />
+      )}
+
+      {/* Features Section */}
       <section
-        id="examples"
+        className="responsive-section"
         style={{
-          padding: "6rem 1rem",
-          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+          background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
         }}
       >
         <div
@@ -1636,214 +1876,506 @@ export default function Home() {
             margin: "0 auto",
           }}
         >
-          <h2
-            style={{
-              fontSize: "2.5rem",
-              fontWeight: "700",
-              textAlign: "center",
-              marginBottom: "1rem",
-              color: "#1e293b",
-            }}
-          >
-            See It In Action
-          </h2>
-          <p
-            style={{
-              fontSize: "1.1rem",
-              color: "#64748b",
-              textAlign: "center",
-              marginBottom: "4rem",
-              maxWidth: "600px",
-              margin: "0 auto 4rem",
-            }}
-          >
-            Discover how our AI transforms images with perfect background removal
-          </p>
+          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <h2
+              className="responsive-heading"
+              style={{
+                fontWeight: "700",
+                color: "#1e293b",
+                marginBottom: "1rem",
+              }}
+            >
+              Why Choose Quizontal RBG?
+            </h2>
+            <p
+              className="responsive-text"
+              style={{
+                color: "#64748b",
+                maxWidth: "600px",
+                margin: "0 auto",
+                lineHeight: "1.6",
+              }}
+            >
+              Experience the power of AI with our advanced background removal technology
+            </p>
+          </div>
 
-          {/* Example Grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: "2rem",
-            }}
-          >
+          <div className="responsive-grid">
             {[
               {
-                before: "https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true",
-                after: "https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true",
-                title: "Product Photography",
-                description: "Perfect for e-commerce and online stores"
+                icon: "⚡",
+                title: "Lightning Fast",
+                description: "Get results in seconds with our optimized AI processing engine"
               },
               {
-                before: "https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true",
-                after: "https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true",
-                title: "Portrait Enhancement",
-                description: "Clean, professional headshots"
+                icon: "🎯",
+                title: "Pixel Perfect",
+                description: "Crisp, clean edges with professional-grade accuracy every time"
               },
               {
-                before: "https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true",
-                after: "https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true",
-                title: "Creative Projects",
-                description: "Ideal for design and marketing"
+                icon: "🆓",
+                title: "Completely Free",
+                description: "No hidden costs, no watermarks, no subscription required"
+              },
+              {
+                icon: "🔒",
+                title: "Privacy First",
+                description: "Your images are processed securely and never stored on our servers"
+              },
+              {
+                icon: "🎨",
+                title: "High Quality",
+                description: "Maintain original image quality with lossless background removal"
+              },
+              {
+                icon: "🌐",
+                title: "Universal Support",
+                description: "Works with all image formats and sizes up to 25MB"
               }
-            ].map((example, index) => (
+            ].map((feature, index) => (
               <div
                 key={index}
                 style={{
                   background: "white",
+                  padding: "clamp(1.5rem, 3vw, 2.5rem)",
                   borderRadius: "20px",
-                  overflow: "hidden",
-                  boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
-                  transition: "transform 0.3s ease",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                  textAlign: "center",
+                  transition: "all 0.3s ease",
+                  border: "1px solid #f1f5f9",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-8px)";
+                  e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.12)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)";
                 }}
               >
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1px",
-                    background: "#f1f5f9",
+                    fontSize: "clamp(2.5rem, 5vw, 3rem)",
+                    marginBottom: "1.5rem",
                   }}
                 >
-                  <div style={{ background: "white", padding: "1rem" }}>
-                    <img
-                      src={example.before}
-                      alt={`Before - ${example.title}`}
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <div
-                      style={{
-                        textAlign: "center",
-                        marginTop: "0.5rem",
-                        fontSize: "0.875rem",
-                        color: "#64748b",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Before
-                    </div>
-                  </div>
-                  <div style={{ background: "white", padding: "1rem" }}>
-                    <img
-                      src={example.after}
-                      alt={`After - ${example.title}`}
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <div
-                      style={{
-                        textAlign: "center",
-                        marginTop: "0.5rem",
-                        fontSize: "0.875rem",
-                        color: "#64748b",
-                        fontWeight: "500",
-                      }}
-                    >
-                      After
-                    </div>
-                  </div>
+                  {feature.icon}
                 </div>
-                <div style={{ padding: "1.5rem" }}>
-                  <h3
-                    style={{
-                      fontSize: "1.25rem",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {example.title}
-                  </h3>
-                  <p
-                    style={{
-                      color: "#64748b",
-                      fontSize: "0.875rem",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    {example.description}
-                  </p>
-                </div>
+                <h3
+                  style={{
+                    fontSize: "clamp(1.25rem, 2.5vw, 1.5rem)",
+                    fontWeight: "600",
+                    color: "#1e293b",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  {feature.title}
+                </h3>
+                <p
+                  className="responsive-text"
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6",
+                    margin: 0,
+                  }}
+                >
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Examples Section */}
       <section
+        id="examples"
+        className="responsive-section"
         style={{
-          padding: "6rem 1rem",
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
-          color: "white",
+          background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
+          position: "relative",
         }}
       >
+        {/* Background Decorative Elements */}
         <div
           style={{
-            maxWidth: "800px",
+            position: "absolute",
+            top: "10%",
+            right: "-5%",
+            width: "300px",
+            height: "300px",
+            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
+            borderRadius: "50%",
+            filter: "blur(50px)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "10%",
+            left: "-5%",
+            width: "250px",
+            height: "250px",
+            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
+            borderRadius: "50%",
+            filter: "blur(40px)",
+          }}
+        />
+        
+        <div
+          style={{
+            maxWidth: "1200px",
             margin: "0 auto",
-            textAlign: "center",
+            position: "relative",
+            zIndex: 2,
           }}
         >
-          <h2
-            style={{
-              fontSize: "2.5rem",
-              fontWeight: "700",
-              marginBottom: "1rem",
-            }}
-          >
-            Ready to Transform Your Images?
-          </h2>
-          <p
-            style={{
-              fontSize: "1.2rem",
-              color: "#cbd5e1",
-              marginBottom: "2.5rem",
-              lineHeight: "1.6",
-            }}
-          >
-            Join thousands of creators and businesses using our AI-powered background removal tool
-          </p>
-          <div
-            style={{
-              display: "flex",
-              gap: "1rem",
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              onClick={() => {
-                if (currentUser) {
-                  document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  router.push('/signup');
-                }
+          {/* Section Header */}
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <h2
+              className="responsive-heading"
+              style={{
+                fontWeight: "800",
+                color: "#1e293b",
+                marginBottom: "1rem",
+                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
+            >
+              See Amazing Results
+            </h2>
+            <p
+              className="responsive-text"
+              style={{
+                color: "#64748b",
+                maxWidth: "600px",
+                margin: "0 auto",
+                lineHeight: "1.6",
+              }}
+            >
+              Check out these stunning transformations powered by our AI technology
+            </p>
+          </div>
+
+          {/* Examples Grid */}
+          <div className="responsive-grid">
+            {/* Example 1 - Product Photography */}
+            <div
+              style={{
+                background: "white",
+                borderRadius: "20px",
+                overflow: "hidden",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                transition: "all 0.3s ease",
+                border: "1px solid #f1f5f9",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-8px)";
+                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  height: "250px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760539834260.png?raw=true"
+                  alt="Shoes product photo"
+                  className="responsive-image"
+                  style={{
+                    height: "100%",
+                    objectFit: "cover",
+                    transition: "transform 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "15px",
+                    right: "15px",
+                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    color: "white",
+                    padding: "6px 12px",
+                    borderRadius: "15px",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                  }}
+                >
+                  Background Removed
+                </div>
+              </div>
+              <div style={{ padding: "2rem" }}>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "700",
+                    color: "#1e293b",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  E-commerce Products
+                </h3>
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6",
+                    marginBottom: "1.5rem",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  Perfect for online stores. Create clean, professional product images that convert better.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "#10b981",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5"></path>
+                  </svg>
+                  Perfect for online stores
+                </div>
+              </div>
+            </div>
+
+            {/* Example 2 - Portrait Photography */}
+            <div
+              style={{
+                background: "white",
+                borderRadius: "20px",
+                overflow: "hidden",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                transition: "all 0.3s ease",
+                border: "1px solid #f1f5f9",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-8px)";
+                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  height: "250px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542319588.png?raw=true"
+                  alt="Portrait photography"
+                  className="responsive-image"
+                  style={{
+                    height: "100%",
+                    objectFit: "cover",
+                    transition: "transform 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "15px",
+                    right: "15px",
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "white",
+                    padding: "6px 12px",
+                    borderRadius: "15px",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                  }}
+                >
+                  Professional Results
+                </div>
+              </div>
+              <div style={{ padding: "2rem" }}>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "700",
+                    color: "#1e293b",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  Portrait Photography
+                </h3>
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6",
+                    marginBottom: "1.5rem",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  Create stunning portraits with clean backgrounds. Perfect for professional headshots and social media.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "#10b981",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5"></path>
+                  </svg>
+                  Ideal for professional photos
+                </div>
+              </div>
+            </div>
+
+            {/* Example 3 - Creative Projects */}
+            <div
+              style={{
+                background: "white",
+                borderRadius: "20px",
+                overflow: "hidden",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                transition: "all 0.3s ease",
+                border: "1px solid #f1f5f9",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-8px)";
+                e.currentTarget.style.boxShadow = "0 30px 50px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)";
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  height: "250px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src="https://github.com/danukaya123/bgtest/blob/main/background-removed-1760542234326.png?raw=true"
+                  alt="Creative pet photography"
+                  className="responsive-image"
+                  style={{
+                    height: "100%",
+                    objectFit: "cover",
+                    transition: "transform 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "15px",
+                    right: "15px",
+                    background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+                    color: "white",
+                    padding: "6px 12px",
+                    borderRadius: "15px",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
+                  }}
+                >
+                  Creative Projects
+                </div>
+              </div>
+              <div style={{ padding: "2rem" }}>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "700",
+                    color: "#1e293b",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  Pet & Animal Photos
+                </h3>
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6",
+                    marginBottom: "1.5rem",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  Remove distracting backgrounds from pet photos. Perfect for creating clean, professional-looking animal portraits.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "#10b981",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5"></path>
+                  </svg>
+                  Great for pet photography
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div style={{ textAlign: "center", marginTop: "4rem" }}>
+            <p
+              className="responsive-text"
+              style={{
+                color: "#64748b",
+                marginBottom: "2rem",
+                fontWeight: "500",
+              }}
+            >
+              Ready to transform your images?
+            </p>
+            <button
+              className="responsive-button"
               style={{
                 background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                 color: "white",
                 border: "none",
-                padding: "16px 40px",
                 borderRadius: "12px",
                 fontWeight: "600",
-                fontSize: "1.1rem",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
@@ -1856,274 +2388,81 @@ export default function Home() {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
               }}
-            >
-              {currentUser ? "Start Processing" : "Get Started Free"}
-            </button>
-            <button
               onClick={() => {
-                document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              style={{
-                background: "transparent",
-                color: "white",
-                border: "1px solid #475569",
-                padding: "16px 32px",
-                borderRadius: "12px",
-                fontWeight: "600",
-                fontSize: "1.1rem",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#374151";
-                e.currentTarget.style.borderColor = "#64748b";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "#475569";
+                document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              View Examples
+              Try It Now - It's Free!
             </button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer - Old Style */}
       <footer
         style={{
-          background: "#0f172a",
-          color: "white",
-          padding: "3rem 1rem 2rem",
+          borderTop: "1px solid #e2e8f0",
+          padding: "3rem 1rem",
+          background: "#f8fafc",
         }}
       >
         <div
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
+            textAlign: "center",
           }}
         >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: "3rem",
-              marginBottom: "3rem",
-            }}
-          >
-            {/* Company Info */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
-                <div
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    borderRadius: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                    fontSize: "16px",
-                    color: "white",
-                  }}
-                >
-                  Q
-                </div>
-                <span
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: "800",
-                    color: "white",
-                    letterSpacing: "-0.5px",
-                  }}
-                >
-                  Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
-                </span>
-              </div>
-              <p
-                style={{
-                  color: "#94a3b8",
-                  lineHeight: "1.6",
-                  marginBottom: "1.5rem",
-                }}
-              >
-                AI-powered background removal tool for creators, businesses, and everyone in between.
-              </p>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4
-                style={{
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  marginBottom: "1rem",
-                  color: "white",
-                }}
-              >
-                Quick Links
-              </h4>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
-                {['Home', 'Features', 'Examples', 'Pricing', 'API Docs'].map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    style={{
-                      color: "#94a3b8",
-                      textDecoration: "none",
-                      transition: "color 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#3b82f6";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "#94a3b8";
-                    }}
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h4
-                style={{
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  marginBottom: "1rem",
-                  color: "white",
-                }}
-              >
-                Support
-              </h4>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
-                {['Help Center', 'Contact Us', 'Status', 'Community'].map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    style={{
-                      color: "#94a3b8",
-                      textDecoration: "none",
-                      transition: "color 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#3b82f6";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "#94a3b8";
-                    }}
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4
-                style={{
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  marginBottom: "1rem",
-                  color: "white",
-                }}
-              >
-                Legal
-              </h4>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
-                {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'GDPR'].map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    style={{
-                      color: "#94a3b8",
-                      textDecoration: "none",
-                      transition: "color 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#3b82f6";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "#94a3b8";
-                    }}
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Bar */}
-          <div
-            style={{
-              borderTop: "1px solid #1e293b",
-              paddingTop: "2rem",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "1rem",
-            }}
-          >
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            gap: "8px", 
+            marginBottom: "1rem",
+            flexWrap: "wrap"
+          }}>
             <div
               style={{
-                color: "#64748b",
-                fontSize: "0.875rem",
-              }}
-            >
-              © 2024 QuizontalRBG. All rights reserved.
-            </div>
-            <div
-              style={{
+                width: "24px",
+                height: "24px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "6px",
                 display: "flex",
-                gap: "1rem",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "12px",
+                color: "white",
               }}
             >
-              {['Twitter', 'GitHub', 'LinkedIn', 'Instagram'].map((social) => (
-                <a
-                  key={social}
-                  href="#"
-                  style={{
-                    color: "#64748b",
-                    textDecoration: "none",
-                    fontSize: "0.875rem",
-                    transition: "color 0.3s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#3b82f6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#64748b";
-                  }}
-                >
-                  {social}
-                </a>
-              ))}
+              Q
             </div>
+            <span
+              style={{
+                fontSize: "18px",
+                fontWeight: "700",
+                color: "#1e293b",
+              }}
+            >
+              Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+            </span>
           </div>
+          <p style={{ 
+            color: "#64748b", 
+            margin: "0.5rem 0", 
+            fontSize: "14px",
+            lineHeight: "1.5"
+          }}>
+            AI-powered background removal made simple and free
+          </p>
+          <p style={{ 
+            color: "#94a3b8", 
+            margin: 0, 
+            fontSize: "12px",
+            marginTop: "1rem"
+          }}>
+            &copy; {new Date().getFullYear()} QuizontalRBG. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

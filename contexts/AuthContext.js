@@ -5,8 +5,10 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
   GoogleAuthProvider,
+  GithubAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -27,12 +29,10 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // Get user data from Firestore
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            
             const userObj = {
               uid: user.uid,
               email: user.email,
@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  // Email/Password Signup
+  // Email/Password Signup with Email Verification
   const signup = async (email, password, userData) => {
     try {
       setLoading(true);
@@ -88,6 +88,9 @@ export function AuthProvider({ children }) {
         displayName: userData.username
       });
 
+      // Send email verification
+      await sendEmailVerification(user);
+
       // Create user document in Firestore
       const userProfileData = {
         uid: user.uid,
@@ -96,6 +99,7 @@ export function AuthProvider({ children }) {
         phoneNumber: userData.phoneNumber || '',
         birthday: userData.birthday || '',
         displayName: userData.username,
+        emailVerified: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         provider: 'email'
@@ -103,12 +107,11 @@ export function AuthProvider({ children }) {
 
       await setDoc(doc(db, 'users', user.uid), userProfileData);
 
-      // Update local state
       const userObj = {
         uid: user.uid,
         email: user.email,
         displayName: userData.username,
-        emailVerified: user.emailVerified,
+        emailVerified: false,
         ...userProfileData
       };
 
@@ -138,13 +141,20 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // SIMPLE Google Signin - No callbacks needed!
-  const signInWithGoogle = async () => {
+  // Social Auth Providers (Google + GitHub Only)
+  const signInWithSocial = async (providerName) => {
     try {
       setLoading(true);
       
-      const provider = new GoogleAuthProvider();
-      // Add scopes if needed
+      let provider;
+      if (providerName === 'google') {
+        provider = new GoogleAuthProvider();
+      } else if (providerName === 'github') {
+        provider = new GithubAuthProvider();
+      } else {
+        throw new Error('Unknown provider');
+      }
+
       provider.addScope('email');
       provider.addScope('profile');
       
@@ -155,22 +165,20 @@ export function AuthProvider({ children }) {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       
       if (!userDoc.exists()) {
-        // Create user profile in Firestore for new Google user
         const userProfileData = {
           uid: user.uid,
           email: user.email,
           username: user.displayName || user.email.split('@')[0],
           displayName: user.displayName,
           photoURL: user.photoURL,
-          provider: 'google',
-          googleId: user.providerData[0]?.uid,
+          provider: providerName,
+          emailVerified: user.emailVerified,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
 
         await setDoc(doc(db, 'users', user.uid), userProfileData);
         
-        // Update local state
         const userObj = {
           uid: user.uid,
           email: user.email,
@@ -186,7 +194,35 @@ export function AuthProvider({ children }) {
       
       return user;
     } catch (error) {
-      console.error('Google signin error:', error);
+      console.error(`${providerName} signin error:`, error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend Email Verification
+  const resendEmailVerification = async () => {
+    if (!currentUser) throw new Error('No user logged in');
+    
+    try {
+      setLoading(true);
+      await sendEmailVerification(currentUser);
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot Password
+  const forgotPassword = async (email) => {
+    try {
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Password reset error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -202,19 +238,6 @@ export function AuthProvider({ children }) {
       setUserProfile(null);
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Password Reset
-  const resetPassword = async (email) => {
-    try {
-      setLoading(true);
-      await sendPasswordResetEmail(auth, email);
-    } catch (error) {
-      console.error('Password reset error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -270,8 +293,9 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
-    resetPassword,
-    signInWithGoogle,
+    forgotPassword,
+    signInWithSocial,
+    resendEmailVerification,
     
     // Profile management
     updateUserProfile,

@@ -1,9 +1,15 @@
 import { AuthProvider } from '../contexts/AuthContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import NotificationComponent from '../components/NotificationComponent';
+import '../styles/globals.css'; // Adjust path if needed
 
-export default function App({ Component, pageProps }) {
+export default function MyApp({ Component, pageProps }) {
   return (
-    <AuthProvider>
-      <Component {...pageProps} />
-    </AuthProvider>
+    <NotificationProvider>
+      <AuthProvider>
+        <NotificationComponent />
+        <Component {...pageProps} />
+      </AuthProvider>
+    </NotificationProvider>
   );
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
-import { sendWelcomeEmail } from '../lib/emailService';
 import Link from 'next/link';
 
 export default function Login() {
@@ -27,7 +26,6 @@ export default function Login() {
       await login(email, password);
       
       // Send welcome email on first login (you might want to track this differently)
-      await sendWelcomeEmail(email, email.split('@')[0]);
       
       router.push('/');
     } catch (error) {

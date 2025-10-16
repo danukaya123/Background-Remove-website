@@ -20,40 +20,8 @@ export default function Home() {
   
   const fileInputRef = useRef(null);
   const resultsSectionRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const mobileMenuRef = useRef(null);
   const router = useRouter();
   const { currentUser, userProfile, logout } = useAuth();
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-      if (mobileMenuRef.current && 
-          !mobileMenuRef.current.contains(event.target) && 
-          !event.target.closest('.menu-toggle')) {
-        setMobileMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [mobileMenuOpen]);
 
   // Auto-scroll to results when processing is complete
   useEffect(() => {
@@ -66,6 +34,32 @@ export default function Home() {
       }, 300);
     }
   }, [resultUrl, loading]);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.menu-toggle')) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
+
+  const handleDownloadEdited = (editedImageUrl) => {
+    try {
+      const a = document.createElement("a");
+      a.href = editedImageUrl;
+      a.download = `edited-background-removed-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Download failed:", err);
+      setError("Download failed. Please try again.");
+    }
+  };
 
   // Typewriter phrases for subheading
   const typewriterPhrases = [
@@ -241,7 +235,6 @@ export default function Home() {
     try {
       await logout();
       setShowDropdown(false);
-      setMobileMenuOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -256,7 +249,6 @@ export default function Home() {
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         padding: "0",
         margin: "0",
-        overflowX: "hidden",
       }}
     >
       <style jsx global>{`
@@ -264,12 +256,6 @@ export default function Home() {
         
         * {
           box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-        
-        html {
-          scroll-behavior: smooth;
         }
         
         body {
@@ -277,11 +263,10 @@ export default function Home() {
           padding: 0;
           background: #ffffff;
           font-family: 'Inter', sans-serif;
+          scroll-behavior: smooth;
           overflow-x: hidden;
-          width: 100%;
         }
         
-        /* Animations */
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
@@ -313,6 +298,17 @@ export default function Home() {
           }
         }
         
+        @keyframes particleFloat {
+          0%, 100% { 
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+          }
+          10%, 90% { opacity: 1; }
+          50% { 
+            transform: translate(100px, -50px) rotate(180deg);
+          }
+        }
+        
         @keyframes slideUp {
           from { 
             opacity: 0;
@@ -335,35 +331,14 @@ export default function Home() {
           60% { transform: translateY(-3px); }
         }
         
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
         }
         
-        @keyframes slideOutRight {
-          from {
-            transform: translateX(0);
-            opacity: 1;
-          }
-          to {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-        }
-        
-        @keyframes overlayFadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+          100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         .float-animation {
@@ -386,18 +361,6 @@ export default function Home() {
           animation: textGlow 2s ease-in-out infinite;
         }
         
-        .slide-in-right {
-          animation: slideInRight 0.3s ease-out;
-        }
-        
-        .slide-out-right {
-          animation: slideOutRight 0.3s ease-out;
-        }
-        
-        .overlay-fade-in {
-          animation: overlayFadeIn 0.3s ease-out;
-        }
-        
         /* Responsive Design */
         @media (max-width: 768px) {
           .desktop-only {
@@ -415,27 +378,18 @@ export default function Home() {
           }
         }
         
-        /* Container Responsive */
-        .container {
-          width: 100%;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 clamp(1rem, 3vw, 2rem);
-        }
-        
         /* Hero Section Responsive */
         .hero-container {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: clamp(2rem, 4vw, 4rem);
+          gap: 4rem;
           align-items: center;
-          width: 100%;
         }
         
         @media (max-width: 968px) {
           .hero-container {
             grid-template-columns: 1fr;
-            gap: clamp(1.5rem, 3vw, 3rem);
+            gap: 3rem;
             text-align: center;
           }
           
@@ -450,7 +404,7 @@ export default function Home() {
         
         @media (max-width: 480px) {
           .hero-container {
-            gap: clamp(1rem, 2vw, 2rem);
+            gap: 2rem;
           }
         }
         
@@ -459,7 +413,6 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
-          width: 100%;
         }
         
         @media (max-width: 768px) {
@@ -471,9 +424,8 @@ export default function Home() {
         /* CTA Buttons */
         .cta-buttons {
           display: flex;
-          gap: clamp(0.75rem, 2vw, 1rem);
+          gap: 1rem;
           flex-wrap: wrap;
-          width: 100%;
         }
         
         @media (max-width: 480px) {
@@ -496,7 +448,7 @@ export default function Home() {
         @media (max-width: 768px) {
           .floating-badge {
             font-size: 12px !important;
-            padding: 6px 12px !important;
+            padding: 8px 16px !important;
           }
         }
         
@@ -504,8 +456,7 @@ export default function Home() {
         .responsive-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-          gap: clamp(1rem, 2vw, 2rem);
-          width: 100%;
+          gap: 2rem;
         }
         
         @media (max-width: 480px) {
@@ -520,80 +471,49 @@ export default function Home() {
           width: 100%;
           height: auto;
           max-width: 100%;
-          display: block;
         }
         
         /* Text Responsive */
         .responsive-text {
-          font-size: clamp(0.9rem, 2vw, 1.1rem);
-          line-height: 1.6;
+          font-size: clamp(1rem, 2vw, 1.2rem);
         }
         
         .responsive-heading {
           font-size: clamp(1.5rem, 4vw, 2.5rem);
-          line-height: 1.2;
         }
         
         /* Button Responsive */
         .responsive-button {
-          padding: clamp(10px, 2vw, 14px) clamp(16px, 3vw, 24px);
+          padding: clamp(12px, 2vw, 16px) clamp(24px, 4vw, 32px);
           font-size: clamp(14px, 2vw, 16px);
-          border-radius: 10px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: none;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          white-space: nowrap;
-          min-height: 44px;
         }
         
         /* Section Padding */
         .responsive-section {
-          padding: clamp(2rem, 4vw, 4rem) 0;
-          width: 100%;
-          overflow: hidden;
+          padding: clamp(2rem, 4vw, 4rem) clamp(1rem, 3vw, 2rem);
         }
         
         /* Navigation Responsive */
-        .nav-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 2rem);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          width: 100%;
-        }
-        
-        .nav-links {
-          display: flex;
-          gap: clamp(0.75rem, 2vw, 1.5rem);
-          align-items: center;
-          flex-wrap: wrap;
-        }
-        
         @media (max-width: 768px) {
+          .nav-container {
+            padding: 1rem !important;
+          }
+          
           .nav-links {
-            gap: 1rem;
+            gap: 1rem !important;
           }
         }
         
         /* Results Grid */
         .results-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-          gap: clamp(1rem, 3vw, 2rem);
-          width: 100%;
+          grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+          gap: clamp(1.5rem, 3vw, 3rem);
         }
         
         @media (max-width: 480px) {
           .results-grid {
             grid-template-columns: 1fr;
-            gap: 1.5rem;
           }
         }
         
@@ -601,106 +521,10 @@ export default function Home() {
         .upload-container {
           max-width: min(800px, 90vw);
           margin: 0 auto;
-          width: 100%;
-          padding: 0 clamp(1rem, 3vw, 2rem);
-        }
-        
-        /* User Dropdown Responsive */
-        @media (max-width: 1024px) {
-          .user-dropdown-content {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            width: 90vw !important;
-            max-width: 400px !important;
-            max-height: 80vh !important;
-            overflow-y: auto !important;
-          }
-        }
-        
-        /* Stats Bar Responsive */
-        .stats-bar {
-          display: flex;
-          gap: clamp(1rem, 2vw, 2rem);
-          justify-content: center;
-          flex-wrap: wrap;
-          width: "100%";
-        }
-        
-        @media (max-width: 480px) {
-          .stats-bar {
-            gap: 1rem;
-          }
-          
-          .stat-item {
-            min-width: 80px !important;
-            padding: 0.75rem !important;
-          }
-        }
-
-        /* Mobile Sidebar Styles */
-        .mobile-sidebar-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 9998;
-          backdrop-filter: blur(4px);
-        }
-
-        .mobile-sidebar {
-          position: fixed;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          width: 85%;
-          max-width: 400px;
-          background: white;
-          z-index: 9999;
-          box-shadow: -10px 0 50px rgba(0, 0, 0, 0.2);
-          display: flex;
-          flex-direction: column;
-          overflow-y: auto;
-        }
-
-        .mobile-sidebar-header {
-          padding: 1.5rem;
-          border-bottom: 1px solid #e2e8f0;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: linear-gradient(135deg, #f8fafc, #ffffff);
-        }
-
-        .mobile-sidebar-content {
-          flex: 1;
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .mobile-sidebar-footer {
-          padding: 1.5rem;
-          border-top: 1px solid #e2e8f0;
-          background: #f8fafc;
-        }
-
-        .notification-container {
-          position: fixed;
-          top: 80px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 1001;
-          width: 90%;
-          max-width: 400px;
         }
       `}</style>
 
-      {/* Navigation */}
+      {/* Navigation - Keep your current navigation */}
       <nav
         style={{
           borderBottom: "1px solid #e2e8f0",
@@ -708,14 +532,23 @@ export default function Home() {
           backdropFilter: "blur(10px)",
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 100,
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          width: "100%",
         }}
       >
-        <div className="nav-container">
+        <div
+          className="nav-container"
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "1rem 2rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div
               style={{
                 width: "32px",
@@ -738,7 +571,6 @@ export default function Home() {
                 fontWeight: "800",
                 color: "#1e293b",
                 letterSpacing: "-0.5px",
-                whiteSpace: "nowrap",
               }}
             >
               Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
@@ -746,7 +578,7 @@ export default function Home() {
           </div>
           
           {/* Desktop Navigation Links */}
-          <div className="desktop-only nav-links">
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
             {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
               <a 
                 key={item}
@@ -757,7 +589,7 @@ export default function Home() {
                   fontSize: "14px", 
                   fontWeight: "500", 
                   transition: "all 0.3s",
-                  padding: "6px 12px",
+                  padding: "6px 10px",
                   borderRadius: "6px",
                   whiteSpace: "nowrap",
                 }}
@@ -774,11 +606,11 @@ export default function Home() {
               </a>
             ))}
             
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
               {currentUser ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                   {/* User Profile Dropdown */}
-                  <div style={{ position: "relative" }} ref={dropdownRef}>
+                  <div style={{ position: "relative" }}>
                     <button
                       style={{
                         background: "transparent",
@@ -793,8 +625,7 @@ export default function Home() {
                         whiteSpace: "nowrap",
                         display: "flex",
                         alignItems: "center",
-                        gap: "6px",
-                        minHeight: "32px",
+                        gap: "8px",
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = "#f8fafc";
@@ -818,27 +649,18 @@ export default function Home() {
                           fontSize: "12px",
                           fontWeight: "bold",
                           color: "white",
-                          flexShrink: 0,
                         }}
                       >
                         {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
                       </div>
-                      <span style={{ 
-                        maxWidth: "120px", 
-                        overflow: "hidden", 
-                        textOverflow: "ellipsis",
-                        display: "inline-block"
-                      }}>
-                        {userProfile?.username || currentUser?.email || "User"}
-                      </span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      {userProfile?.username || currentUser?.email || "User"}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
                     
                     {showDropdown && (
                       <div
-                        className="user-dropdown-content"
                         style={{
                           position: "absolute",
                           top: "100%",
@@ -855,7 +677,7 @@ export default function Home() {
                       >
                         <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
                           Signed in as<br />
-                          <strong style={{ color: "#1e293b", wordBreak: "break-all" }}>{currentUser?.email || "User"}</strong>
+                          <strong style={{ color: "#1e293b" }}>{currentUser?.email || "User"}</strong>
                         </div>
                         {userProfile && (
                           <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
@@ -886,7 +708,6 @@ export default function Home() {
                             display: "flex",
                             alignItems: "center",
                             gap: "8px",
-                            marginTop: "0.5rem",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = "#fef2f2";
@@ -911,15 +732,14 @@ export default function Home() {
                     style={{
                       background: "transparent",
                       border: "1px solid #d1d5db",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
                       color: "#374151",
                       fontWeight: "600",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
                       fontSize: "14px",
                       cursor: "pointer",
                       transition: "all 0.3s",
                       whiteSpace: "nowrap",
-                      minHeight: "36px",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "#f8fafc";
@@ -936,17 +756,16 @@ export default function Home() {
                     onClick={() => router.push('/signup')}
                     style={{
                       background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                      color: "white",
-                      boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
                       border: "none",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
                       transition: "all 0.3s",
+                      boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
                       whiteSpace: "nowrap",
-                      minHeight: "36px",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-1px)";
@@ -971,44 +790,31 @@ export default function Home() {
               onClick={toggleMobileMenu}
               style={{
                 background: "transparent",
-                border: "1px solid #e2e8f0",
-                padding: "10px",
-                borderRadius: "8px",
+                border: "none",
+                padding: "8px",
+                borderRadius: "6px",
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
                 gap: "4px",
-                minHeight: "44px",
-                minWidth: "44px",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#f8fafc";
-                e.currentTarget.style.borderColor = "#cbd5e1";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "#e2e8f0";
               }}
             >
               <span style={{ 
-                width: "20px", 
+                width: "24px", 
                 height: "2px", 
                 background: "#1e293b",
                 transition: "all 0.3s",
                 transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
               }}></span>
               <span style={{ 
-                width: "20px", 
+                width: "24px", 
                 height: "2px", 
                 background: "#1e293b",
                 transition: "all 0.3s",
                 opacity: mobileMenuOpen ? "0" : "1"
               }}></span>
               <span style={{ 
-                width: "20px", 
+                width: "24px", 
                 height: "2px", 
                 background: "#1e293b",
                 transition: "all 0.3s",
@@ -1018,325 +824,122 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile Sidebar Navigation */}
+        {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <>
-            <div 
-              className="mobile-sidebar-overlay overlay-fade-in"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <div 
-              ref={mobileMenuRef}
-              className="mobile-sidebar slide-in-right"
-            >
-              {/* Sidebar Header */}
-              <div className="mobile-sidebar-header">
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                      borderRadius: "8px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: "bold",
-                      fontSize: "16px",
-                      color: "white",
-                    }}
-                  >
-                    Q
-                  </div>
-                  <span
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "800",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
-                  </span>
-                </div>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    padding: "8px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f1f5f9";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Sidebar Content */}
-              <div className="mobile-sidebar-content">
-                {/* Navigation Links */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-                    <a 
-                      key={item}
-                      href="#" 
-                      style={{ 
-                        color: "#64748b", 
-                        textDecoration: "none", 
-                        fontSize: "16px", 
-                        fontWeight: "500", 
-                        padding: "12px 16px",
-                        borderRadius: "8px",
-                        transition: "all 0.3s",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                      onClick={() => setMobileMenuOpen(false)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f8fafc";
-                        e.currentTarget.style.color = "#3b82f6";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.color = "#64748b";
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "20px",
-                          height: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <div style={{ width: "6px", height: "6px", background: "#64748b", borderRadius: "50%" }} />
-                      </div>
-                      {item}
-                    </a>
-                  ))}
-                </div>
-
-                {/* User Account Section */}
-                <div style={{ 
-                  background: "linear-gradient(135deg, #f8fafc, #ffffff)",
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                  border: "1px solid #e2e8f0",
-                  marginTop: "1rem",
-                }}>
-                  {currentUser ? (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
-                        <div
-                          style={{
-                            width: "48px",
-                            height: "48px",
-                            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "18px",
-                            fontWeight: "bold",
-                            color: "white",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ 
-                            fontSize: "16px", 
-                            fontWeight: "600", 
-                            color: "#1e293b",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap"
-                          }}>
-                            {userProfile?.username || "User"}
-                          </div>
-                          <div style={{ 
-                            fontSize: "14px", 
-                            color: "#64748b",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap"
-                          }}>
-                            {currentUser?.email}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {userProfile && (
-                        <div style={{ 
-                          background: "white", 
-                          padding: "12px", 
-                          borderRadius: "8px", 
-                          border: "1px solid #e2e8f0",
-                          marginBottom: "1rem"
-                        }}>
-                          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>Account Details</div>
-                          {userProfile.phoneNumber && (
-                            <div style={{ fontSize: "14px", color: "#1e293b", display: "flex", alignItems: "center", gap: "8px" }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-                              </svg>
-                              {userProfile.phoneNumber}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <button
-                        onClick={handleLogout}
-                        style={{
-                          background: "transparent",
-                          border: "1px solid #d1d5db",
-                          color: "#374151",
-                          fontWeight: "600",
-                          width: "100%",
-                          padding: "12px 16px",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          cursor: "pointer",
-                          transition: "all 0.3s",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#f8fafc";
-                          e.currentTarget.style.borderColor = "#9ca3af";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.borderColor = "#d1d5db";
-                        }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-                        </svg>
-                        Sign Out
-                      </button>
-                    </>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                      <p style={{ color: "#64748b", fontSize: "14px", textAlign: "center", margin: 0 }}>
-                        Join thousands of users transforming their images
-                      </p>
-                      <button
-                        onClick={() => {
-                          router.push('/login');
-                          setMobileMenuOpen(false);
-                        }}
-                        style={{
-                          background: "transparent",
-                          border: "1px solid #d1d5db",
-                          color: "#374151",
-                          fontWeight: "600",
-                          width: "100%",
-                          padding: "12px 16px",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          cursor: "pointer",
-                          transition: "all 0.3s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#f8fafc";
-                          e.currentTarget.style.borderColor = "#9ca3af";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.borderColor = "#d1d5db";
-                        }}
-                      >
-                        Log in
-                      </button>
-                      <button
-                        onClick={() => {
-                          router.push('/signup');
-                          setMobileMenuOpen(false);
-                        }}
-                        style={{
-                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                          color: "white",
-                          width: "100%",
-                          padding: "12px 16px",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          border: "none",
-                          transition: "all 0.3s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "none";
-                        }}
-                      >
-                        Sign up
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Sidebar Footer */}
-              <div className="mobile-sidebar-footer">
-                <div style={{ textAlign: "center", color: "#64748b", fontSize: "12px" }}>
-                  &copy; {new Date().getFullYear()} QuizontalRBG
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </nav>
-
-      {/* Rest of your component remains the same... */}
-      {/* Notification Container */}
-      <div className="notification-container">
-        {error && (
-          <div
+          <div 
+            className="mobile-menu"
             style={{
-              background: "#fef2f2",
-              border: "1px solid #fecaca",
-              color: "#dc2626",
-              padding: "12px 16px",
-              borderRadius: "12px",
-              marginBottom: "8px",
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              background: "rgba(255, 255, 255, 0.98)",
+              backdropFilter: "blur(10px)",
+              borderTop: "1px solid #e2e8f0",
+              padding: "1rem 2rem",
               display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
+              flexDirection: "column",
+              gap: "0.75rem",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+              zIndex: 1000,
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
+            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+              <a 
+                key={item}
+                href="#" 
+                style={{ 
+                  color: "#64748b", 
+                  textDecoration: "none", 
+                  fontSize: "16px", 
+                  fontWeight: "500", 
+                  padding: "10px 0",
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item}
+              </a>
+            ))}
+            
+            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+              {currentUser ? (
+                <>
+                  <div style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9", width: "100%" }}>
+                    <div style={{ fontSize: "12px", color: "#64748b" }}>Signed in as</div>
+                    <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{currentUser.email}</div>
+                    {userProfile && (
+                      <>
+                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Username: {userProfile.username}</div>
+                        {userProfile.phoneNumber && (
+                          <div style={{ fontSize: "12px", color: "#64748b" }}>Phone: {userProfile.phoneNumber}</div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      color: "#374151",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      router.push('/login');
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      color: "#374151",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push('/signup');
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      border: "none",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
-      </div>
+      </nav>
 
       {/* Hero Section */}
       <section
@@ -1353,8 +956,8 @@ export default function Home() {
             position: "absolute",
             top: "-10%",
             right: "-5%",
-            width: "clamp(200px, 40vw, 400px)",
-            height: "clamp(200px, 40vw, 400px)",
+            width: "400px",
+            height: "400px",
             background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
             borderRadius: "50%",
             filter: "blur(60px)",
@@ -1365,304 +968,329 @@ export default function Home() {
             position: "absolute",
             bottom: "-10%",
             left: "-5%",
-            width: "clamp(150px, 30vw, 300px)",
-            height: "clamp(150px, 30vw, 300px)",
+            width: "300px",
+            height: "300px",
             background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
             borderRadius: "50%",
             filter: "blur(50px)",
           }}
         />
         
-        <div className="container">
-          <div className="hero-container">
-            {/* Left Content - Text */}
-            <div className="hero-text">
-              <h1
-                className="responsive-heading"
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 2,
+          }}
+          className="hero-container"
+        >
+          {/* Left Content - Text */}
+          <div className="hero-text">
+            <h1
+              className="responsive-heading"
+              style={{
+                fontWeight: "800",
+                lineHeight: "1.1",
+                marginBottom: "0.5rem",
+                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                letterSpacing: "-1px",
+              }}
+            >
+              Quizontal Image
+              <br />
+              <span
                 style={{
-                  fontWeight: "800",
-                  lineHeight: "1.1",
-                  marginBottom: "0.5rem",
-                  background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                  letterSpacing: "-1px",
                 }}
               >
-                Quizontal Image
-                <br />
-                <span
+                Background Removal
+              </span>
+            </h1>
+            
+            <p
+              className="responsive-text"
+              style={{
+                color: "#64748b",
+                marginBottom: "0.5rem",
+                fontWeight: "600",
+              }}
+            >
+              100% Automatically and Free
+            </p>
+            
+            <p
+              className="responsive-text"
+              style={{
+                color: "#64748b",
+                marginBottom: "2.5rem",
+                lineHeight: "1.7",
+                maxWidth: "500px",
+              }}
+            >
+              Transform your images with AI-powered background removal. 
+              Perfect for product photos, portraits, and creative projects. 
+              No manual work, no credit card required.
+            </p>
+
+            {/* Feature Points */}
+            <div style={{ marginBottom: "2.5rem" }} className="feature-points">
+              {[
+                { icon: "✓", text: "AI-powered instant processing" },
+                { icon: "✓", text: "Preserves original image quality" },
+              ].map((feature, index) => (
+                <div
+                  key={index}
                   style={{
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "0.75rem",
                   }}
                 >
-                  Background Removal
-                </span>
-              </h1>
-              
-              <p
-                className="responsive-text"
-                style={{
-                  color: "#64748b",
-                  marginBottom: "0.5rem",
-                  fontWeight: "600",
-                }}
-              >
-                100% Automatically and Free
-              </p>
-              
-              <p
-                className="responsive-text"
-                style={{
-                  color: "#64748b",
-                  marginBottom: "2.5rem",
-                  lineHeight: "1.7",
-                  maxWidth: "500px",
-                }}
-              >
-                Transform your images with AI-powered background removal. 
-                Perfect for product photos, portraits, and creative projects. 
-                No manual work, no credit card required.
-              </p>
-
-              {/* Feature Points */}
-              <div style={{ marginBottom: "2.5rem" }} className="feature-points">
-                {[
-                  { icon: "✓", text: "AI-powered instant processing" },
-                  { icon: "✓", text: "Preserves original image quality" },
-                ].map((feature, index) => (
                   <div
-                    key={index}
                     style={{
+                      width: "24px",
+                      height: "24px",
+                      background: "linear-gradient(135deg, #10b981, #059669)",
+                      borderRadius: "50%",
                       display: "flex",
                       alignItems: "center",
-                      gap: "12px",
-                      marginBottom: "0.75rem",
+                      justifyContent: "center",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      color: "white",
+                      flexShrink: 0,
                     }}
                   >
-                    <div
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        background: "linear-gradient(135deg, #10b981, #059669)",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        color: "white",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {feature.icon}
-                    </div>
-                    <span
-                      style={{
-                        color: "#475569",
-                        fontSize: "1rem",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {feature.text}
-                    </span>
+                    {feature.icon}
                   </div>
-                ))}
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="cta-buttons">
-                <button
-                  className="responsive-button"
-                  style={{
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    color: "white",
-                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-                  }}
-                  onClick={() => {
-                    if (currentUser) {
-                      document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                      router.push('/login');
-                    }
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {currentUser ? "Try It Now" : "Get Started"}
-                </button>
-                
-                <button
-                  className="responsive-button"
-                  style={{
-                    background: "transparent",
-                    color: "#64748b",
-                    border: "1px solid #d1d5db",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#9ca3af";
-                    e.currentTarget.style.color = "#374151";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "#d1d5db";
-                    e.currentTarget.style.color = "#64748b";
-                  }}
-                  onClick={() => {
-                    document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  View Examples
-                </button>
-              </div>
+                  <span
+                    style={{
+                      color: "#475569",
+                      fontSize: "1rem",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {feature.text}
+                  </span>
+                </div>
+              ))}
             </div>
 
-            {/* Right Content - Image */}
+            {/* CTA Buttons */}
+            <div className="cta-buttons">
+              <button
+                className="responsive-button"
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+                }}
+                onClick={() => {
+                  if (currentUser) {
+                    document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    router.push('/login');
+                  }
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {currentUser ? "Try It Now" : "Get Started"}
+              </button>
+              
+              <button
+                className="responsive-button"
+                style={{
+                  background: "transparent",
+                  color: "#64748b",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#9ca3af";
+                  e.currentTarget.style.color = "#374151";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                  e.currentTarget.style.color = "#64748b";
+                }}
+                onClick={() => {
+                  document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                View Examples
+              </button>
+            </div>
+          </div>
+
+          {/* Right Content - Image */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "relative",
+              flexDirection: "column",
+              gap: "2rem",
+            }}
+            className="hero-image"
+          >
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: "500px",
+              }}
+            >
+              {/* Main Image Container */}
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: "20px",
+                  padding: "1.5rem",
+                  boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+                  position: "relative",
+                  zIndex: 6,
+                  transform: "rotate(2deg)",
+                }}
+              >
+                <img
+                  src="https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true"
+                  alt="Before and after background removal example"
+                  className="responsive-image"
+                  style={{
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                  }}
+                />
+              </div>
+              
+              {/* Floating Element 1 */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-20px",
+                  right: "-20px",
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  color: "white",
+                  padding: "12px 20px",
+                  borderRadius: "50px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
+                  zIndex: 7,
+                }}
+                className="floating-badge"
+              >
+                ✨ AI Powered
+              </div>
+              
+              {/* Floating Element 2 */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "-15px",
+                  left: "-15px",
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  color: "white",
+                  padding: "10px 18px",
+                  borderRadius: "50px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  boxShadow: "0 10px 25px rgba(245, 158, 11, 0.3)",
+                  zIndex: 7,
+                  animation: "bounce-subtle 3s ease-in-out infinite 1.5s",
+                }}
+                className="floating-badge"
+              >
+                ⚡ Instant Results
+              </div>
+            </div>
+            
+            {/* Stats Bar */}
             <div
               style={{
                 display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                position: "relative",
-                flexDirection: "column",
                 gap: "2rem",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                marginTop: "1rem",
               }}
-              className="hero-image"
             >
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  maxWidth: "500px",
-                }}
-              >
-                {/* Main Image Container */}
+              {[
+                { number: "50K+", label: "Images Processed" },
+                { number: "99.9%", label: "Accuracy" },
+                { number: "2s", label: "Avg. Processing" },
+              ].map((stat, index) => (
                 <div
+                  key={index}
                   style={{
-                    background: "white",
-                    borderRadius: "20px",
-                    padding: "clamp(1rem, 2vw, 1.5rem)",
-                    boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
-                    position: "relative",
-                    zIndex: 6,
-                    transform: "rotate(2deg)",
+                    textAlign: "center",
+                    padding: "1rem",
+                    background: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "12px",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.3)",
+                    minWidth: "100px",
                   }}
                 >
-                  <img
-                    src="https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true"
-                    alt="Before and after background removal example"
-                    className="responsive-image"
-                    style={{
-                      borderRadius: "12px",
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-                    }}
-                  />
-                </div>
-                
-                {/* Floating Element 1 */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "clamp(-15px, -2vw, -20px)",
-                    right: "clamp(-15px, -2vw, -20px)",
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "white",
-                    padding: "clamp(8px, 1.5vw, 12px) clamp(12px, 2vw, 20px)",
-                    borderRadius: "50px",
-                    fontSize: "clamp(12px, 1.5vw, 14px)",
-                    fontWeight: "600",
-                    boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
-                    zIndex: 7,
-                  }}
-                  className="floating-badge"
-                >
-                  ✨ AI Powered
-                </div>
-                
-                {/* Floating Element 2 */}
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "clamp(-10px, -1.5vw, -15px)",
-                    left: "clamp(-10px, -1.5vw, -15px)",
-                    background: "linear-gradient(135deg, #f59e0b, #d97706)",
-                    color: "white",
-                    padding: "clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 18px)",
-                    borderRadius: "50px",
-                    fontSize: "clamp(12px, 1.5vw, 14px)",
-                    fontWeight: "600",
-                    boxShadow: "0 10px 25px rgba(245, 158, 11, 0.3)",
-                    zIndex: 7,
-                    animation: "bounce-subtle 3s ease-in-out infinite 1.5s",
-                  }}
-                  className="floating-badge"
-                >
-                  ⚡ Instant Results
-                </div>
-              </div>
-              
-              {/* Stats Bar */}
-              <div className="stats-bar">
-                {[
-                  { number: "50K+", label: "Images Processed" },
-                  { number: "99.9%", label: "Accuracy" },
-                  { number: "2s", label: "Avg. Processing" },
-                ].map((stat, index) => (
                   <div
-                    key={index}
-                    className="stat-item"
                     style={{
-                      textAlign: "center",
-                      padding: "clamp(0.75rem, 1.5vw, 1rem)",
-                      background: "rgba(255, 255, 255, 0.8)",
-                      borderRadius: "12px",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255, 255, 255, 0.3)",
-                      minWidth: "90px",
+                      fontSize: "1.5rem",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                      marginBottom: "4px",
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: "clamp(1.25rem, 2.5vw, 1.5rem)",
-                        fontWeight: "800",
-                        color: "#1e293b",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {stat.number}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
-                        color: "#64748b",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {stat.label}
-                    </div>
+                    {stat.number}
                   </div>
-                ))}
-              </div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#64748b",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Upload Section */}
+      {/* Upload Section - ALWAYS VISIBLE */}
       <section
         id="upload-section"
         className="responsive-section"
@@ -1744,8 +1372,15 @@ export default function Home() {
                   htmlFor="file-upload"
                   className="responsive-button"
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
                     background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                     color: "white",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
                     boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
                   }}
                   onMouseEnter={(e) => {
@@ -1811,8 +1446,8 @@ export default function Home() {
                       {/* Advanced Neural Network Animation */}
                       <div style={{ 
                         position: "relative", 
-                        width: "clamp(80px, 15vw, 120px)", 
-                        height: "clamp(80px, 15vw, 120px)",
+                        width: "120px", 
+                        height: "120px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center"
@@ -1821,8 +1456,8 @@ export default function Home() {
                         <div
                           style={{
                             position: "absolute",
-                            width: "80px",
-                            height: "80px",
+                            width: "100px",
+                            height: "100px",
                             border: "2px solid #e2e8f0",
                             borderRadius: "50%",
                           }}
@@ -1834,8 +1469,8 @@ export default function Home() {
                             key={i}
                             style={{
                               position: "absolute",
-                              width: "6px",
-                              height: "6px",
+                              width: "8px",
+                              height: "8px",
                               background: "#3b82f6",
                               borderRadius: "50%",
                               animation: `neuralOrbit ${2 + i * 0.5}s linear infinite`,
@@ -1848,8 +1483,8 @@ export default function Home() {
                         <div
                           style={{
                             position: "absolute",
-                            width: "50px",
-                            height: "50px",
+                            width: "60px",
+                            height: "60px",
                             border: "2px solid #e2e8f0",
                             borderRadius: "50%",
                           }}
@@ -1861,8 +1496,8 @@ export default function Home() {
                             key={i}
                             style={{
                               position: "absolute",
-                              width: "5px",
-                              height: "5px",
+                              width: "6px",
+                              height: "6px",
                               background: "#10b981",
                               borderRadius: "50%",
                               animation: `neuralOrbitReverse ${1.5 + i * 0.4}s linear infinite`,
@@ -1874,8 +1509,8 @@ export default function Home() {
                         {/* AI Core */}
                         <div
                           style={{
-                            width: "16px",
-                            height: "16px",
+                            width: "20px",
+                            height: "20px",
                             background: "linear-gradient(135deg, #3b82f6, #10b981)",
                             borderRadius: "50%",
                             animation: "aiCorePulse 2s ease-in-out infinite",
@@ -1925,8 +1560,16 @@ export default function Home() {
                         onClick={handleRemoveBackground}
                         className="responsive-button"
                         style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
                           background: "linear-gradient(135deg, #10b981, #059669)",
                           color: "white",
+                          border: "none",
+                          borderRadius: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
                           boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)",
                         }}
                         onMouseEnter={(e) => {
@@ -1951,6 +1594,10 @@ export default function Home() {
                           background: "transparent",
                           color: "#64748b",
                           border: "1px solid #d1d5db",
+                          borderRadius: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = "#f8fafc";
@@ -2003,18 +1650,25 @@ export default function Home() {
       {(resultUrl || editingMode) && (
         <section
           ref={resultsSectionRef}
-          className="responsive-section slide-up"
+          className="responsive-section"
           style={{
             background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
             minHeight: "50vh",
             display: "flex",
             alignItems: "center",
           }}
+          className="slide-up"
         >
-          <div className="container">
+          <div
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              width: "100%",
+            }}
+          >
             <div style={{ textAlign: "center", marginBottom: "3rem" }}>
               <h2 style={{ 
-                fontSize: "clamp(1.75rem, 4vw, 2.5rem)", 
+                fontSize: "clamp(2rem, 4vw, 3rem)", 
                 fontWeight: "700", 
                 color: "#1e293b", 
                 marginBottom: "1rem",
@@ -2041,8 +1695,16 @@ export default function Home() {
                 onClick={() => setEditingMode(true)}
                 className="responsive-button"
                 style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
                   background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                   color: "white",
+                  border: "none",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
                   boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
                   marginBottom: "1rem",
                 }}
@@ -2077,7 +1739,7 @@ export default function Home() {
                 <div
                   style={{
                     background: "white",
-                    padding: "clamp(1rem, 2vw, 1.5rem)",
+                    padding: "1.5rem",
                     borderRadius: "20px",
                     boxShadow: "0 15px 35px rgba(0,0,0,0.1)",
                   }}
@@ -2087,7 +1749,7 @@ export default function Home() {
                     alt="Original"
                     className="responsive-image"
                     style={{
-                      maxWidth: "100%",
+                      maxWidth: "500px",
                       borderRadius: "12px",
                       boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
                     }}
@@ -2108,7 +1770,7 @@ export default function Home() {
                 <div
                   style={{
                     background: "white",
-                    padding: "clamp(1rem, 2vw, 1.5rem)",
+                    padding: "1.5rem",
                     borderRadius: "20px",
                     boxShadow: "0 15px 35px rgba(59, 130, 246, 0.15)",
                     position: "relative",
@@ -2119,7 +1781,7 @@ export default function Home() {
                     alt="Background removed"
                     className="responsive-image"
                     style={{
-                      maxWidth: "100%",
+                      maxWidth: "500px",
                       borderRadius: "12px",
                       background: "linear-gradient(45deg, #f8fafc, #e2e8f0)",
                       padding: "1rem",
@@ -2131,10 +1793,18 @@ export default function Home() {
                   onClick={downloadImage}
                   className="responsive-button"
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
                     background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                     color: "white",
-                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
                     marginTop: "2rem",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-2px)";
@@ -2161,6 +1831,10 @@ export default function Home() {
                   background: "transparent",
                   color: "#64748b",
                   border: "1px solid #d1d5db",
+                  borderRadius: "10px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#f8fafc";
@@ -2196,7 +1870,12 @@ export default function Home() {
           background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
         }}
       >
-        <div className="container">
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+          }}
+        >
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2
               className="responsive-heading"
@@ -2258,7 +1937,7 @@ export default function Home() {
                 key={index}
                 style={{
                   background: "white",
-                  padding: "clamp(1.5rem, 3vw, 2rem)",
+                  padding: "clamp(1.5rem, 3vw, 2.5rem)",
                   borderRadius: "20px",
                   boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
                   textAlign: "center",
@@ -2276,7 +1955,7 @@ export default function Home() {
               >
                 <div
                   style={{
-                    fontSize: "clamp(2rem, 4vw, 2.5rem)",
+                    fontSize: "clamp(2.5rem, 5vw, 3rem)",
                     marginBottom: "1.5rem",
                   }}
                 >
@@ -2323,8 +2002,8 @@ export default function Home() {
             position: "absolute",
             top: "10%",
             right: "-5%",
-            width: "clamp(150px, 30vw, 300px)",
-            height: "clamp(150px, 30vw, 300px)",
+            width: "300px",
+            height: "300px",
             background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
             borderRadius: "50%",
             filter: "blur(50px)",
@@ -2335,15 +2014,22 @@ export default function Home() {
             position: "absolute",
             bottom: "10%",
             left: "-5%",
-            width: "clamp(120px, 25vw, 250px)",
-            height: "clamp(120px, 25vw, 250px)",
+            width: "250px",
+            height: "250px",
             background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
             borderRadius: "50%",
             filter: "blur(40px)",
           }}
         />
         
-        <div className="container">
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
           {/* Section Header */}
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <h2
@@ -2397,7 +2083,7 @@ export default function Home() {
               <div
                 style={{
                   position: "relative",
-                  height: "clamp(200px, 30vw, 250px)",
+                  height: "250px",
                   overflow: "hidden",
                 }}
               >
@@ -2434,7 +2120,7 @@ export default function Home() {
                   Background Removed
                 </div>
               </div>
-              <div style={{ padding: "clamp(1.5rem, 2vw, 2rem)" }}>
+              <div style={{ padding: "2rem" }}>
                 <h3
                   style={{
                     fontSize: "1.25rem",
@@ -2495,7 +2181,7 @@ export default function Home() {
               <div
                 style={{
                   position: "relative",
-                  height: "clamp(200px, 30vw, 250px)",
+                  height: "250px",
                   overflow: "hidden",
                 }}
               >
@@ -2532,7 +2218,7 @@ export default function Home() {
                   Professional Results
                 </div>
               </div>
-              <div style={{ padding: "clamp(1.5rem, 2vw, 2rem)" }}>
+              <div style={{ padding: "2rem" }}>
                 <h3
                   style={{
                     fontSize: "1.25rem",
@@ -2593,7 +2279,7 @@ export default function Home() {
               <div
                 style={{
                   position: "relative",
-                  height: "clamp(200px, 30vw, 250px)",
+                  height: "250px",
                   overflow: "hidden",
                 }}
               >
@@ -2630,7 +2316,7 @@ export default function Home() {
                   Creative Projects
                 </div>
               </div>
-              <div style={{ padding: "clamp(1.5rem, 2vw, 2rem)" }}>
+              <div style={{ padding: "2rem" }}>
                 <h3
                   style={{
                     fontSize: "1.25rem",
@@ -2687,6 +2373,11 @@ export default function Home() {
               style={{
                 background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                 color: "white",
+                border: "none",
+                borderRadius: "12px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
                 boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
               }}
               onMouseEnter={(e) => {
@@ -2707,67 +2398,71 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer - Old Style */}
       <footer
         style={{
           borderTop: "1px solid #e2e8f0",
-          padding: "clamp(2rem, 3vw, 3rem) 1rem",
+          padding: "3rem 1rem",
           background: "#f8fafc",
         }}
       >
-        <div className="container">
-          <div style={{ textAlign: "center" }}>
-            <div style={{ 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center", 
-              gap: "8px", 
-              marginBottom: "1rem",
-              flexWrap: "wrap"
-            }}>
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  borderRadius: "6px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                  fontSize: "12px",
-                  color: "white",
-                }}
-              >
-                Q
-              </div>
-              <span
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "700",
-                  color: "#1e293b",
-                }}
-              >
-                Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
-              </span>
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            gap: "8px", 
+            marginBottom: "1rem",
+            flexWrap: "wrap"
+          }}>
+            <div
+              style={{
+                width: "24px",
+                height: "24px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "12px",
+                color: "white",
+              }}
+            >
+              Q
             </div>
-            <p style={{ 
-              color: "#64748b", 
-              margin: "0.5rem 0", 
-              fontSize: "14px",
-              lineHeight: "1.5"
-            }}>
-              AI-powered background removal made simple and free
-            </p>
-            <p style={{ 
-              color: "#94a3b8", 
-              margin: 0, 
-              fontSize: "12px",
-              marginTop: "1rem"
-            }}>
-              &copy; {new Date().getFullYear()} QuizontalRBG. All rights reserved.
-            </p>
+            <span
+              style={{
+                fontSize: "18px",
+                fontWeight: "700",
+                color: "#1e293b",
+              }}
+            >
+              Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+            </span>
           </div>
+          <p style={{ 
+            color: "#64748b", 
+            margin: "0.5rem 0", 
+            fontSize: "14px",
+            lineHeight: "1.5"
+          }}>
+            AI-powered background removal made simple and free
+          </p>
+          <p style={{ 
+            color: "#94a3b8", 
+            margin: 0, 
+            fontSize: "12px",
+            marginTop: "1rem"
+          }}>
+            &copy; {new Date().getFullYear()} QuizontalRBG. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

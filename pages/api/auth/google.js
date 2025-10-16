@@ -10,6 +10,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('Exchanging code for token...');
+    
     // Exchange authorization code for access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -20,7 +22,7 @@ export default async function handler(req, res) {
         code,
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}`,
+        redirect_uri: process.env.NEXTAUTH_URL || 'http://localhost:3000',
         grant_type: 'authorization_code',
       }),
     });
@@ -34,6 +36,7 @@ export default async function handler(req, res) {
       });
     }
 
+    console.log('Token exchange successful');
     res.json({
       access_token: tokenData.access_token,
       expires_in: tokenData.expires_in,

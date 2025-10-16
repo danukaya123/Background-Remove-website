@@ -687,7 +687,6 @@ const resetAll = () => {
             >
               Sign up
             </button>
-          </>
         )}
       </div>
     </div>

@@ -265,8 +265,6 @@ export default function Home() {
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         padding: "0",
         margin: "0",
-        width: "100%",
-        overflowX: "hidden", // Prevent horizontal scroll
       }}
     >
       <style jsx global>{`
@@ -274,19 +272,15 @@ export default function Home() {
         
         * {
           box-sizing: border-box;
-          margin: 0;
-          padding: 0;
         }
         
-        html, body {
+        body {
           margin: 0;
           padding: 0;
           background: #ffffff;
           font-family: 'Inter', sans-serif;
           scroll-behavior: smooth;
-          overflow-x: hidden; /* Prevent horizontal scroll */
-          width: 100%;
-          max-width: 100%;
+          overflow-x: hidden;
         }
         
         /* Enhanced Responsive Animations */
@@ -422,8 +416,6 @@ export default function Home() {
           grid-template-columns: 1fr 1fr;
           gap: 4rem;
           align-items: center;
-          width: 100%;
-          max-width: 100%;
         }
         
         @media (max-width: 968px) {
@@ -502,8 +494,6 @@ export default function Home() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
           gap: 2rem;
-          width: 100%;
-          max-width: 100%;
         }
         
         @media (max-width: 480px) {
@@ -540,9 +530,6 @@ export default function Home() {
         /* Section Padding */
         .responsive-section {
           padding: clamp(2rem, 4vw, 4rem) clamp(1rem, 3vw, 2rem);
-          width: 100%;
-          max-width: 100%;
-          overflow: hidden; /* Prevent overflow */
         }
         
         /* Navigation Responsive */
@@ -561,8 +548,6 @@ export default function Home() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
           gap: clamp(1.5rem, 3vw, 3rem);
-          width: 100%;
-          max-width: 100%;
         }
         
         @media (max-width: 480px) {
@@ -577,7 +562,6 @@ export default function Home() {
           max-width: min(800px, 90vw);
           margin: 0 auto;
           padding: 0 1rem;
-          width: 100%;
         }
         
         /* Mobile Sidebar Styles */
@@ -616,28 +600,6 @@ export default function Home() {
             border-radius: 12px;
           }
         }
-
-        /* Fix for horizontal overflow */
-        .hero-image-container {
-          position: relative;
-          width: 100%;
-          max-width: 100%;
-          overflow: hidden;
-        }
-
-        .floating-elements-container {
-          position: relative;
-          width: 100%;
-          max-width: 500px;
-          margin: 0 auto;
-        }
-
-        /* Ensure all containers don't overflow */
-        .max-width-container {
-          width: 100%;
-          max-width: 100%;
-          overflow: hidden;
-        }
       `}</style>
 
       {/* Navigation */}
@@ -650,8 +612,6 @@ export default function Home() {
           top: 0,
           zIndex: 100,
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          width: "100%",
-          maxWidth: "100%",
         }}
       >
         <div
@@ -663,7 +623,6 @@ export default function Home() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            width: "100%",
           }}
         >
           {/* Logo */}
@@ -1135,9 +1094,10 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Rest of your components remain the same */}
       {/* Hero Section */}
       <section
-        className="responsive-section max-width-container"
+        className="responsive-section"
         style={{
           background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
           position: "relative",
@@ -1176,7 +1136,6 @@ export default function Home() {
             margin: "0 auto",
             position: "relative",
             zIndex: 2,
-            width: "100%",
           }}
           className="hero-container"
         >
@@ -1350,7 +1309,6 @@ export default function Home() {
 
           {/* Right Content - Image */}
           <div
-            className="hero-image-container"
             style={{
               display: "flex",
               justifyContent: "center",
@@ -1359,9 +1317,9 @@ export default function Home() {
               flexDirection: "column",
               gap: "2rem",
             }}
+            className="hero-image"
           >
             <div
-              className="floating-elements-container"
               style={{
                 position: "relative",
                 width: "100%",
@@ -1378,8 +1336,6 @@ export default function Home() {
                   position: "relative",
                   zIndex: 6,
                   transform: "rotate(2deg)",
-                  width: "100%",
-                  maxWidth: "100%",
                 }}
               >
                 <img
@@ -1389,8 +1345,6 @@ export default function Home() {
                   style={{
                     borderRadius: "12px",
                     boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-                    width: "100%",
-                    height: "auto",
                   }}
                 />
               </div>
@@ -1445,8 +1399,6 @@ export default function Home() {
                 justifyContent: "center",
                 flexWrap: "wrap",
                 marginTop: "1rem",
-                width: "100%",
-                maxWidth: "100%",
               }}
             >
               {[
@@ -1464,9 +1416,6 @@ export default function Home() {
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255, 255, 255, 0.3)",
                     minWidth: "100px",
-                    flex: "1",
-                    minWidth: "120px",
-                    maxWidth: "150px",
                   }}
                 >
                   <div
@@ -1495,11 +1444,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The rest of your sections (Upload, Results, Features, Examples, Footer) remain the same */}
-      {/* Upload Section */}
+      {/* Upload Section - ALWAYS VISIBLE */}
       <section
         id="upload-section"
-        className="responsive-section max-width-container"
+        className="responsive-section"
         style={{
           background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
         }}
@@ -1521,7 +1469,6 @@ export default function Home() {
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            {/* Upload content remains the same */}
             {!file ? (
               <div style={{ textAlign: "center" }}>
                 <div
@@ -1857,13 +1804,14 @@ export default function Home() {
       {(resultUrl || editingMode) && (
         <section
           ref={resultsSectionRef}
-          className="responsive-section max-width-container slide-up"
+          className="responsive-section"
           style={{
             background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
             minHeight: "50vh",
             display: "flex",
             alignItems: "center",
           }}
+          className="slide-up"
         >
           <div
             style={{
@@ -2071,7 +2019,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section
-        className="responsive-section max-width-container"
+        className="responsive-section"
         style={{
           background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
         }}
@@ -2196,7 +2144,7 @@ export default function Home() {
       {/* Examples Section */}
       <section
         id="examples"
-        className="responsive-section max-width-container"
+        className="responsive-section"
         style={{
           background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
           position: "relative",
@@ -2606,13 +2554,10 @@ export default function Home() {
 
       {/* Footer */}
       <footer
-        className="max-width-container"
         style={{
           borderTop: "1px solid #e2e8f0",
           padding: "3rem 1rem",
           background: "#f8fafc",
-          width: "100%",
-          maxWidth: "100%",
         }}
       >
         <div

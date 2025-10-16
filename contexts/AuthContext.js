@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -24,9 +24,14 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const previousUserRef = useRef(null); // Track previous user state
+  const notificationSentRef = useRef(false); // Track if notification was sent
 
   // Notification functions
   const showLoginNotification = (user) => {
+    if (notificationSentRef.current) return; // Prevent duplicate notifications
+    
+    notificationSentRef.current = true;
     const event = new CustomEvent('showNotification', {
       detail: {
         type: 'success',
@@ -35,9 +40,17 @@ export function AuthProvider({ children }) {
       }
     });
     window.dispatchEvent(event);
+    
+    // Reset after a short delay
+    setTimeout(() => {
+      notificationSentRef.current = false;
+    }, 1000);
   };
 
   const showLogoutNotification = () => {
+    if (notificationSentRef.current) return; // Prevent duplicate notifications
+    
+    notificationSentRef.current = true;
     const event = new CustomEvent('showNotification', {
       detail: {
         type: 'info',
@@ -46,6 +59,11 @@ export function AuthProvider({ children }) {
       }
     });
     window.dispatchEvent(event);
+    
+    // Reset after a short delay
+    setTimeout(() => {
+      notificationSentRef.current = false;
+    }, 1000);
   };
 
   const showErrorNotification = (title, message) => {
@@ -61,12 +79,15 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      const previousUser = previousUserRef.current;
+      previousUserRef.current = user; // Update ref for next comparison
+
       // Check for login/logout events
-      if (user && !currentUser) {
-        // User just logged in
+      if (user && !previousUser) {
+        // User just logged in (was null, now has user)
         showLoginNotification(user);
-      } else if (!user && currentUser) {
-        // User just logged out
+      } else if (!user && previousUser) {
+        // User just logged out (had user, now null)
         showLogoutNotification();
       }
 
@@ -116,7 +137,7 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
-  }, [currentUser]);
+  }, []); // Remove currentUser from dependencies
 
   // Email/Password Signup with Email Verification
   const signup = async (email, password, userData) => {

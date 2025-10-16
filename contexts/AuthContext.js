@@ -5,9 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup
+  updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -90,58 +88,126 @@ export function AuthProvider({ children }) {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  // Google OAuth Signup/Login
-  const signInWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      // Add scopes if needed
-      provider.addScope('email');
-      provider.addScope('profile');
-      
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      // Check if user already exists in Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      
-      if (!userDoc.exists()) {
-        // Create new user profile for Google signup
-        const userProfileData = {
-          uid: user.uid,
-          email: user.email,
-          username: user.displayName || user.email.split('@')[0],
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          provider: 'google',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+  // Google OAuth with direct Google API (not Firebase)
+  const signInWithGoogle = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = `${window.location.origin}`;
+    const scope = 'email profile';
+    const state = Math.random().toString(36).substring(2);
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `state=${state}&` +
+      `access_type=offline&` +
+      `prompt=consent`;
+    
+    // Store state for verification
+    localStorage.setItem('oauth_state', state);
+    window.location.href = authUrl;
+  };
 
-        await setDoc(doc(db, 'users', user.uid), userProfileData);
-        
-        // Update local state
-        setUserProfile(userProfileData);
-        setUser({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          ...userProfileData
-        });
-      } else {
-        // User exists, just update local state
-        const existingData = userDoc.data();
-        setUserProfile(existingData);
-        setUser({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          ...existingData
-        });
-      }
+  // Handle Google OAuth callback
+  const handleGoogleAuthCallback = async (code) => {
+    try {
+      setLoading(true);
       
-      return user;
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to exchange code for token');
+      }
+
+      const tokenData = await tokenResponse.json();
+      
+      // Get user info from Google
+      const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`
+        }
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user info');
+      }
+
+      const googleUser = await userResponse.json();
+      
+      // Create or sign in user in Firebase
+      return await handleGoogleUser(googleUser);
+      
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      console.error('Google OAuth error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Google user creation/sign in
+  const handleGoogleUser = async (googleUser) => {
+    try {
+      const { email, name, picture, id } = googleUser;
+      
+      // Generate a secure password for Firebase
+      const password = btoa(email + process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID + id).slice(0, 20);
+      
+      try {
+        // Try to sign in existing user
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          // Create new user
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          
+          // Update profile with Google data
+          await updateProfile(user, {
+            displayName: name,
+            photoURL: picture
+          });
+
+          // Create user profile in Firestore
+          const userProfileData = {
+            uid: user.uid,
+            email: email,
+            username: name || email.split('@')[0],
+            displayName: name,
+            photoURL: picture,
+            provider: 'google',
+            googleId: id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          await setDoc(doc(db, 'users', user.uid), userProfileData);
+          
+          // Update local state
+          setUserProfile(userProfileData);
+          setUser({
+            uid: user.uid,
+            email: user.email,
+            displayName: name,
+            ...userProfileData
+          });
+
+          return user;
+        } else {
+          throw error;
+        }
+      }
+    } catch (error) {
+      console.error('Error handling Google user:', error);
       throw error;
     }
   };
@@ -203,6 +269,7 @@ export function AuthProvider({ children }) {
     logout,
     resetPassword,
     signInWithGoogle,
+    handleGoogleAuthCallback,
     
     // Profile management
     updateUserProfile,

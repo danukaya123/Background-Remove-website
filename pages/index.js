@@ -15,7 +15,7 @@ export default function Home() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);<nav
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   
   const fileInputRef = useRef(null);
@@ -701,337 +701,21 @@ export default function Home() {
       `}</style>
 
       {/* Navigation */}
-<nav
-  style={{
-    borderBottom: "1px solid #e2e8f0",
-    background: "rgba(255, 255, 255, 0.95)",
-    backdropFilter: "blur(10px)",
-    position: "sticky",
-    top: 0,
-    zIndex: 1000,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    width: "100%",
-  }}
->
-  <div className="nav-container">
-    {/* Logo */}
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-      <div
+      <nav
         style={{
-          width: "32px",
-          height: "32px",
-          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: "bold",
-          fontSize: "16px",
-          color: "white",
+          borderBottom: "1px solid #e2e8f0",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          width: "100%",
         }}
       >
-        Q
-      </div>
-      <span
-        style={{
-          fontSize: "24px",
-          fontWeight: "800",
-          color: "#1e293b",
-          letterSpacing: "-0.5px",
-          whiteSpace: "nowrap",
-        }}
-      >
-        Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
-      </span>
-    </div>
-    
-    {/* Desktop Navigation Links */}
-    <div className="desktop-only nav-links">
-      {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-        <a 
-          key={item}
-          href="#" 
-          style={{ 
-            color: "#64748b", 
-            textDecoration: "none", 
-            fontSize: "14px", 
-            fontWeight: "500", 
-            transition: "all 0.3s",
-            padding: "6px 12px",
-            borderRadius: "6px",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = "#3b82f6";
-            e.currentTarget.style.background = "#f1f5f9";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = "#64748b";
-            e.currentTarget.style.background = "transparent";
-          }}
-        >
-          {item}
-        </a>
-      ))}
-      
-      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem", flexWrap: "wrap" }}>
-        {currentUser ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            {/* User Profile Dropdown */}
-            <div style={{ position: "relative" }} ref={dropdownRef}>
-              <button
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                  whiteSpace: "nowrap",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  minHeight: "32px",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                }}
-                onClick={() => setShowDropdown(!showDropdown)}
-              >
-                <div
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    color: "white",
-                    flexShrink: 0,
-                  }}
-                >
-                  {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
-                </div>
-                <span style={{ 
-                  maxWidth: "120px", 
-                  overflow: "hidden", 
-                  textOverflow: "ellipsis",
-                  display: "inline-block"
-                }}>
-                  {userProfile?.username || currentUser?.email || "User"}
-                </span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showDropdown && (
-                <div
-                  className="user-dropdown-content"
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    background: "white",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    padding: "0.75rem",
-                    marginTop: "0.5rem",
-                    minWidth: "200px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                    zIndex: 1000,
-                  }}
-                >
-                  <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
-                    Signed in as<br />
-                    <strong style={{ color: "#1e293b", wordBreak: "break-all" }}>{currentUser?.email || "User"}</strong>
-                  </div>
-                  {userProfile && (
-                    <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
-                      <div style={{ fontSize: "12px", color: "#64748b" }}>Username:</div>
-                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.username}</div>
-                      {userProfile.phoneNumber && (
-                        <>
-                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Phone:</div>
-                          <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.phoneNumber}</div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      color: "#dc2626",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      borderRadius: "6px",
-                      transition: "all 0.3s",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginTop: "0.5rem",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#fef2f2";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-                    </svg>
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <>
-            <button
-              onClick={() => router.push('/login')}
-              style={{
-                background: "transparent",
-                border: "1px solid #d1d5db",
-                color: "#374151",
-                fontWeight: "600",
-                padding: "8px 16px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
-                transition: "all 0.3s",
-                whiteSpace: "nowrap",
-                minHeight: "36px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#f8fafc";
-                e.currentTarget.style.borderColor = "#9ca3af";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "#d1d5db";
-              }}
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => router.push('/signup')}
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                color: "white",
-                boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
-                padding: "8px 16px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                border: "none",
-                transition: "all 0.3s",
-                whiteSpace: "nowrap",
-                minHeight: "36px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
-              }}
-            >
-              Sign up
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-
-    {/* Mobile Menu Toggle - Improved styling */}
-    <div className="mobile-only">
-      <button
-        className="menu-toggle"
-        onClick={toggleMobileMenu}
-        style={{
-          background: "transparent",
-          border: "1px solid #e2e8f0",
-          padding: "10px",
-          borderRadius: "8px",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
-          minHeight: "44px",
-          minWidth: "44px",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all 0.3s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "#f8fafc";
-          e.currentTarget.style.borderColor = "#cbd5e1";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.borderColor = "#e2e8f0";
-        }}
-      >
-        <span style={{ 
-          width: "20px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
-        }}></span>
-        <span style={{ 
-          width: "20px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          opacity: mobileMenuOpen ? "0" : "1"
-        }}></span>
-        <span style={{ 
-          width: "20px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
-        }}></span>
-      </button>
-    </div>
-  </div>
-
-  {/* Mobile Sidebar Navigation */}
-  {mobileMenuOpen && (
-    <>
-      <div 
-        className="mobile-sidebar-overlay overlay-fade-in"
-        onClick={() => setMobileMenuOpen(false)}
-      />
-      <div 
-        ref={mobileMenuRef}
-        className="mobile-sidebar slide-in-right"
-      >
-        {/* Sidebar Header */}
-        <div className="mobile-sidebar-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="nav-container">
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
             <div
               style={{
                 width: "32px",
@@ -1050,44 +734,19 @@ export default function Home() {
             </div>
             <span
               style={{
-                fontSize: "18px",
+                fontSize: "24px",
                 fontWeight: "800",
                 color: "#1e293b",
+                letterSpacing: "-0.5px",
+                whiteSpace: "nowrap",
               }}
             >
               Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
             </span>
           </div>
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            style={{
-              background: "transparent",
-              border: "none",
-              padding: "8px",
-              borderRadius: "6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.3s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#f1f5f9";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Sidebar Content */}
-        <div className="mobile-sidebar-content">
-          {/* Navigation Links */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          
+          {/* Desktop Navigation Links */}
+          <div className="desktop-only nav-links">
             {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
               <a 
                 key={item}
@@ -1095,225 +754,566 @@ export default function Home() {
                 style={{ 
                   color: "#64748b", 
                   textDecoration: "none", 
-                  fontSize: "16px", 
+                  fontSize: "14px", 
                   fontWeight: "500", 
-                  padding: "12px 16px",
-                  borderRadius: "8px",
                   transition: "all 0.3s",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  whiteSpace: "nowrap",
                 }}
-                onClick={() => setMobileMenuOpen(false)}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
                   e.currentTarget.style.color = "#3b82f6";
+                  e.currentTarget.style.background = "#f1f5f9";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
                   e.currentTarget.style.color = "#64748b";
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
-                <div
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div style={{ width: "6px", height: "6px", background: "#64748b", borderRadius: "50%" }} />
-                </div>
                 {item}
               </a>
             ))}
-          </div>
-
-          {/* User Account Section */}
-          <div style={{ 
-            background: "linear-gradient(135deg, #f8fafc, #ffffff)",
-            borderRadius: "12px",
-            padding: "1.5rem",
-            border: "1px solid #e2e8f0",
-            marginTop: "1rem",
-          }}>
-            {currentUser ? (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      color: "white",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ 
-                      fontSize: "16px", 
-                      fontWeight: "600", 
-                      color: "#1e293b",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap"
-                    }}>
-                      {userProfile?.username || "User"}
-                    </div>
-                    <div style={{ 
-                      fontSize: "14px", 
-                      color: "#64748b",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap"
-                    }}>
-                      {currentUser?.email}
-                    </div>
-                  </div>
-                </div>
-                
-                {userProfile && (
-                  <div style={{ 
-                    background: "white", 
-                    padding: "12px", 
-                    borderRadius: "8px", 
-                    border: "1px solid #e2e8f0",
-                    marginBottom: "1rem"
-                  }}>
-                    <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>Account Details</div>
-                    {userProfile.phoneNumber && (
-                      <div style={{ fontSize: "14px", color: "#1e293b", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-                        </svg>
-                        {userProfile.phoneNumber}
+            
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem", flexWrap: "wrap" }}>
+              {currentUser ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  {/* User Profile Dropdown */}
+                  <div style={{ position: "relative" }} ref={dropdownRef}>
+                    <button
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #d1d5db",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        color: "#374151",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        minHeight: "32px",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.borderColor = "#9ca3af";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "#d1d5db";
+                      }}
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    >
+                      <div
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          color: "white",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <span style={{ 
+                        maxWidth: "120px", 
+                        overflow: "hidden", 
+                        textOverflow: "ellipsis",
+                        display: "inline-block"
+                      }}>
+                        {userProfile?.username || currentUser?.email || "User"}
+                      </span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showDropdown && (
+                      <div
+                        className="user-dropdown-content"
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          right: 0,
+                          background: "white",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "12px",
+                          padding: "0.75rem",
+                          marginTop: "0.5rem",
+                          minWidth: "200px",
+                          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                          zIndex: 1000,
+                        }}
+                      >
+                        <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                          Signed in as<br />
+                          <strong style={{ color: "#1e293b", wordBreak: "break-all" }}>{currentUser?.email || "User"}</strong>
+                        </div>
+                        {userProfile && (
+                          <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
+                            <div style={{ fontSize: "12px", color: "#64748b" }}>Username:</div>
+                            <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.username}</div>
+                            {userProfile.phoneNumber && (
+                              <>
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Phone:</div>
+                                <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.phoneNumber}</div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        <button
+                          onClick={handleLogout}
+                          style={{
+                            width: "100%",
+                            background: "transparent",
+                            border: "none",
+                            padding: "0.75rem",
+                            textAlign: "left",
+                            color: "#dc2626",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            borderRadius: "6px",
+                            transition: "all 0.3s",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginTop: "0.5rem",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#fef2f2";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                          </svg>
+                          Sign Out
+                        </button>
                       </div>
                     )}
                   </div>
-                )}
-                
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push('/login')}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      color: "#374151",
+                      fontWeight: "600",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      whiteSpace: "nowrap",
+                      minHeight: "36px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#9ca3af";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                    }}
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => router.push('/signup')}
+                    style={{
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      color: "white",
+                      boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      border: "none",
+                      transition: "all 0.3s",
+                      whiteSpace: "nowrap",
+                      minHeight: "36px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+                    }}
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className="mobile-only">
+            <button
+              className="menu-toggle"
+              onClick={toggleMobileMenu}
+              style={{
+                background: "transparent",
+                border: "1px solid #e2e8f0",
+                padding: "10px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                minHeight: "44px",
+                minWidth: "44px",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f8fafc";
+                e.currentTarget.style.borderColor = "#cbd5e1";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "#e2e8f0";
+              }}
+            >
+              <span style={{ 
+                width: "20px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+              }}></span>
+              <span style={{ 
+                width: "20px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                opacity: mobileMenuOpen ? "0" : "1"
+              }}></span>
+              <span style={{ 
+                width: "20px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+              }}></span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Sidebar Navigation */}
+        {mobileMenuOpen && (
+          <>
+            <div 
+              className="mobile-sidebar-overlay overlay-fade-in"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div 
+              ref={mobileMenuRef}
+              className="mobile-sidebar slide-in-right"
+            >
+              {/* Sidebar Header */}
+              <div className="mobile-sidebar-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "16px",
+                      color: "white",
+                    }}
+                  >
+                    Q
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+                  </span>
+                </div>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setMobileMenuOpen(false)}
                   style={{
                     background: "transparent",
-                    border: "1px solid #d1d5db",
-                    color: "#374151",
-                    fontWeight: "600",
-                    width: "100%",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
+                    border: "none",
+                    padding: "8px",
+                    borderRadius: "6px",
                     cursor: "pointer",
-                    transition: "all 0.3s",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "8px",
+                    transition: "all 0.3s ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#9ca3af";
+                    e.currentTarget.style.background = "#f1f5f9";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "#d1d5db";
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <p style={{ color: "#64748b", fontSize: "14px", textAlign: "center", margin: 0 }}>
-                  Join thousands of users transforming their images
-                </p>
-                <button
-                  onClick={() => {
-                    router.push('/login');
-                    setMobileMenuOpen(false);
-                  }}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #d1d5db",
-                    color: "#374151",
-                    fontWeight: "600",
-                    width: "100%",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    transition: "all 0.3s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#9ca3af";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "#d1d5db";
-                  }}
-                >
-                  Log in
-                </button>
-                <button
-                  onClick={() => {
-                    router.push('/signup');
-                    setMobileMenuOpen(false);
-                  }}
-                  style={{
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    color: "white",
-                    width: "100%",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    border: "none",
-                    transition: "all 0.3s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  Sign up
                 </button>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Sidebar Footer */}
-        <div className="mobile-sidebar-footer">
-          <div style={{ textAlign: "center", color: "#64748b", fontSize: "12px" }}>
-            &copy; {new Date().getFullYear()} QuizontalRBG
-          </div>
-        </div>
-      </div>
-    </>
-  )}
-</nav>
+              {/* Sidebar Content */}
+              <div className="mobile-sidebar-content">
+                {/* Navigation Links */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+                    <a 
+                      key={item}
+                      href="#" 
+                      style={{ 
+                        color: "#64748b", 
+                        textDecoration: "none", 
+                        fontSize: "16px", 
+                        fontWeight: "500", 
+                        padding: "12px 16px",
+                        borderRadius: "8px",
+                        transition: "all 0.3s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                      onClick={() => setMobileMenuOpen(false)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.color = "#3b82f6";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "#64748b";
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <div style={{ width: "6px", height: "6px", background: "#64748b", borderRadius: "50%" }} />
+                      </div>
+                      {item}
+                    </a>
+                  ))}
+                </div>
 
-      {/* Notification Container - Only show errors, removed welcome message */}
+                {/* User Account Section */}
+                <div style={{ 
+                  background: "linear-gradient(135deg, #f8fafc, #ffffff)",
+                  borderRadius: "12px",
+                  padding: "1.5rem",
+                  border: "1px solid #e2e8f0",
+                  marginTop: "1rem",
+                }}>
+                  {currentUser ? (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+                        <div
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            color: "white",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ 
+                            fontSize: "16px", 
+                            fontWeight: "600", 
+                            color: "#1e293b",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}>
+                            {userProfile?.username || "User"}
+                          </div>
+                          <div style={{ 
+                            fontSize: "14px", 
+                            color: "#64748b",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}>
+                            {currentUser?.email}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {userProfile && (
+                        <div style={{ 
+                          background: "white", 
+                          padding: "12px", 
+                          borderRadius: "8px", 
+                          border: "1px solid #e2e8f0",
+                          marginBottom: "1rem"
+                        }}>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>Account Details</div>
+                          {userProfile.phoneNumber && (
+                            <div style={{ fontSize: "14px", color: "#1e293b", display: "flex", alignItems: "center", gap: "8px" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+                              </svg>
+                              {userProfile.phoneNumber}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={handleLogout}
+                        style={{
+                          background: "transparent",
+                          border: "1px solid #d1d5db",
+                          color: "#374151",
+                          fontWeight: "600",
+                          width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          cursor: "pointer",
+                          transition: "all 0.3s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#f8fafc";
+                          e.currentTarget.style.borderColor = "#9ca3af";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.borderColor = "#d1d5db";
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                        </svg>
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                      <p style={{ color: "#64748b", fontSize: "14px", textAlign: "center", margin: 0 }}>
+                        Join thousands of users transforming their images
+                      </p>
+                      <button
+                        onClick={() => {
+                          router.push('/login');
+                          setMobileMenuOpen(false);
+                        }}
+                        style={{
+                          background: "transparent",
+                          border: "1px solid #d1d5db",
+                          color: "#374151",
+                          fontWeight: "600",
+                          width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          cursor: "pointer",
+                          transition: "all 0.3s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#f8fafc";
+                          e.currentTarget.style.borderColor = "#9ca3af";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.borderColor = "#d1d5db";
+                        }}
+                      >
+                        Log in
+                      </button>
+                      <button
+                        onClick={() => {
+                          router.push('/signup');
+                          setMobileMenuOpen(false);
+                        }}
+                        style={{
+                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                          color: "white",
+                          width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          border: "none",
+                          transition: "all 0.3s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      >
+                        Sign up
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sidebar Footer */}
+              <div className="mobile-sidebar-footer">
+                <div style={{ textAlign: "center", color: "#64748b", fontSize: "12px" }}>
+                  &copy; {new Date().getFullYear()} QuizontalRBG
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </nav>
+
+      {/* Rest of your component remains the same... */}
+      {/* Notification Container */}
       <div className="notification-container">
-        {/* Error notifications only */}
         {error && (
           <div
             style={{
@@ -1338,7 +1338,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Rest of your component remains exactly the same... */}
       {/* Hero Section */}
       <section
         className="responsive-section"

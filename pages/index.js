@@ -1549,7 +1549,7 @@ export default function Home() {
           )}
         </div>
       </section>
-
+)}
 {resultUrl && !editingMode && (
   <section
     ref={resultsSectionRef}

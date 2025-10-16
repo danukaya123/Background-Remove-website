@@ -332,7 +332,7 @@ export default function Signup() {
                 marginBottom: "8px",
               }}
             >
-              Username *
+              Choose a username
             </label>
             <input
               id="username"
@@ -351,8 +351,9 @@ export default function Signup() {
                 transition: "all 0.3s ease",
                 background: "white",
                 opacity: loading ? 0.7 : 1,
+                boxSizing: "border-box",
               }}
-              placeholder="Choose a username"
+              placeholder="Enter your username"
               onFocus={(e) => {
                 e.target.style.borderColor = "#3b82f6";
                 e.target.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.1)";
@@ -394,6 +395,7 @@ export default function Signup() {
                 transition: "all 0.3s ease",
                 background: "white",
                 opacity: loading ? 0.7 : 1,
+                boxSizing: "border-box",
               }}
               placeholder="Enter your email"
               onFocus={(e) => {
@@ -407,8 +409,14 @@ export default function Signup() {
             />
           </div>
 
-          <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div>
+          {/* Phone and Birthday - Fixed responsive grid */}
+          <div className="responsive-grid" style={{ 
+            display: "grid", 
+            gridTemplateColumns: "1fr 1fr", 
+            gap: "1rem",
+            width: "100%"
+          }}>
+            <div style={{ width: "100%" }}>
               <label
                 htmlFor="phoneNumber"
                 style={{
@@ -437,6 +445,7 @@ export default function Signup() {
                   transition: "all 0.3s ease",
                   background: "white",
                   opacity: loading ? 0.7 : 1,
+                  boxSizing: "border-box",
                 }}
                 placeholder="Phone"
                 onFocus={(e) => {
@@ -450,7 +459,7 @@ export default function Signup() {
               />
             </div>
 
-            <div>
+            <div style={{ width: "100%" }}>
               <label
                 htmlFor="birthday"
                 style={{
@@ -466,7 +475,7 @@ export default function Signup() {
               <input
                 id="birthday"
                 name="birthday"
-                type="date"
+                type="text"
                 value={formData.birthday}
                 onChange={handleChange}
                 disabled={loading}
@@ -479,7 +488,9 @@ export default function Signup() {
                   transition: "all 0.3s ease",
                   background: "white",
                   opacity: loading ? 0.7 : 1,
+                  boxSizing: "border-box",
                 }}
+                placeholder="mm/dd/yyyy"
                 onFocus={(e) => {
                   e.target.style.borderColor = "#3b82f6";
                   e.target.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.1)";
@@ -522,6 +533,7 @@ export default function Signup() {
                 transition: "all 0.3s ease",
                 background: "white",
                 opacity: loading ? 0.7 : 1,
+                boxSizing: "border-box",
               }}
               placeholder="Create a password (min. 6 characters)"
               onFocus={(e) => {
@@ -565,6 +577,7 @@ export default function Signup() {
                 transition: "all 0.3s ease",
                 background: "white",
                 opacity: loading ? 0.7 : 1,
+                boxSizing: "border-box",
               }}
               placeholder="Confirm your password"
               onFocus={(e) => {
@@ -592,6 +605,7 @@ export default function Signup() {
                 marginTop: "2px",
                 accentColor: "#3b82f6",
                 opacity: loading ? 0.7 : 1,
+                flexShrink: 0,
               }}
             />
             <label htmlFor="terms" style={{ fontSize: "14px", color: "#64748b", lineHeight: "1.4", cursor: "pointer" }}>
@@ -624,6 +638,7 @@ export default function Signup() {
               boxShadow: loading || !acceptedTerms ? "none" : "0 4px 15px rgba(59, 130, 246, 0.3)",
               marginTop: "0.5rem",
               opacity: loading ? 0.7 : 1,
+              width: "100%",
             }}
             onMouseEnter={(e) => {
               if (!loading && acceptedTerms) {

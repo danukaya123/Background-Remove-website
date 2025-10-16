@@ -20,7 +20,6 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [oauthLoading, setOauthLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -75,42 +74,6 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
-  }, []);
-
-  // Check for Google OAuth callback on mount
-  useEffect(() => {
-    const handleGoogleOAuthCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const error = urlParams.get('error');
-
-      if (error) {
-        console.error('Google OAuth error:', error);
-        // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return;
-      }
-
-      if (code) {
-        try {
-          setOauthLoading(true);
-          console.log('Processing Google OAuth callback...');
-          
-          await handleGoogleAuthCallback(code);
-          
-          // Clean URL after successful auth
-          window.history.replaceState({}, document.title, window.location.pathname);
-          console.log('Google OAuth completed successfully');
-          
-        } catch (error) {
-          console.error('Google OAuth callback error:', error);
-        } finally {
-          setOauthLoading(false);
-        }
-      }
-    };
-
-    handleGoogleOAuthCallback();
   }, []);
 
   // Email/Password Signup
@@ -176,10 +139,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Google OAuth with direct Google API
+  // Google OAuth with direct Google API - FIXED REDIRECT URI
   const signInWithGoogle = () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}`;
+    // FIX: Redirect to the callback page, not the root
+    const redirectUri = `${window.location.origin}/auth/callback`;
     const scope = 'email profile';
     const state = Math.random().toString(36).substring(2);
     
@@ -194,13 +158,14 @@ export function AuthProvider({ children }) {
     
     // Store state for verification
     localStorage.setItem('oauth_state', state);
-    console.log('Redirecting to Google OAuth...');
+    console.log('Redirecting to Google OAuth with redirect URI:', redirectUri);
     window.location.href = authUrl;
   };
 
   // Handle Google OAuth callback
   const handleGoogleAuthCallback = async (code) => {
     try {
+      setLoading(true);
       console.log('Exchanging code for access token...');
       
       // Exchange authorization code for access token
@@ -209,11 +174,15 @@ export function AuthProvider({ children }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ 
+          code,
+          redirectUri: `${window.location.origin}/auth/callback` // Important: same redirect URI
+        }),
       });
 
       if (!tokenResponse.ok) {
         const errorData = await tokenResponse.json();
+        console.error('Token exchange failed:', errorData);
         throw new Error(errorData.error || 'Failed to exchange code for token');
       }
 
@@ -232,7 +201,7 @@ export function AuthProvider({ children }) {
       }
 
       const googleUser = await userResponse.json();
-      console.log('Google user info:', googleUser);
+      console.log('Google user info received:', googleUser);
       
       // Create or sign in user in Firebase
       return await handleGoogleUser(googleUser);
@@ -240,6 +209,8 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Google OAuth error:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -252,6 +223,8 @@ export function AuthProvider({ children }) {
         throw new Error('No email received from Google');
       }
 
+      console.log('Processing Google user:', email);
+      
       // Generate a secure password for Firebase
       const password = btoa(email + process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID + id).slice(0, 20);
       
@@ -260,7 +233,23 @@ export function AuthProvider({ children }) {
         // Try to sign in existing user
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         console.log('Existing user signed in successfully');
-        return userCredential.user;
+        
+        // Update local state
+        const user = userCredential.user;
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserProfile(userData);
+          setCurrentUser({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            emailVerified: user.emailVerified,
+            ...userData
+          });
+        }
+        
+        return user;
       } catch (error) {
         if (error.code === 'auth/user-not-found') {
           console.log('Creating new user...');
@@ -295,13 +284,14 @@ export function AuthProvider({ children }) {
             email: user.email,
             displayName: name,
             emailVerified: user.emailVerified,
+            photoURL: picture,
             ...userProfileData
           };
 
           setUserProfile(userProfileData);
           setCurrentUser(userObj);
 
-          console.log('New Google user created successfully');
+          console.log('New Google user created successfully in Firestore');
           return user;
         } else {
           console.error('Firebase auth error:', error);
@@ -384,32 +374,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Get user profile data
-  const refreshUserProfile = async () => {
-    if (!currentUser) return null;
-    
-    try {
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUserProfile(userData);
-        
-        // Also update user object with latest data
-        const updatedUser = {
-          ...currentUser,
-          ...userData
-        };
-        setCurrentUser(updatedUser);
-        
-        return userData;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error refreshing user profile:', error);
-      throw error;
-    }
-  };
-
   const value = {
     // User state
     user: currentUser,
@@ -426,11 +390,10 @@ export function AuthProvider({ children }) {
     
     // Profile management
     updateUserProfile,
-    refreshUserProfile,
     
     // Helper properties
     isAuthenticated: !!currentUser,
-    isLoading: loading || oauthLoading
+    isLoading: loading
   };
 
   return (

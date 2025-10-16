@@ -14,7 +14,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { signup, signupWithGoogle, currentUser } = useAuth();
+const { signup, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   // Redirect if already logged in
@@ -68,17 +68,18 @@ export default function Signup() {
     }
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await signupWithGoogle();
-    } catch (error) {
-      console.error('Google signup error:', error);
-      setError('Failed to sign up with Google. Please try again.');
-      setLoading(false);
-    }
-  };
+const handleGoogleSignup = async () => {
+  try {
+    setError('');
+    setLoading(true);
+    await signInWithGoogle(); // Same function for both login and signup
+    router.push('/');
+  } catch (error) {
+    setError('Failed to create account with Google. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div

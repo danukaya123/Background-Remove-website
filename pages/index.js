@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Client } from "@gradio/client";
-import ImageEditor from './ImageEditor'; // Adjust path as needed
+import ImageEditor from './ImageEditor';
+import { useRouter } from 'next/router';
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -9,9 +10,27 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [editingMode, setEditingMode] = useState(false); // Add this
+  const [editingMode, setEditingMode] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  
   const fileInputRef = useRef(null);
   const resultsSectionRef = useRef(null);
+  const router = useRouter();
+
+  // Mock authentication state - replace with your actual auth logic
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Mock logout function - replace with your actual logout logic
+  const logout = () => {
+    setCurrentUser(null);
+    setUserProfile(null);
+    setShowDropdown(false);
+  };
 
   // Auto-scroll to results when processing is complete
   useEffect(() => {
@@ -38,64 +57,59 @@ export default function Home() {
   }, [mobileMenuOpen]);
 
   const handleDownloadEdited = (editedImageUrl) => {
-  try {
-    const a = document.createElement("a");
-    a.href = editedImageUrl;
-    a.download = `edited-background-removed-${Date.now()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } catch (err) {
-    console.error("Download failed:", err);
-    setError("Download failed. Please try again.");
-  }
-};
-
-const [displayedText, setDisplayedText] = useState('');
-const [currentIndex, setCurrentIndex] = useState(0);
-const [isDeleting, setIsDeleting] = useState(false);
-const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-
-// Typewriter phrases for subheading
-const typewriterPhrases = [
-  "AI-Powered & Instant Processing.!",
-  "100% Free & No Watermarks.!", 
-  "Professional Quality Results.!",
-  "Perfect for E-commerce.!",
-  "No Manual Editing Required.!",
-  "Works with Any Image Format.!",
-  "Crisp Clean Edges Every Time.!",
-  "Secure & Private Processing.!"
-];
-
-// Typewriter effect for subheading
-useEffect(() => {
-  const currentPhrase = typewriterPhrases[currentPhraseIndex];
-  
-  const timeout = setTimeout(() => {
-    if (!isDeleting) {
-      // Typing phase
-      if (currentIndex < currentPhrase.length) {
-        setDisplayedText(currentPhrase.substring(0, currentIndex + 1));
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        // Wait before starting to delete
-        setTimeout(() => setIsDeleting(true), 2000);
-      }
-    } else {
-      // Deleting phase
-      if (currentIndex > 0) {
-        setDisplayedText(currentPhrase.substring(0, currentIndex - 1));
-        setCurrentIndex(currentIndex - 1);
-      } else {
-        setIsDeleting(false);
-        setCurrentPhraseIndex((currentPhraseIndex + 1) % typewriterPhrases.length);
-      }
+    try {
+      const a = document.createElement("a");
+      a.href = editedImageUrl;
+      a.download = `edited-background-removed-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Download failed:", err);
+      setError("Download failed. Please try again.");
     }
-  }, isDeleting ? 40 : 60);
+  };
 
-  return () => clearTimeout(timeout);
-}, [currentIndex, isDeleting, currentPhraseIndex]);
+  // Typewriter phrases for subheading
+  const typewriterPhrases = [
+    "AI-Powered & Instant Processing.!",
+    "100% Free & No Watermarks.!", 
+    "Professional Quality Results.!",
+    "Perfect for E-commerce.!",
+    "No Manual Editing Required.!",
+    "Works with Any Image Format.!",
+    "Crisp Clean Edges Every Time.!",
+    "Secure & Private Processing.!"
+  ];
+
+  // Typewriter effect for subheading
+  useEffect(() => {
+    const currentPhrase = typewriterPhrases[currentPhraseIndex];
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        // Typing phase
+        if (currentIndex < currentPhrase.length) {
+          setDisplayedText(currentPhrase.substring(0, currentIndex + 1));
+          setCurrentIndex(currentIndex + 1);
+        } else {
+          // Wait before starting to delete
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        // Deleting phase
+        if (currentIndex > 0) {
+          setDisplayedText(currentPhrase.substring(0, currentIndex - 1));
+          setCurrentIndex(currentIndex - 1);
+        } else {
+          setIsDeleting(false);
+          setCurrentPhraseIndex((currentPhraseIndex + 1) % typewriterPhrases.length);
+        }
+      }
+    }, isDeleting ? 40 : 60);
+
+    return () => clearTimeout(timeout);
+  }, [currentIndex, isDeleting, currentPhraseIndex]);
 
   // Drag and drop handlers
   const handleDrag = (e) => {
@@ -188,15 +202,15 @@ useEffect(() => {
   };
 
   // Reset function
-const resetAll = () => {
-  setFile(null);
-  setResultUrl(null);
-  setError(null);
-  setEditingMode(false); // Add this
-  if (fileInputRef.current) {
-    fileInputRef.current.value = "";
-  }
-};
+  const resetAll = () => {
+    setFile(null);
+    setResultUrl(null);
+    setError(null);
+    setEditingMode(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   // Toggle mobile menu
   const toggleMobileMenu = () => {
@@ -214,627 +228,396 @@ const resetAll = () => {
         margin: "0",
       }}
     >
-      {/* Global Styles */}
-<style jsx global>{`
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-  
-  * {
-    box-sizing: border-box;
-  }
-  
-  body {
-    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    font-family: 'Inter', sans-serif;
-    scroll-behavior: smooth;
-  }
-  
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-  
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-    50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
-  }
-  
-  @keyframes neuralOrbit {
-    0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
-    100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
-  }
-  
-  @keyframes neuralOrbitReverse {
-    0% { transform: rotate(0deg) translateX(25px) rotate(0deg); }
-    100% { transform: rotate(-360deg) translateX(25px) rotate(360deg); }
-  }
-  
-  @keyframes aiCorePulse {
-    0%, 100% { 
-      transform: scale(1);
-      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-    }
-    50% { 
-      transform: scale(1.1);
-      box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-    }
-  }
-  
-  @keyframes dataFlow {
-    0% { stroke-dashoffset: 100; }
-    100% { stroke-dashoffset: 0; }
-  }
-  
-  @keyframes particleFloat {
-    0%, 100% { 
-      transform: translate(0, 0) rotate(0deg);
-      opacity: 0;
-    }
-    10%, 90% { opacity: 1; }
-    50% { 
-      transform: translate(100px, -50px) rotate(180deg);
-    }
-  }
-  
-  @keyframes slideUp {
-    from { 
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to { 
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes textGlow {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 1; }
-  }
-  
-  @keyframes slideInFromRight {
-    from { 
-      opacity: 0;
-      transform: translateX(100%);
-    }
-    to { 
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  .float-animation {
-    animation: float 3s ease-in-out infinite;
-  }
-  
-  .pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-  
-  .bounce-subtle {
-    animation: bounce-subtle 2s infinite;
-  }
-  
-  .slide-up {
-    animation: slideUp 0.6s ease-out;
-  }
-  
-  .text-glow {
-    animation: textGlow 2s ease-in-out infinite;
-  }
-  
-  .slide-in-right {
-    animation: slideInFromRight 0.3s ease-out;
-  }
-  
-  @keyframes bounce-subtle {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-5px); }
-    60% { transform: translateY(-3px); }
-  }
-  
-  /* Responsive design helper classes */
-  .desktop-only {
-    display: flex;
-  }
-  
-  .mobile-only {
-    display: none;
-  }
-  
-  /* Hero section responsive styles */
-  .hero-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-  }
-  
-  .hero-text h1,
-  .hero-text p {
-    text-align: left;
-  }
-  
-  .feature-points {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .cta-buttons {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  .floating-badge {
-    position: absolute;
-    z-index: 4;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  @media (max-width: 768px) {
-    .desktop-only {
-      display: none !important;
-    }
-    
-    .mobile-only {
-      display: flex !important;
-    }
-    
-    .hero-container {
-      grid-template-columns: 1fr !important;
-      gap: 3rem !important;
-      text-align: center;
-    }
-    
-    .hero-text h1,
-    .hero-text p {
-      text-align: center !important;
-    }
-    
-    .cta-buttons {
-      justify-content: center !important;
-    }
-    
-    .feature-points {
-      align-items: center !important;
-    }
-    
-    /* FIX: Text first, then image below on mobile */
-    .hero-text {
-      order: 1; /* Text appears first */
-    }
-    
-    .hero-image {
-      order: 2; /* Image appears second (below text) */
-    }
-    
-    .floating-badge {
-      font-size: 12px !important;
-      padding: 8px 16px !important;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .cta-buttons button {
-      padding: 12px 20px !important;
-      font-size: 14px !important;
-      width: 100%;
-      justify-content: center;
-    }
-    
-    .cta-buttons {
-      flex-direction: column;
-    }
-  }
-
-// Add this to your global styles section
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-}
-`}</style>
-
       {/* Navigation */}
-{/* Navigation */}
-{/* Navigation */}
-<nav
-  style={{
-    borderBottom: "1px solid #e2e8f0",
-    background: "rgba(255, 255, 255, 0.95)",
-    backdropFilter: "blur(10px)",
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-  }}
->
-  <div
-    style={{
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "1rem 2rem",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
-  >
-    {/* Logo */}
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <div
+      <nav
         style={{
-          width: "32px",
-          height: "32px",
-          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: "bold",
-          fontSize: "16px",
-          color: "white",
+          borderBottom: "1px solid #e2e8f0",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         }}
       >
-        Q
-      </div>
-      <span
-        style={{
-          fontSize: "24px",
-          fontWeight: "800",
-          color: "#1e293b",
-          letterSpacing: "-0.5px",
-        }}
-      >
-        Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
-      </span>
-    </div>
-    
-    {/* Desktop Navigation Links */}
-    <div className="desktop-only" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-      {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-        <a 
-          key={item}
-          href="#" 
-          style={{ 
-            color: "#64748b", 
-            textDecoration: "none", 
-            fontSize: "14px", 
-            fontWeight: "500", 
-            transition: "all 0.3s",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = "#3b82f6";
-            e.currentTarget.style.background = "#f1f5f9";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = "#64748b";
-            e.currentTarget.style.background = "transparent";
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "1rem 2rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          {item}
-        </a>
-      ))}
-      
-      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
-        {currentUser ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            {/* User Profile Dropdown */}
-            <div style={{ position: "relative" }}>
-              <button
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+                color: "white",
+              }}
+            >
+              Q
+            </div>
+            <span
+              style={{
+                fontSize: "24px",
+                fontWeight: "800",
+                color: "#1e293b",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+            </span>
+          </div>
+          
+          {/* Desktop Navigation Links */}
+          <div className="desktop-only" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+              <a 
+                key={item}
+                href="#" 
+                style={{ 
+                  color: "#64748b", 
+                  textDecoration: "none", 
+                  fontSize: "14px", 
+                  fontWeight: "500", 
                   transition: "all 0.3s",
+                  padding: "6px 10px",
+                  borderRadius: "6px",
                   whiteSpace: "nowrap",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
+                  e.currentTarget.style.color = "#3b82f6";
+                  e.currentTarget.style.background = "#f1f5f9";
                 }}
                 onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#64748b";
                   e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
                 }}
-                onClick={() => setShowDropdown(!showDropdown)}
               >
-                <div
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    color: "white",
-                  }}
-                >
-                  {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase()}
-                </div>
-                {userProfile?.username || currentUser.email}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showDropdown && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    background: "white",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    padding: "0.75rem",
-                    marginTop: "0.5rem",
-                    minWidth: "200px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                    zIndex: 1000,
-                  }}
-                >
-                  <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
-                    Signed in as<br />
-                    <strong style={{ color: "#1e293b" }}>{currentUser.email}</strong>
+                {item}
+              </a>
+            ))}
+            
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
+              {currentUser ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  {/* User Profile Dropdown */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #d1d5db",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        color: "#374151",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.borderColor = "#9ca3af";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "#d1d5db";
+                      }}
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    >
+                      <div
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          color: "white",
+                        }}
+                      >
+                        {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      {userProfile?.username || currentUser?.email || "User"}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showDropdown && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          right: 0,
+                          background: "white",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "12px",
+                          padding: "0.75rem",
+                          marginTop: "0.5rem",
+                          minWidth: "200px",
+                          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                          zIndex: 1000,
+                        }}
+                      >
+                        <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                          Signed in as<br />
+                          <strong style={{ color: "#1e293b" }}>{currentUser?.email || "User"}</strong>
+                        </div>
+                        <button
+                          onClick={logout}
+                          style={{
+                            width: "100%",
+                            background: "transparent",
+                            border: "none",
+                            padding: "0.75rem",
+                            textAlign: "left",
+                            color: "#dc2626",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            borderRadius: "6px",
+                            transition: "all 0.3s",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#fef2f2";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                          </svg>
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
                   </div>
+                </div>
+              ) : (
+                <>
                   <button
-                    onClick={logout}
+                    onClick={() => router.push('/login')}
                     style={{
-                      width: "100%",
                       background: "transparent",
-                      border: "none",
-                      padding: "0.75rem",
-                      textAlign: "left",
-                      color: "#dc2626",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
+                      border: "1px solid #d1d5db",
+                      padding: "6px 16px",
                       borderRadius: "6px",
+                      color: "#374151",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
                       transition: "all 0.3s",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
+                      whiteSpace: "nowrap",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#fef2f2";
+                      e.currentTarget.style.background = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#9ca3af";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderColor = "#d1d5db";
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-                    </svg>
-                    Sign Out
+                    Log in
                   </button>
-                </div>
+                  <button
+                    onClick={() => router.push('/signup')}
+                    style={{
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      border: "none",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+                    }}
+                  >
+                    Sign up
+                  </button>
+                </>
               )}
             </div>
           </div>
-        ) : (
-          <>
+
+          {/* Mobile Menu Toggle */}
+          <div className="mobile-only">
             <button
-              onClick={() => router.push('/login')}
+              className="menu-toggle"
+              onClick={toggleMobileMenu}
               style={{
                 background: "transparent",
-                border: "1px solid #d1d5db",
-                padding: "6px 16px",
-                borderRadius: "6px",
-                color: "#374151",
-                fontWeight: "600",
-                fontSize: "14px",
-                cursor: "pointer",
-                transition: "all 0.3s",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#f8fafc";
-                e.currentTarget.style.borderColor = "#9ca3af";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "#d1d5db";
-              }}
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => router.push('/signup')}
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                 border: "none",
-                padding: "6px 16px",
+                padding: "8px",
                 borderRadius: "6px",
-                color: "white",
-                fontWeight: "600",
-                fontSize: "14px",
                 cursor: "pointer",
-                transition: "all 0.3s",
-                boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
               }}
             >
-              Sign up
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+              }}></span>
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                opacity: mobileMenuOpen ? "0" : "1"
+              }}></span>
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+              }}></span>
             </button>
-          </>
-        )}
-      </div>
-    </div>
+          </div>
+        </div>
 
-    {/* Mobile Menu Toggle */}
-    <div className="mobile-only">
-      <button
-        className="menu-toggle"
-        onClick={toggleMobileMenu}
-        style={{
-          background: "transparent",
-          border: "none",
-          padding: "8px",
-          borderRadius: "6px",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
-        }}
-      >
-        <span style={{ 
-          width: "24px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
-        }}></span>
-        <span style={{ 
-          width: "24px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          opacity: mobileMenuOpen ? "0" : "1"
-        }}></span>
-        <span style={{ 
-          width: "24px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
-        }}></span>
-      </button>
-    </div>
-  </div>
-
-  {/* Mobile Navigation Menu */}
-  {mobileMenuOpen && (
-    <div 
-      className="mobile-menu"
-      style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        right: 0,
-        background: "rgba(255, 255, 255, 0.98)",
-        backdropFilter: "blur(10px)",
-        borderTop: "1px solid #e2e8f0",
-        padding: "1rem 2rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.75rem",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-        zIndex: 1000,
-      }}
-    >
-      {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-        <a 
-          key={item}
-          href="#" 
-          style={{ 
-            color: "#64748b", 
-            textDecoration: "none", 
-            fontSize: "16px", 
-            fontWeight: "500", 
-            padding: "10px 0",
-            borderBottom: "1px solid #f1f5f9",
-          }}
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          {item}
-        </a>
-      ))}
-      
-      <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-        {currentUser ? (
-          <button
-            onClick={logout}
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div 
+            className="mobile-menu"
             style={{
-              background: "transparent",
-              border: "1px solid #d1d5db",
-              padding: "10px 16px",
-              borderRadius: "6px",
-              color: "#374151",
-              fontWeight: "600",
-              fontSize: "14px",
-              cursor: "pointer",
-              flex: 1,
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              background: "rgba(255, 255, 255, 0.98)",
+              backdropFilter: "blur(10px)",
+              borderTop: "1px solid #e2e8f0",
+              padding: "1rem 2rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+              zIndex: 1000,
             }}
           >
-            Sign Out
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={() => {
-                router.push('/login');
-                setMobileMenuOpen(false);
-              }}
-              style={{
-                background: "transparent",
-                border: "1px solid #d1d5db",
-                padding: "10px 16px",
-                borderRadius: "6px",
-                color: "#374151",
-                fontWeight: "600",
-                fontSize: "14px",
-                cursor: "pointer",
-                flex: 1,
-              }}
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => {
-                router.push('/signup');
-                setMobileMenuOpen(false);
-              }}
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                border: "none",
-                padding: "10px 16px",
-                borderRadius: "6px",
-                color: "white",
-                fontWeight: "600",
-                fontSize: "14px",
-                cursor: "pointer",
-                flex: 1,
-              }}
-            >
-              Sign up
-            </button>
-          </>
+            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+              <a 
+                key={item}
+                href="#" 
+                style={{ 
+                  color: "#64748b", 
+                  textDecoration: "none", 
+                  fontSize: "16px", 
+                  fontWeight: "500", 
+                  padding: "10px 0",
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item}
+              </a>
+            ))}
+            
+            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+              {currentUser ? (
+                <button
+                  onClick={logout}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid #d1d5db",
+                    padding: "10px 16px",
+                    borderRadius: "6px",
+                    color: "#374151",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    flex: 1,
+                  }}
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      router.push('/login');
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      color: "#374151",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push('/signup');
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      border: "none",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      flex: 1,
+                    }}
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         )}
-      </div>
-    </div>
-  )}
-</nav>
+      </nav>
+
 
       {/* Hero Section - Left Text, Right Image Layout */}
       <section
@@ -1273,90 +1056,90 @@ const resetAll = () => {
         </div>
         </div>
       </section>
-{!currentUser ? (
-  <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
-    <div style={{ maxWidth: "500px", margin: "0 auto" }}>
-      <div
-        style={{
-          width: "80px",
-          height: "80px",
-          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-          borderRadius: "20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 2rem",
-          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
-        }}
-      >
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "white" }}>
-          <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-          <circle cx="8.5" cy="7" r="4" />
-          <path d="M20 8v6M23 11h-6" />
-        </svg>
-      </div>
-      <h2 style={{ fontSize: "2rem", fontWeight: "700", color: "#1e293b", marginBottom: "1rem" }}>
-        Sign In Required
-      </h2>
-      <p style={{ color: "#64748b", fontSize: "1.1rem", marginBottom: "2rem", lineHeight: "1.6" }}>
-        Please sign in to your account to access our AI-powered background removal tool and start transforming your images.
-      </p>
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-        <button
-          onClick={() => router.push('/login')}
-          style={{
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            color: "white",
-            border: "none",
-            padding: "14px 32px",
-            borderRadius: "12px",
-            fontWeight: "600",
-            fontSize: "1rem",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-            boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-          }}
-        >
-          Sign In
-        </button>
-        <button
-          onClick={() => router.push('/signup')}
-          style={{
-            background: "transparent",
-            color: "#64748b",
-            border: "1px solid #d1d5db",
-            padding: "14px 32px",
-            borderRadius: "12px",
-            fontWeight: "600",
-            fontSize: "1rem",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#f8fafc";
-            e.currentTarget.style.borderColor = "#9ca3af";
-            e.currentTarget.style.color = "#374151";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.borderColor = "#d1d5db";
-            e.currentTarget.style.color = "#64748b";
-          }}
-        >
-          Create Account
-        </button>
-      </div>
-    </div>
-  </div>
-) : (
+      {!currentUser ? (
+        <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
+          <div style={{ maxWidth: "500px", margin: "0 auto" }}>
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 2rem",
+                boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
+              }}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "white" }}>
+                <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <path d="M20 8v6M23 11h-6" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: "2rem", fontWeight: "700", color: "#1e293b", marginBottom: "1rem" }}>
+              Sign In Required
+            </h2>
+            <p style={{ color: "#64748b", fontSize: "1.1rem", marginBottom: "2rem", lineHeight: "1.6" }}>
+              Please sign in to your account to access our AI-powered background removal tool and start transforming your images.
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                onClick={() => router.push('/login')}
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                  color: "white",
+                  border: "none",
+                  padding: "14px 32px",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => router.push('/signup')}
+                style={{
+                  background: "transparent",
+                  color: "#64748b",
+                  border: "1px solid #d1d5db",
+                  padding: "14px 32px",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#9ca3af";
+                  e.currentTarget.style.color = "#374151";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                  e.currentTarget.style.color = "#64748b";
+                }}
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
   
       <section
         style={{

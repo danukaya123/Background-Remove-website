@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
-import { sendWelcomeEmail } from '../lib/emailService';
 import Link from 'next/link';
 
 export default function Signup() {
@@ -53,7 +52,6 @@ export default function Signup() {
       });
 
       // Send welcome email
-      await sendWelcomeEmail(formData.email, formData.username);
       
       router.push('/');
     } catch (error) {

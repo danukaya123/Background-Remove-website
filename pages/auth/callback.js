@@ -6,33 +6,49 @@ export default function AuthCallback() {
   const router = useRouter();
   const { handleGoogleAuthCallback } = useAuth();
   const [status, setStatus] = useState('Processing Google authentication...');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Get the URL parameters from the current URL
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
 
+      console.log('Callback URL params:', { code, error }); // Debug log
+
       if (error) {
-        setStatus(`Error: ${error}`);
+        setError(`Google OAuth Error: ${error}`);
+        setStatus('Authentication failed');
         setTimeout(() => router.push('/login'), 3000);
         return;
       }
 
       if (!code) {
-        setStatus('No authorization code received');
+        setError('No authorization code received from Google');
+        setStatus('Authentication failed');
         setTimeout(() => router.push('/login'), 3000);
         return;
       }
 
       try {
-        setStatus('Authenticating with Google...');
+        setStatus('Exchanging code for access token...');
+        
+        // Call the Google auth callback handler
         await handleGoogleAuthCallback(code);
-        setStatus('Success! Redirecting...');
-        setTimeout(() => router.push('/'), 2000);
+        
+        setStatus('Authentication successful! Redirecting...');
+        
+        // Clear the URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Redirect to home page
+        setTimeout(() => router.push('/'), 1000);
+        
       } catch (error) {
         console.error('OAuth callback error:', error);
-        setStatus(`Authentication failed: ${error.message}`);
+        setError(`Authentication failed: ${error.message}`);
+        setStatus('Error occurred');
         setTimeout(() => router.push('/login'), 3000);
       }
     };
@@ -81,9 +97,14 @@ export default function AuthCallback() {
         <h2 style={{ marginBottom: '1rem', color: '#1e293b' }}>
           Google Authentication
         </h2>
-        <p style={{ color: '#64748b', marginBottom: '2rem' }}>
+        <p style={{ color: '#64748b', marginBottom: '1rem' }}>
           {status}
         </p>
+        {error && (
+          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '14px' }}>
+            {error}
+          </p>
+        )}
         <div
           style={{
             width: '40px',

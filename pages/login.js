@@ -9,7 +9,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, loginWithGoogle, currentUser } = useAuth();
+const { login, signInWithGoogle, user } = useAuth();
   const router = useRouter();
 
   // Redirect if already logged in
@@ -38,17 +38,18 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await loginWithGoogle();
-    } catch (error) {
-      console.error('Google login error:', error);
-      setError('Failed to log in with Google. Please try again.');
-      setLoading(false);
-    }
-  };
+const handleGoogleLogin = async () => {
+  try {
+    setError('');
+    setLoading(true);
+    await signInWithGoogle();
+    router.push('/');
+  } catch (error) {
+    setError('Failed to sign in with Google. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div

@@ -15,7 +15,7 @@ export default function Home() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);<nav
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   
   const fileInputRef = useRef(null);
@@ -701,9 +701,6 @@ export default function Home() {
       `}</style>
 
       {/* Navigation */}
-// Replace your entire nav section with this fixed version:
-
-{/* Navigation */}
 <nav
   style={{
     borderBottom: "1px solid #e2e8f0",

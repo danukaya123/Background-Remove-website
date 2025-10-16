@@ -1579,7 +1579,7 @@ export default function Home() {
                   {loading && (
                     <div
                       style={{
-                        position: "absolute",
+                       
                         top: 0,
                         left: 0,
                         right: 0,

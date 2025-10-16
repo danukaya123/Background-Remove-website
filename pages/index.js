@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Client } from "@gradio/client";
+import ImageEditor from './ImageEditor'; // Adjust path as needed
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -8,6 +9,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [editingMode, setEditingMode] = useState(false); // Add this
   const fileInputRef = useRef(null);
   const resultsSectionRef = useRef(null);
 
@@ -34,6 +36,66 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileMenuOpen]);
+
+  const handleDownloadEdited = (editedImageUrl) => {
+  try {
+    const a = document.createElement("a");
+    a.href = editedImageUrl;
+    a.download = `edited-background-removed-${Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    console.error("Download failed:", err);
+    setError("Download failed. Please try again.");
+  }
+};
+
+const [displayedText, setDisplayedText] = useState('');
+const [currentIndex, setCurrentIndex] = useState(0);
+const [isDeleting, setIsDeleting] = useState(false);
+const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+
+// Typewriter phrases for subheading
+const typewriterPhrases = [
+  "AI-Powered & Instant Processing.!",
+  "100% Free & No Watermarks.!", 
+  "Professional Quality Results.!",
+  "Perfect for E-commerce.!",
+  "No Manual Editing Required.!",
+  "Works with Any Image Format.!",
+  "Crisp Clean Edges Every Time.!",
+  "Secure & Private Processing.!"
+];
+
+// Typewriter effect for subheading
+useEffect(() => {
+  const currentPhrase = typewriterPhrases[currentPhraseIndex];
+  
+  const timeout = setTimeout(() => {
+    if (!isDeleting) {
+      // Typing phase
+      if (currentIndex < currentPhrase.length) {
+        setDisplayedText(currentPhrase.substring(0, currentIndex + 1));
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        // Wait before starting to delete
+        setTimeout(() => setIsDeleting(true), 2000);
+      }
+    } else {
+      // Deleting phase
+      if (currentIndex > 0) {
+        setDisplayedText(currentPhrase.substring(0, currentIndex - 1));
+        setCurrentIndex(currentIndex - 1);
+      } else {
+        setIsDeleting(false);
+        setCurrentPhraseIndex((currentPhraseIndex + 1) % typewriterPhrases.length);
+      }
+    }
+  }, isDeleting ? 40 : 60);
+
+  return () => clearTimeout(timeout);
+}, [currentIndex, isDeleting, currentPhraseIndex]);
 
   // Drag and drop handlers
   const handleDrag = (e) => {
@@ -126,14 +188,15 @@ export default function Home() {
   };
 
   // Reset function
-  const resetAll = () => {
-    setFile(null);
-    setResultUrl(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+const resetAll = () => {
+  setFile(null);
+  setResultUrl(null);
+  setError(null);
+  setEditingMode(false); // Add this
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+};
 
   // Toggle mobile menu
   const toggleMobileMenu = () => {
@@ -368,9 +431,21 @@ export default function Home() {
       flex-direction: column;
     }
   }
+
+// Add this to your global styles section
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
 `}</style>
 
       {/* Navigation */}
+{/* Navigation */}
 {/* Navigation */}
 <nav
   style={{
@@ -409,7 +484,7 @@ export default function Home() {
           color: "white",
         }}
       >
-        BG
+        Q
       </div>
       <span
         style={{
@@ -419,7 +494,7 @@ export default function Home() {
           letterSpacing: "-0.5px",
         }}
       >
-        remove<span style={{ color: "#3b82f6" }}>BG</span>
+        Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
       </span>
     </div>
     
@@ -453,98 +528,169 @@ export default function Home() {
       ))}
       
       <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
-        <button
-          style={{
-            background: "transparent",
-            border: "1px solid #d1d5db",
-            padding: "6px 16px",
-            borderRadius: "6px",
-            color: "#374151",
-            fontWeight: "600",
-            fontSize: "14px",
-            cursor: "pointer",
-            transition: "all 0.3s",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#f8fafc";
-            e.currentTarget.style.borderColor = "#9ca3af";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.borderColor = "#d1d5db";
-          }}
-        >
-          Log in
-        </button>
-        <button
-          style={{
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            border: "none",
-            padding: "6px 16px",
-            borderRadius: "6px",
-            color: "white",
-            fontWeight: "600",
-            fontSize: "14px",
-            cursor: "pointer",
-            transition: "all 0.3s",
-            boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
-          }}
-        >
-          Sign up
-        </button>
+        {currentUser ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {/* User Profile Dropdown */}
+            <div style={{ position: "relative" }}>
+              <button
+                style={{
+                  background: "transparent",
+                  border: "1px solid #d1d5db",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  color: "#374151",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#9ca3af";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                }}
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                <div
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    color: "white",
+                  }}
+                >
+                  {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase()}
+                </div>
+                {userProfile?.username || currentUser.email}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showDropdown && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    background: "white",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    padding: "0.75rem",
+                    marginTop: "0.5rem",
+                    minWidth: "200px",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                    zIndex: 1000,
+                  }}
+                >
+                  <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                    Signed in as<br />
+                    <strong style={{ color: "#1e293b" }}>{currentUser.email}</strong>
+                  </div>
+                  <button
+                    onClick={logout}
+                    style={{
+                      width: "100%",
+                      background: "transparent",
+                      border: "none",
+                      padding: "0.75rem",
+                      textAlign: "left",
+                      color: "#dc2626",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      borderRadius: "6px",
+                      transition: "all 0.3s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#fef2f2";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => router.push('/login')}
+              style={{
+                background: "transparent",
+                border: "1px solid #d1d5db",
+                padding: "6px 16px",
+                borderRadius: "6px",
+                color: "#374151",
+                fontWeight: "600",
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "all 0.3s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f8fafc";
+                e.currentTarget.style.borderColor = "#9ca3af";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "#d1d5db";
+              }}
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => router.push('/signup')}
+              style={{
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                border: "none",
+                padding: "6px 16px",
+                borderRadius: "6px",
+                color: "white",
+                fontWeight: "600",
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "all 0.3s",
+                boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+              }}
+            >
+              Sign up
+            </button>
+          </>
+        )}
       </div>
     </div>
-
-    {/* Mobile Menu Toggle */}
-    <div className="mobile-only">
-      <button
-        className="menu-toggle"
-        onClick={toggleMobileMenu}
-        style={{
-          background: "transparent",
-          border: "none",
-          padding: "8px",
-          borderRadius: "6px",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
-        }}
-      >
-        <span style={{ 
-          width: "24px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
-        }}></span>
-        <span style={{ 
-          width: "24px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          opacity: mobileMenuOpen ? "0" : "1"
-        }}></span>
-        <span style={{ 
-          width: "24px", 
-          height: "2px", 
-          background: "#1e293b",
-          transition: "all 0.3s",
-          transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
-        }}></span>
-      </button>
-    </div>
-  </div>
 
   {/* Mobile Navigation Menu */}
   {mobileMenuOpen && (
@@ -666,32 +812,33 @@ export default function Home() {
         >
           {/* Left Content - Text */}
           <div className="hero-text">
-            <h1
-              style={{
-                fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
-                fontWeight: "800",
-                lineHeight: "1.1",
-                marginBottom: "1.5rem",
-                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                letterSpacing: "-1px",
-              }}
-            >
-              Remove Image
-              <br />
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Background
-              </span>
-            </h1>
+{/* Main Fixed Heading */}
+<h1
+  style={{
+    fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
+    fontWeight: "800",
+    lineHeight: "1.1",
+    marginBottom: "0.5rem",
+    background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+    letterSpacing: "-1px",
+  }}
+>
+  Quizontal Image
+  <br />
+  <span
+    style={{
+      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+    }}
+  >
+    Background Removal
+  </span>
+</h1>
             
             <p
               style={{
@@ -722,9 +869,7 @@ export default function Home() {
             <div style={{ marginBottom: "2.5rem" }} className="feature-points">
               {[
                 { icon: "✓", text: "AI-powered instant processing" },
-                { icon: "✓", text: "No manual editing required" },
                 { icon: "✓", text: "Preserves original image quality" },
-                { icon: "✓", text: "Works with any image format" }
               ].map((feature, index) => (
                 <div
                   key={index}
@@ -830,111 +975,318 @@ export default function Home() {
           </div>
 
           {/* Right Content - Image */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              position: "relative",
-            }}
-            className="hero-image"
-          >
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: "500px",
-              }}
-            >
-              {/* Main Image Container */}
-              <div
-                style={{
-                  background: "white",
-                  borderRadius: "20px",
-                  padding: "1.5rem",
-                  boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
-                  position: "relative",
-                  zIndex: 3,
-                  transform: "rotate(2deg)",
-                }}
-              >
-                <img
-                  src="https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true"
-                  alt="Before and after background removal example"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-                  }}
-                />
-              </div>
-              
-              {/* Floating Element 1 */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-20px",
-                  right: "-20px",
-                  background: "linear-gradient(135deg, #10b981, #059669)",
-                  color: "white",
-                  padding: "12px 20px",
-                  borderRadius: "50px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
-                  zIndex: 4,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-                className="floating-badge"
-              >
-                <span>After</span>
-              </div>
-              
-              {/* Floating Element 2 */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "-15px",
-                  left: "-15px",
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  color: "white",
-                  padding: "12px 20px",
-                  borderRadius: "50px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
-                  zIndex: 4,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-                className="floating-badge"
-              >
-                <span>Before</span>
-              </div>
-              
-              {/* Background Decorative Card */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "30px",
-                  left: "30px",
-                  right: "-30px",
-                  bottom: "-30px",
-                  background: "linear-gradient(135deg, #e2e8f0, #cbd5e1)",
-                  borderRadius: "20px",
-                  zIndex: 1,
-                  transform: "rotate(-2deg)",
-                }}
-              />
-            </div>
-          </div>
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    flexDirection: "column", // Changed to column layout
+    gap: "2rem", // Added gap between image and typewriter
+  }}
+  className="hero-image"
+>
+  <div
+    style={{
+      position: "relative",
+      width: "100%",
+      maxWidth: "500px",
+    }}
+  >
+    {/* Main Image Container */}
+    <div
+      style={{
+        background: "white",
+        borderRadius: "20px",
+        padding: "1.5rem",
+        boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+        position: "relative",
+        zIndex: 6,
+        transform: "rotate(2deg)",
+      }}
+    >
+      <img
+        src="https://github.com/danukaya123/bgtest/blob/main/bgremove-banner.PNG?raw=true"
+        alt="Before and after background removal example"
+        style={{
+          width: "100%",
+          height: "auto",
+          borderRadius: "12px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+        }}
+      />
+    </div>
+    
+    {/* Floating Element 1 */}
+    <div
+      style={{
+        position: "absolute",
+        top: "-20px",
+        right: "-20px",
+        background: "linear-gradient(135deg, #10b981, #059669)",
+        color: "white",
+        padding: "12px 20px",
+        borderRadius: "50px",
+        fontSize: "14px",
+        fontWeight: "600",
+        boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
+        zIndex: 7,
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+      }}
+      className="floating-badge"
+    >
+      <span>After</span>
+    </div>
+    
+    {/* Floating Element 2 */}
+    <div
+      style={{
+        position: "absolute",
+        bottom: "-15px",
+        left: "-15px",
+        background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+        color: "white",
+        padding: "12px 20px",
+        borderRadius: "50px",
+        fontSize: "14px",
+        fontWeight: "600",
+        boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
+        zIndex: 7,
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+      }}
+      className="floating-badge"
+    >
+      <span>Before</span>
+    </div>
+    
+    {/* Background Decorative Card */}
+    <div
+      style={{
+        position: "absolute",
+        top: "30px",
+        left: "30px",
+        right: "-30px",
+        bottom: "-30px",
+        background: "linear-gradient(135deg, #e2e8f0, #cbd5e1)",
+        borderRadius: "20px",
+        zIndex: 1,
+        transform: "rotate(-2deg)",
+      }}
+    />
+  </div>
+
+  <div
+    style={{
+      width: "100%",
+      maxWidth: "500px",
+      textAlign: "center",
+    }}
+  >
+    <div
+      style={{
+        fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
+        fontWeight: "700",
+        color: "#3b82f6",
+        padding: "1.5rem 2rem",
+        borderRadius: "16px",
+        background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)",
+        border: "2px solid rgba(59, 130, 246, 0.3)",
+        boxShadow: `
+          0 8px 32px rgba(59, 130, 246, 0.15),
+          0 2px 8px rgba(59, 130, 246, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6)
+        `,
+        margin: "0 auto",
+        position: "relative",
+        overflow: "hidden",
+        backdropFilter: "blur(10px)",
+        transition: "all 0.3s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = `
+          0 12px 40px rgba(59, 130, 246, 0.25),
+          0 4px 12px rgba(59, 130, 246, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8)
+        `;
+        e.currentTarget.style.background = "linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = `
+          0 8px 32px rgba(59, 130, 246, 0.15),
+          0 2px 8px rgba(59, 130, 246, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6)
+        `;
+        e.currentTarget.style.background = "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)";
+      }}
+    >
+      {/* Animated background elements */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-50%",
+          left: "-50%",
+          width: "200%",
+          height: "200%",
+          background: "linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.05) 50%, transparent 70%)",
+          animation: "shimmer 3s ease-in-out infinite",
+          zIndex: 1,
+        }}
+      />
+      
+      {/* Main text content */}
+      <div style={{ position: "relative", zIndex: 2 }}>
+        {displayedText}
+        <span
+          style={{
+            display: "inline-block",
+            width: "3px",
+            height: "1.4em",
+            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+            marginLeft: "6px",
+            animation: "blink 1s infinite",
+            verticalAlign: "middle",
+            borderRadius: "1px",
+            boxShadow: "0 0 8px rgba(59, 130, 246, 0.6)",
+          }}
+        />
+      </div>
+
+      {/* Floating particles */}
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "15px",
+          width: "8px",
+          height: "8px",
+          background: "#10b981",
+          borderRadius: "50%",
+          animation: "pulse-glow 2s ease-in-out infinite",
+          boxShadow: "0 0 12px rgba(16, 185, 129, 0.6)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "12px",
+          left: "20px",
+          width: "6px",
+          height: "6px",
+          background: "#8b5cf6",
+          borderRadius: "50%",
+          animation: "pulse-glow 2s ease-in-out infinite 0.5s",
+          boxShadow: "0 0 10px rgba(139, 92, 246, 0.5)",
+        }}
+      />
+    </div>
+    
+    {/* Subtitle text */}
+    <p
+      style={{
+        color: "#64748b",
+        fontSize: "0.9rem",
+        fontWeight: "500",
+        marginTop: "1rem",
+        marginBottom: 0,
+        opacity: 0.8,
+      }}
+    >
+      Powered by Advanced AI Technology
+    </p>
+        </div>
+        </div>
         </div>
       </section>
-
+{!currentUser ? (
+  <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
+    <div style={{ maxWidth: "500px", margin: "0 auto" }}>
+      <div
+        style={{
+          width: "80px",
+          height: "80px",
+          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+          borderRadius: "20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 2rem",
+          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)",
+        }}
+      >
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "white" }}>
+          <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" />
+          <path d="M20 8v6M23 11h-6" />
+        </svg>
+      </div>
+      <h2 style={{ fontSize: "2rem", fontWeight: "700", color: "#1e293b", marginBottom: "1rem" }}>
+        Sign In Required
+      </h2>
+      <p style={{ color: "#64748b", fontSize: "1.1rem", marginBottom: "2rem", lineHeight: "1.6" }}>
+        Please sign in to your account to access our AI-powered background removal tool and start transforming your images.
+      </p>
+      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+        <button
+          onClick={() => router.push('/login')}
+          style={{
+            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+            color: "white",
+            border: "none",
+            padding: "14px 32px",
+            borderRadius: "12px",
+            fontWeight: "600",
+            fontSize: "1rem",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+          }}
+        >
+          Sign In
+        </button>
+        <button
+          onClick={() => router.push('/signup')}
+          style={{
+            background: "transparent",
+            color: "#64748b",
+            border: "1px solid #d1d5db",
+            padding: "14px 32px",
+            borderRadius: "12px",
+            fontWeight: "600",
+            fontSize: "1rem",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#f8fafc";
+            e.currentTarget.style.borderColor = "#9ca3af";
+            e.currentTarget.style.color = "#374151";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "#d1d5db";
+            e.currentTarget.style.color = "#64748b";
+          }}
+        >
+          Create Account
+        </button>
+      </div>
+    </div>
+  </div>
+) : (
       {/* Upload Section - Positioned below hero */}
       <section
         style={{
@@ -1078,7 +1430,7 @@ export default function Home() {
                   {loading && (
                     <div
                       style={{
-                        position: "absolute",
+                       
                         top: 0,
                         left: 0,
                         right: 0,
@@ -1346,185 +1698,231 @@ export default function Home() {
       </section>
 
       {/* Results Section */}
-      {resultUrl && (
-        <section
-          ref={resultsSectionRef}
+{resultUrl && !editingMode && (
+  <section
+    ref={resultsSectionRef}
+    style={{
+      padding: "4rem 1rem",
+      background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+      minHeight: "50vh",
+      display: "flex",
+      alignItems: "center",
+    }}
+    className="slide-up"
+  >
+    <div
+      style={{
+        maxWidth: "1200px",
+        margin: "0 auto",
+        width: "100%",
+      }}
+    >
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ 
+          fontSize: "clamp(2rem, 4vw, 3rem)", 
+          fontWeight: "700", 
+          color: "#1e293b", 
+          marginBottom: "1rem",
+          background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}>
+          Background Removed! 🎉
+        </h2>
+        <p style={{ 
+          fontSize: "clamp(1rem, 2vw, 1.2rem)", 
+          color: "#64748b",
+          maxWidth: "600px",
+          margin: "0 auto",
+        }}>
+          Your image has been processed successfully. Download the result or edit it further.
+        </p>
+      </div>
+      
+      {/* Edit Button */}
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <button
+          onClick={() => setEditingMode(true)}
           style={{
-            padding: "4rem 1rem",
-            background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            minHeight: "50vh",
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
+            gap: "8px",
+            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+            color: "white",
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: "12px",
+            fontWeight: "600",
+            fontSize: "16px",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
+            marginBottom: "1rem",
           }}
-          className="slide-up"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 8px 25px rgba(139, 92, 246, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 15px rgba(139, 92, 246, 0.3)";
+          }}
         >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          Edit Image
+        </button>
+      </div>
+      
+      {/* Results Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(400px, 100%), 1fr))",
+          gap: "clamp(2rem, 4vw, 4rem)",
+          alignItems: "start",
+        }}
+      >
+        {/* Original Image */}
+        <div style={{ textAlign: "center" }}>
+          <h3 style={{ 
+            fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
+            fontWeight: "600", 
+            color: "#64748b", 
+            marginBottom: "1.5rem" 
+          }}>
+            Original Image
+          </h3>
           <div
             style={{
-              maxWidth: "1200px",
-              margin: "0 auto",
-              width: "100%",
+              background: "white",
+              padding: "1.5rem",
+              borderRadius: "20px",
+              boxShadow: "0 15px 35px rgba(0,0,0,0.1)",
             }}
           >
-            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-              <h2 style={{ 
-                fontSize: "clamp(2rem, 4vw, 3rem)", 
-                fontWeight: "700", 
-                color: "#1e293b", 
-                marginBottom: "1rem",
-                background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}>
-                Background Removed! 🎉
-              </h2>
-              <p style={{ 
-                fontSize: "clamp(1rem, 2vw, 1.2rem)", 
-                color: "#64748b",
-                maxWidth: "600px",
-                margin: "0 auto",
-              }}>
-                Your image has been processed successfully. Download the result or remove another background.
-              </p>
-            </div>
-            
-            <div
+            <img
+              src={URL.createObjectURL(file)}
+              alt="Original"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(400px, 100%), 1fr))",
-                gap: "clamp(2rem, 4vw, 4rem)",
-                alignItems: "start",
+                width: "100%",
+                maxWidth: "500px",
+                borderRadius: "12px",
+                boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
               }}
-            >
-              {/* Original Image */}
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ 
-                  fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
-                  fontWeight: "600", 
-                  color: "#64748b", 
-                  marginBottom: "1.5rem" 
-                }}>
-                  Original Image
-                </h3>
-                <div
-                  style={{
-                    background: "white",
-                    padding: "1.5rem",
-                    borderRadius: "20px",
-                    boxShadow: "0 15px 35px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Original"
-                    style={{
-                      width: "100%",
-                      maxWidth: "500px",
-                      borderRadius: "12px",
-                      boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Processed Image */}
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ 
-                  fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
-                  fontWeight: "600", 
-                  color: "#64748b", 
-                  marginBottom: "1.5rem" 
-                }}>
-                  Background Removed
-                </h3>
-                <div
-                  style={{
-                    background: "white",
-                    padding: "1.5rem",
-                    borderRadius: "20px",
-                    boxShadow: "0 15px 35px rgba(59, 130, 246, 0.15)",
-                    position: "relative",
-                  }}
-                >
-                  <img
-                    src={resultUrl}
-                    alt="Background removed"
-                    style={{
-                      width: "100%",
-                      maxWidth: "500px",
-                      borderRadius: "12px",
-                      background: "linear-gradient(45deg, #f8fafc, #e2e8f0)",
-                      padding: "1rem",
-                    }}
-                  />
-                </div>
-                
-                <button
-                  onClick={downloadImage}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                    color: "white",
-                    border: "none",
-                    padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
-                    borderRadius: "12px",
-                    fontWeight: "600",
-                    fontSize: "clamp(14px, 2vw, 16px)",
-                    cursor: "pointer",
-                    marginTop: "2rem",
-                    transition: "all 0.3s ease",
-                    boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download Image
-                </button>
-              </div>
-            </div>
-            
-            <div style={{ marginTop: "3rem", textAlign: "center" }}>
-              <button
-                onClick={resetAll}
-                style={{
-                  background: "transparent",
-                  color: "#64748b",
-                  border: "1px solid #d1d5db",
-                  padding: "clamp(10px, 2vw, 12px) clamp(20px, 3vw, 28px)",
-                  borderRadius: "10px",
-                  fontWeight: "600",
-                  fontSize: "clamp(14px, 2vw, 16px)",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#9ca3af";
-                  e.currentTarget.style.color = "#374151";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                  e.currentTarget.style.color = "#64748b";
-                }}
-              >
-                Remove Another Background
-              </button>
-            </div>
+            />
           </div>
-        </section>
-      )}
+        </div>
+
+        {/* Processed Image */}
+        <div style={{ textAlign: "center" }}>
+          <h3 style={{ 
+            fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
+            fontWeight: "600", 
+            color: "#64748b", 
+            marginBottom: "1.5rem" 
+          }}>
+            Background Removed
+          </h3>
+          <div
+            style={{
+              background: "white",
+              padding: "1.5rem",
+              borderRadius: "20px",
+              boxShadow: "0 15px 35px rgba(59, 130, 246, 0.15)",
+              position: "relative",
+            }}
+          >
+            <img
+              src={resultUrl}
+              alt="Background removed"
+              style={{
+                width: "100%",
+                maxWidth: "500px",
+                borderRadius: "12px",
+                background: "linear-gradient(45deg, #f8fafc, #e2e8f0)",
+                padding: "1rem",
+              }}
+            />
+          </div>
+          
+          <button
+            onClick={downloadImage}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+              color: "white",
+              border: "none",
+              padding: "clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)",
+              borderRadius: "12px",
+              fontWeight: "600",
+              fontSize: "clamp(14px, 2vw, 16px)",
+              cursor: "pointer",
+              marginTop: "2rem",
+              transition: "all 0.3s ease",
+              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 8px 25px rgba(59, 130, 246, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download Image
+          </button>
+        </div>
+      </div>
+      
+      <div style={{ marginTop: "3rem", textAlign: "center" }}>
+        <button
+          onClick={resetAll}
+          style={{
+            background: "transparent",
+            color: "#64748b",
+            border: "1px solid #d1d5db",
+            padding: "clamp(10px, 2vw, 12px) clamp(20px, 3vw, 28px)",
+            borderRadius: "10px",
+            fontWeight: "600",
+            fontSize: "clamp(14px, 2vw, 16px)",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#f8fafc";
+            e.currentTarget.style.borderColor = "#9ca3af";
+            e.currentTarget.style.color = "#374151";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "#d1d5db";
+            e.currentTarget.style.color = "#64748b";
+          }}
+        >
+          Remove Another Background
+        </button>
+      </div>
+    </div>
+  </section>
+)}
+
+{/* Image Editor Component */}
+{editingMode && resultUrl && (
+  <ImageEditor 
+    resultUrl={resultUrl}
+    onClose={() => setEditingMode(false)}
+    onDownloadEdited={handleDownloadEdited}
+  />
+)}
 
       {/* Features Section */}
       <section
@@ -1548,7 +1946,7 @@ export default function Home() {
                 marginBottom: "1rem",
               }}
             >
-              Why Choose RemoveBG?
+              Why Choose Quizontal RBG?
             </h2>
             <p
               style={{
@@ -2114,7 +2512,7 @@ export default function Home() {
                 color: "white",
               }}
             >
-              BG
+              Q
             </div>
             <span
               style={{
@@ -2123,7 +2521,7 @@ export default function Home() {
                 color: "#1e293b",
               }}
             >
-              remove<span style={{ color: "#3b82f6" }}>BG</span>
+              Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
             </span>
           </div>
           <p style={{ 
@@ -2140,7 +2538,7 @@ export default function Home() {
             fontSize: "12px",
             marginTop: "1rem"
           }}>
-            &copy; {new Date().getFullYear()} removeBG. All rights reserved.
+            &copy; {new Date().getFullYear()} QuizontalRBG. All rights reserved.
           </p>
         </div>
       </footer>

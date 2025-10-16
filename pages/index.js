@@ -183,7 +183,7 @@ export default function Home() {
     setError(null);
 
     try {
-      const client = await Client.connect("Jonny001/Background-Remover-C1");
+      const client = await Client.connect("danuka21/quizontal-Background-Remover-C1");
       console.log("✅ Connected to HF Space");
 
       const result = await client.predict("/image", { image: file });

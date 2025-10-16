@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -74,6 +75,42 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
+  }, []);
+
+  // Check for Google OAuth callback on mount
+  useEffect(() => {
+    const handleGoogleOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const error = urlParams.get('error');
+
+      if (error) {
+        console.error('Google OAuth error:', error);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
+      if (code) {
+        try {
+          setOauthLoading(true);
+          console.log('Processing Google OAuth callback...');
+          
+          await handleGoogleAuthCallback(code);
+          
+          // Clean URL after successful auth
+          window.history.replaceState({}, document.title, window.location.pathname);
+          console.log('Google OAuth completed successfully');
+          
+        } catch (error) {
+          console.error('Google OAuth callback error:', error);
+        } finally {
+          setOauthLoading(false);
+        }
+      }
+    };
+
+    handleGoogleOAuthCallback();
   }, []);
 
   // Email/Password Signup
@@ -139,7 +176,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Google OAuth with direct Google API (not Firebase)
+  // Google OAuth with direct Google API
   const signInWithGoogle = () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectUri = `${window.location.origin}`;
@@ -157,13 +194,14 @@ export function AuthProvider({ children }) {
     
     // Store state for verification
     localStorage.setItem('oauth_state', state);
+    console.log('Redirecting to Google OAuth...');
     window.location.href = authUrl;
   };
 
   // Handle Google OAuth callback
   const handleGoogleAuthCallback = async (code) => {
     try {
-      setLoading(true);
+      console.log('Exchanging code for access token...');
       
       // Exchange authorization code for access token
       const tokenResponse = await fetch('/api/auth/google', {
@@ -175,10 +213,12 @@ export function AuthProvider({ children }) {
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange code for token');
+        const errorData = await tokenResponse.json();
+        throw new Error(errorData.error || 'Failed to exchange code for token');
       }
 
       const tokenData = await tokenResponse.json();
+      console.log('Token exchange successful');
       
       // Get user info from Google
       const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -188,10 +228,11 @@ export function AuthProvider({ children }) {
       });
 
       if (!userResponse.ok) {
-        throw new Error('Failed to get user info');
+        throw new Error('Failed to get user info from Google');
       }
 
       const googleUser = await userResponse.json();
+      console.log('Google user info:', googleUser);
       
       // Create or sign in user in Firebase
       return await handleGoogleUser(googleUser);
@@ -199,8 +240,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Google OAuth error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -209,15 +248,22 @@ export function AuthProvider({ children }) {
     try {
       const { email, name, picture, id } = googleUser;
       
+      if (!email) {
+        throw new Error('No email received from Google');
+      }
+
       // Generate a secure password for Firebase
       const password = btoa(email + process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID + id).slice(0, 20);
       
       try {
+        console.log('Attempting to sign in existing user...');
         // Try to sign in existing user
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('Existing user signed in successfully');
         return userCredential.user;
       } catch (error) {
         if (error.code === 'auth/user-not-found') {
+          console.log('Creating new user...');
           // Create new user
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const user = userCredential.user;
@@ -255,8 +301,10 @@ export function AuthProvider({ children }) {
           setUserProfile(userProfileData);
           setCurrentUser(userObj);
 
+          console.log('New Google user created successfully');
           return user;
         } else {
+          console.error('Firebase auth error:', error);
           throw error;
         }
       }
@@ -336,7 +384,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Get user profile data (useful for refreshing data)
+  // Get user profile data
   const refreshUserProfile = async () => {
     if (!currentUser) return null;
     
@@ -363,7 +411,7 @@ export function AuthProvider({ children }) {
   };
 
   const value = {
-    // User state - exposing both currentUser and user for compatibility
+    // User state
     user: currentUser,
     currentUser,
     userProfile,
@@ -382,7 +430,7 @@ export function AuthProvider({ children }) {
     
     // Helper properties
     isAuthenticated: !!currentUser,
-    isLoading: loading
+    isLoading: loading || oauthLoading
   };
 
   return (

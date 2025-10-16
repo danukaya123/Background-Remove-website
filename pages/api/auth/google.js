@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { code } = req.body;
+  const { code, redirectUri } = req.body;
 
   if (!code) {
     return res.status(400).json({ error: 'No authorization code provided' });
@@ -11,6 +11,11 @@ export default async function handler(req, res) {
 
   try {
     console.log('Exchanging code for token...');
+    
+    // Use the redirect_uri from the request or default to callback
+    const finalRedirectUri = redirectUri || `${process.env.NEXTAUTH_URL || 'https://background-remove-website.vercel.app'}/auth/callback`;
+    
+    console.log('Using redirect URI:', finalRedirectUri);
     
     // Exchange authorization code for access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -22,7 +27,7 @@ export default async function handler(req, res) {
         code,
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+        redirect_uri: finalRedirectUri,
         grant_type: 'authorization_code',
       }),
     });

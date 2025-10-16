@@ -42,6 +42,19 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   // Auto-scroll to results when processing is complete
   useEffect(() => {
     if (resultUrl && !loading) {
@@ -705,15 +718,15 @@ export default function Home() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
             <div
               style={{
-                width: "clamp(28px, 3vw, 32px)",
-                height: "clamp(28px, 3vw, 32px)",
+                width: "32px",
+                height: "32px",
                 background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontWeight: "bold",
-                fontSize: "clamp(14px, 2vw, 16px)",
+                fontSize: "16px",
                 color: "white",
               }}
             >
@@ -721,7 +734,7 @@ export default function Home() {
             </div>
             <span
               style={{
-                fontSize: "clamp(18px, 2.5vw, 24px)",
+                fontSize: "24px",
                 fontWeight: "800",
                 color: "#1e293b",
                 letterSpacing: "-0.5px",
@@ -732,7 +745,7 @@ export default function Home() {
             </span>
           </div>
           
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation Links - Restored original size */}
           <div className="desktop-only nav-links">
             {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
               <a 
@@ -741,10 +754,10 @@ export default function Home() {
                 style={{ 
                   color: "#64748b", 
                   textDecoration: "none", 
-                  fontSize: "clamp(13px, 1.5vw, 14px)", 
+                  fontSize: "14px", 
                   fontWeight: "500", 
                   transition: "all 0.3s",
-                  padding: "6px 10px",
+                  padding: "6px 12px",
                   borderRadius: "6px",
                   whiteSpace: "nowrap",
                 }}
@@ -761,20 +774,20 @@ export default function Home() {
               </a>
             ))}
             
-            <div style={{ display: "flex", gap: "clamp(0.5rem, 1vw, 0.75rem)", alignItems: "center", marginLeft: "0.5rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem", flexWrap: "wrap" }}>
               {currentUser ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "clamp(0.5rem, 1vw, 1rem)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                   {/* User Profile Dropdown */}
                   <div style={{ position: "relative" }} ref={dropdownRef}>
                     <button
                       style={{
                         background: "transparent",
                         border: "1px solid #d1d5db",
-                        padding: "clamp(5px, 1vw, 6px) clamp(8px, 1.5vw, 12px)",
+                        padding: "6px 12px",
                         borderRadius: "6px",
                         color: "#374151",
                         fontWeight: "600",
-                        fontSize: "clamp(13px, 1.5vw, 14px)",
+                        fontSize: "14px",
                         cursor: "pointer",
                         transition: "all 0.3s",
                         whiteSpace: "nowrap",
@@ -795,14 +808,14 @@ export default function Home() {
                     >
                       <div
                         style={{
-                          width: "clamp(20px, 2.5vw, 24px)",
-                          height: "clamp(20px, 2.5vw, 24px)",
+                          width: "24px",
+                          height: "24px",
                           background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                           borderRadius: "50%",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: "clamp(10px, 1.5vw, 12px)",
+                          fontSize: "12px",
                           fontWeight: "bold",
                           color: "white",
                           flexShrink: 0,
@@ -895,12 +908,18 @@ export default function Home() {
                 <>
                   <button
                     onClick={() => router.push('/login')}
-                    className="responsive-button"
                     style={{
                       background: "transparent",
                       border: "1px solid #d1d5db",
                       color: "#374151",
                       fontWeight: "600",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      whiteSpace: "nowrap",
+                      minHeight: "36px",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "#f8fafc";
@@ -915,11 +934,19 @@ export default function Home() {
                   </button>
                   <button
                     onClick={() => router.push('/signup')}
-                    className="responsive-button"
                     style={{
                       background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                       color: "white",
                       boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      border: "none",
+                      transition: "all 0.3s",
+                      whiteSpace: "nowrap",
+                      minHeight: "36px",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-1px)";
@@ -1080,7 +1107,6 @@ export default function Home() {
                           justifyContent: "center",
                         }}
                       >
-                        {/* You can add icons here for each menu item */}
                         <div style={{ width: "6px", height: "6px", background: "#64748b", borderRadius: "50%" }} />
                       </div>
                       {item}
@@ -1161,13 +1187,29 @@ export default function Home() {
                       
                       <button
                         onClick={handleLogout}
-                        className="responsive-button"
                         style={{
                           background: "transparent",
                           border: "1px solid #d1d5db",
                           color: "#374151",
                           fontWeight: "600",
                           width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          cursor: "pointer",
+                          transition: "all 0.3s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#f8fafc";
+                          e.currentTarget.style.borderColor = "#9ca3af";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.borderColor = "#d1d5db";
                         }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1186,13 +1228,25 @@ export default function Home() {
                           router.push('/login');
                           setMobileMenuOpen(false);
                         }}
-                        className="responsive-button"
                         style={{
                           background: "transparent",
                           border: "1px solid #d1d5db",
                           color: "#374151",
                           fontWeight: "600",
                           width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          cursor: "pointer",
+                          transition: "all 0.3s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#f8fafc";
+                          e.currentTarget.style.borderColor = "#9ca3af";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.borderColor = "#d1d5db";
                         }}
                       >
                         Log in
@@ -1202,11 +1256,25 @@ export default function Home() {
                           router.push('/signup');
                           setMobileMenuOpen(false);
                         }}
-                        className="responsive-button"
                         style={{
                           background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                           color: "white",
                           width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          border: "none",
+                          transition: "all 0.3s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "none";
                         }}
                       >
                         Sign up
@@ -1227,33 +1295,9 @@ export default function Home() {
         )}
       </nav>
 
-      {/* Notification Container - Fixed position for better visibility */}
+      {/* Notification Container - Only show errors, removed welcome message */}
       <div className="notification-container">
-        {/* Welcome notification */}
-        {currentUser && (
-          <div
-            style={{
-              background: "linear-gradient(135deg, #10b981, #059669)",
-              color: "white",
-              padding: "12px 16px",
-              borderRadius: "12px",
-              marginBottom: "8px",
-              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Welcome back, {userProfile?.username || currentUser.email}!
-          </div>
-        )}
-
-        {/* Error notifications */}
+        {/* Error notifications only */}
         {error && (
           <div
             style={{
@@ -1278,7 +1322,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Rest of your component remains the same... */}
+      {/* Rest of your component remains exactly the same... */}
       {/* Hero Section */}
       <section
         className="responsive-section"

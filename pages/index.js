@@ -270,9 +270,7 @@ export default function Home() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        * {
-          box-sizing: border-box;
-        }
+
         
         body {
           margin: 0;
@@ -460,7 +458,6 @@ export default function Home() {
           display: flex;
           gap: 1rem;
           flex-wrap: wrap;
-          justify-content: center;
         }
         
         @media (max-width: 480px) {

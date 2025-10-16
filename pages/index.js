@@ -1357,7 +1357,7 @@ const resetAll = () => {
     </div>
   </div>
 ) : (
-      {/* Upload Section - Positioned below hero */}
+  
       <section
         style={{
           padding: "2rem 1rem 6rem",

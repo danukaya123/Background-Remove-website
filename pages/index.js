@@ -1767,7 +1767,6 @@ const resetAll = () => {
         </div>
       </section>
 
-      {/* Results Section */}
 {resultUrl && !editingMode && (
   <section
     ref={resultsSectionRef}
@@ -1810,7 +1809,6 @@ const resetAll = () => {
         </p>
       </div>
       
-      {/* Edit Button */}
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
         <button
           onClick={() => setEditingMode(true)}
@@ -1846,7 +1844,6 @@ const resetAll = () => {
         </button>
       </div>
       
-      {/* Results Grid */}
       <div
         style={{
           display: "grid",
@@ -1855,7 +1852,6 @@ const resetAll = () => {
           alignItems: "start",
         }}
       >
-        {/* Original Image */}
         <div style={{ textAlign: "center" }}>
           <h3 style={{ 
             fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
@@ -1886,7 +1882,6 @@ const resetAll = () => {
           </div>
         </div>
 
-        {/* Processed Image */}
         <div style={{ textAlign: "center" }}>
           <h3 style={{ 
             fontSize: "clamp(1.1rem, 2vw, 1.25rem)", 
@@ -1985,7 +1980,6 @@ const resetAll = () => {
   </section>
 )}
 
-{/* Image Editor Component */}
 {editingMode && resultUrl && (
   <ImageEditor 
     resultUrl={resultUrl}
@@ -1994,7 +1988,6 @@ const resetAll = () => {
   />
 )}
 
-      {/* Features Section */}
       <section
         style={{
           padding: "4rem 1rem",
@@ -2125,7 +2118,6 @@ const resetAll = () => {
       </section>
 
 
-{/* Examples Section */}
 <section
   id="examples"
   style={{
@@ -2134,7 +2126,6 @@ const resetAll = () => {
     position: "relative",
   }}
 >
-  {/* Background Decorative Elements */}
   <div
     style={{
       position: "absolute",
@@ -2168,7 +2159,6 @@ const resetAll = () => {
       zIndex: 2,
     }}
   >
-    {/* Section Header */}
     <div style={{ textAlign: "center", marginBottom: "4rem" }}>
       <h2
         style={{
@@ -2197,7 +2187,6 @@ const resetAll = () => {
       </p>
     </div>
 
-    {/* Examples Grid */}
     <div
       style={{
         display: "grid",
@@ -2206,7 +2195,6 @@ const resetAll = () => {
         alignItems: "start",
       }}
     >
-      {/* Example 1 - Product Photography */}
       <div
         style={{
           background: "white",
@@ -2304,7 +2292,6 @@ const resetAll = () => {
         </div>
       </div>
 
-      {/* Example 2 - Portrait Photography */}
       <div
         style={{
           background: "white",
@@ -2402,7 +2389,6 @@ const resetAll = () => {
         </div>
       </div>
 
-      {/* Example 3 - Creative Projects */}
       <div
         style={{
           background: "white",
@@ -2501,7 +2487,6 @@ const resetAll = () => {
       </div>
     </div>
 
-    {/* CTA Section */}
     <div style={{ textAlign: "center", marginTop: "4rem" }}>
       <p
         style={{
@@ -2545,7 +2530,6 @@ const resetAll = () => {
   </div>
 </section>
 
-      {/* Footer */}
       <footer
         style={{
           borderTop: "1px solid #e2e8f0",

@@ -21,6 +21,7 @@ export default function Home() {
   const fileInputRef = useRef(null);
   const resultsSectionRef = useRef(null);
   const dropdownRef = useRef(null);
+  const mobileMenuRef = useRef(null);
   const router = useRouter();
   const { currentUser, userProfile, logout } = useAuth();
 
@@ -29,6 +30,11 @@ export default function Home() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+      if (mobileMenuRef.current && 
+          !mobileMenuRef.current.contains(event.target) && 
+          !event.target.closest('.menu-toggle')) {
+        setMobileMenuOpen(false);
       }
     };
 
@@ -47,32 +53,6 @@ export default function Home() {
       }, 300);
     }
   }, [resultUrl, loading]);
-
-  // Close mobile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (mobileMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.menu-toggle')) {
-        setMobileMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [mobileMenuOpen]);
-
-  const handleDownloadEdited = (editedImageUrl) => {
-    try {
-      const a = document.createElement("a");
-      a.href = editedImageUrl;
-      a.download = `edited-background-removed-${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error("Download failed:", err);
-      setError("Download failed. Please try again.");
-    }
-  };
 
   // Typewriter phrases for subheading
   const typewriterPhrases = [
@@ -248,6 +228,7 @@ export default function Home() {
     try {
       await logout();
       setShowDropdown(false);
+      setMobileMenuOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -341,6 +322,37 @@ export default function Home() {
           60% { transform: translateY(-3px); }
         }
         
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideOutRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes overlayFadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
         .float-animation {
           animation: float 3s ease-in-out infinite;
         }
@@ -359,6 +371,18 @@ export default function Home() {
         
         .text-glow {
           animation: textGlow 2s ease-in-out infinite;
+        }
+        
+        .slide-in-right {
+          animation: slideInRight 0.3s ease-out;
+        }
+        
+        .slide-out-right {
+          animation: slideOutRight 0.3s ease-out;
+        }
+        
+        .overlay-fade-in {
+          animation: overlayFadeIn 0.3s ease-out;
         }
         
         /* Responsive Design */
@@ -588,7 +612,7 @@ export default function Home() {
           gap: clamp(1rem, 2vw, 2rem);
           justify-content: center;
           flex-wrap: wrap;
-          width: 100%;
+          width: "100%";
         }
         
         @media (max-width: 480px) {
@@ -600,6 +624,66 @@ export default function Home() {
             min-width: 80px !important;
             padding: 0.75rem !important;
           }
+        }
+
+        /* Mobile Sidebar Styles */
+        .mobile-sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 9998;
+          backdrop-filter: blur(4px);
+        }
+
+        .mobile-sidebar {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 85%;
+          max-width: 400px;
+          background: white;
+          z-index: 9999;
+          box-shadow: -10px 0 50px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
+        }
+
+        .mobile-sidebar-header {
+          padding: 1.5rem;
+          border-bottom: 1px solid #e2e8f0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: linear-gradient(135deg, #f8fafc, #ffffff);
+        }
+
+        .mobile-sidebar-content {
+          flex: 1;
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .mobile-sidebar-footer {
+          padding: 1.5rem;
+          border-top: 1px solid #e2e8f0;
+          background: #f8fafc;
+        }
+
+        .notification-container {
+          position: fixed;
+          top: 80px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1001;
+          width: 90%;
+          max-width: 400px;
         }
       `}</style>
 
@@ -898,114 +982,303 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
+        {/* Mobile Sidebar Navigation */}
         {mobileMenuOpen && (
-          <div 
-            className="mobile-menu"
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              background: "rgba(255, 255, 255, 0.98)",
-              backdropFilter: "blur(10px)",
-              borderTop: "1px solid #e2e8f0",
-              padding: "1rem clamp(1rem, 3vw, 2rem)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.75rem",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-              zIndex: 1000,
-              maxHeight: "80vh",
-              overflowY: "auto",
-            }}
-          >
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "16px", 
-                  fontWeight: "500", 
-                  padding: "12px 0",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item}
-              </a>
-            ))}
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "1rem" }}>
-              {currentUser ? (
-                <>
-                  <div style={{ padding: "12px 0", borderBottom: "1px solid #f1f5f9", width: "100%" }}>
-                    <div style={{ fontSize: "12px", color: "#64748b" }}>Signed in as</div>
-                    <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b", wordBreak: "break-all" }}>{currentUser.email}</div>
-                    {userProfile && (
-                      <>
-                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Username: {userProfile.username}</div>
-                        {userProfile.phoneNumber && (
-                          <div style={{ fontSize: "12px", color: "#64748b" }}>Phone: {userProfile.phoneNumber}</div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="responsive-button"
+          <>
+            <div 
+              className="mobile-sidebar-overlay overlay-fade-in"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div 
+              ref={mobileMenuRef}
+              className="mobile-sidebar slide-in-right"
+            >
+              {/* Sidebar Header */}
+              <div className="mobile-sidebar-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
                     style={{
-                      background: "transparent",
-                      border: "1px solid #d1d5db",
-                      color: "#374151",
-                      fontWeight: "600",
-                      width: "100%",
-                    }}
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <div style={{ display: "flex", gap: "0.75rem", width: "100%" }}>
-                  <button
-                    onClick={() => {
-                      router.push('/login');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="responsive-button"
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #d1d5db",
-                      color: "#374151",
-                      fontWeight: "600",
-                      flex: 1,
-                    }}
-                  >
-                    Log in
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push('/signup');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="responsive-button"
-                    style={{
+                      width: "32px",
+                      height: "32px",
                       background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "16px",
                       color: "white",
-                      flex: 1,
                     }}
                   >
-                    Sign up
-                  </button>
+                    Q
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "800",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+                  </span>
                 </div>
-              )}
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Sidebar Content */}
+              <div className="mobile-sidebar-content">
+                {/* Navigation Links */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+                    <a 
+                      key={item}
+                      href="#" 
+                      style={{ 
+                        color: "#64748b", 
+                        textDecoration: "none", 
+                        fontSize: "16px", 
+                        fontWeight: "500", 
+                        padding: "12px 16px",
+                        borderRadius: "8px",
+                        transition: "all 0.3s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                      onClick={() => setMobileMenuOpen(false)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.color = "#3b82f6";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "#64748b";
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {/* You can add icons here for each menu item */}
+                        <div style={{ width: "6px", height: "6px", background: "#64748b", borderRadius: "50%" }} />
+                      </div>
+                      {item}
+                    </a>
+                  ))}
+                </div>
+
+                {/* User Account Section */}
+                <div style={{ 
+                  background: "linear-gradient(135deg, #f8fafc, #ffffff)",
+                  borderRadius: "12px",
+                  padding: "1.5rem",
+                  border: "1px solid #e2e8f0",
+                  marginTop: "1rem",
+                }}>
+                  {currentUser ? (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+                        <div
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            color: "white",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ 
+                            fontSize: "16px", 
+                            fontWeight: "600", 
+                            color: "#1e293b",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}>
+                            {userProfile?.username || "User"}
+                          </div>
+                          <div style={{ 
+                            fontSize: "14px", 
+                            color: "#64748b",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}>
+                            {currentUser?.email}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {userProfile && (
+                        <div style={{ 
+                          background: "white", 
+                          padding: "12px", 
+                          borderRadius: "8px", 
+                          border: "1px solid #e2e8f0",
+                          marginBottom: "1rem"
+                        }}>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>Account Details</div>
+                          {userProfile.phoneNumber && (
+                            <div style={{ fontSize: "14px", color: "#1e293b", display: "flex", alignItems: "center", gap: "8px" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+                              </svg>
+                              {userProfile.phoneNumber}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="responsive-button"
+                        style={{
+                          background: "transparent",
+                          border: "1px solid #d1d5db",
+                          color: "#374151",
+                          fontWeight: "600",
+                          width: "100%",
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                        </svg>
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                      <p style={{ color: "#64748b", fontSize: "14px", textAlign: "center", margin: 0 }}>
+                        Join thousands of users transforming their images
+                      </p>
+                      <button
+                        onClick={() => {
+                          router.push('/login');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="responsive-button"
+                        style={{
+                          background: "transparent",
+                          border: "1px solid #d1d5db",
+                          color: "#374151",
+                          fontWeight: "600",
+                          width: "100%",
+                        }}
+                      >
+                        Log in
+                      </button>
+                      <button
+                        onClick={() => {
+                          router.push('/signup');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="responsive-button"
+                        style={{
+                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                          color: "white",
+                          width: "100%",
+                        }}
+                      >
+                        Sign up
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sidebar Footer */}
+              <div className="mobile-sidebar-footer">
+                <div style={{ textAlign: "center", color: "#64748b", fontSize: "12px" }}>
+                  &copy; {new Date().getFullYear()} QuizontalRBG
+                </div>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </nav>
 
+      {/* Notification Container - Fixed position for better visibility */}
+      <div className="notification-container">
+        {/* Welcome notification */}
+        {currentUser && (
+          <div
+            style={{
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              color: "white",
+              padding: "12px 16px",
+              borderRadius: "12px",
+              marginBottom: "8px",
+              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              fontWeight: "500",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Welcome back, {userProfile?.username || currentUser.email}!
+          </div>
+        )}
+
+        {/* Error notifications */}
+        {error && (
+          <div
+            style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#dc2626",
+              padding: "12px 16px",
+              borderRadius: "12px",
+              marginBottom: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              fontWeight: "500",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* Rest of your component remains the same... */}
       {/* Hero Section */}
       <section
         className="responsive-section"

@@ -25,8 +25,51 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Notification functions
+  const showLoginNotification = (user) => {
+    const event = new CustomEvent('showNotification', {
+      detail: {
+        type: 'success',
+        title: 'Welcome back! 👋',
+        message: `You've successfully signed in as ${user.displayName || user.email}.`
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const showLogoutNotification = () => {
+    const event = new CustomEvent('showNotification', {
+      detail: {
+        type: 'info',
+        title: 'Signed out',
+        message: 'You have been successfully signed out from our system.'
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const showErrorNotification = (title, message) => {
+    const event = new CustomEvent('showNotification', {
+      detail: {
+        type: 'error',
+        title,
+        message
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // Check for login/logout events
+      if (user && !currentUser) {
+        // User just logged in
+        showLoginNotification(user);
+      } else if (!user && currentUser) {
+        // User just logged out
+        showLogoutNotification();
+      }
+
       if (user) {
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -73,7 +116,7 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [currentUser]);
 
   // Email/Password Signup with Email Verification
   const signup = async (email, password, userData) => {
@@ -121,6 +164,7 @@ export function AuthProvider({ children }) {
       return user;
     } catch (error) {
       console.error('Signup error:', error);
+      showErrorNotification('Signup Failed', error.message);
       throw error;
     } finally {
       setLoading(false);
@@ -135,6 +179,7 @@ export function AuthProvider({ children }) {
       return userCredential.user;
     } catch (error) {
       console.error('Login error:', error);
+      showErrorNotification('Login Failed', error.message);
       throw error;
     } finally {
       setLoading(false);
@@ -195,6 +240,7 @@ export function AuthProvider({ children }) {
       return user;
     } catch (error) {
       console.error(`${providerName} signin error:`, error);
+      showErrorNotification(`Sign in with ${providerName} failed`, error.message);
       throw error;
     } finally {
       setLoading(false);
@@ -208,8 +254,19 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       await sendEmailVerification(currentUser);
+      
+      // Show success notification
+      const event = new CustomEvent('showNotification', {
+        detail: {
+          type: 'success',
+          title: 'Verification Email Sent',
+          message: 'Please check your inbox for the verification link.'
+        }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error('Resend verification error:', error);
+      showErrorNotification('Verification Failed', error.message);
       throw error;
     } finally {
       setLoading(false);
@@ -221,8 +278,19 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       await sendPasswordResetEmail(auth, email);
+      
+      // Show success notification
+      const event = new CustomEvent('showNotification', {
+        detail: {
+          type: 'success',
+          title: 'Reset Email Sent',
+          message: 'Please check your inbox for the password reset link.'
+        }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error('Password reset error:', error);
+      showErrorNotification('Password Reset Failed', error.message);
       throw error;
     } finally {
       setLoading(false);
@@ -234,10 +302,10 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       await signOut(auth);
-      setCurrentUser(null);
-      setUserProfile(null);
+      // The onAuthStateChanged will handle the notification
     } catch (error) {
       console.error('Logout error:', error);
+      showErrorNotification('Logout Failed', 'There was an issue signing out. Please try again.');
       throw error;
     } finally {
       setLoading(false);
@@ -274,9 +342,20 @@ export function AuthProvider({ children }) {
       setUserProfile(newProfile);
       setCurrentUser(newUser);
 
+      // Show success notification
+      const event = new CustomEvent('showNotification', {
+        detail: {
+          type: 'success',
+          title: 'Profile Updated',
+          message: 'Your profile has been successfully updated.'
+        }
+      });
+      window.dispatchEvent(event);
+
       return newProfile;
     } catch (error) {
       console.error('Error updating profile:', error);
+      showErrorNotification('Update Failed', 'There was an issue updating your profile.');
       throw error;
     } finally {
       setLoading(false);

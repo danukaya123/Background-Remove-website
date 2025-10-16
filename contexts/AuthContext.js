@@ -17,57 +17,57 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
         try {
           // Get user data from Firestore
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
             
             // Create a consistent user object
             const userObj = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName || userData.username || userData.displayName,
-              emailVerified: firebaseUser.emailVerified,
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName || userData.username || userData.displayName,
+              emailVerified: user.emailVerified,
               // Include all Firestore data
               ...userData
             };
             
-            setUser(userObj);
+            setCurrentUser(userObj);
             setUserProfile(userData);
           } else {
             // If no Firestore document exists, create basic user object
             const userObj = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              emailVerified: firebaseUser.emailVerified,
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              emailVerified: user.emailVerified,
             };
             
-            setUser(userObj);
+            setCurrentUser(userObj);
             setUserProfile(null);
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
           // Fallback to basic Firebase user data
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            emailVerified: firebaseUser.emailVerified,
+          setCurrentUser({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            emailVerified: user.emailVerified,
           });
           setUserProfile(null);
         }
       } else {
-        setUser(null);
+        setCurrentUser(null);
         setUserProfile(null);
       }
       setLoading(false);
@@ -79,21 +79,20 @@ export function AuthProvider({ children }) {
   // Email/Password Signup
   const signup = async (email, password, userData) => {
     try {
-      setError('');
       setLoading(true);
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      const user = userCredential.user;
 
       // Update profile with username
-      await updateProfile(firebaseUser, {
+      await updateProfile(user, {
         displayName: userData.username
       });
 
       // Create user document in Firestore
       const userProfileData = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
+        uid: user.uid,
+        email: user.email,
         username: userData.username,
         phoneNumber: userData.phoneNumber || '',
         birthday: userData.birthday || '',
@@ -103,21 +102,21 @@ export function AuthProvider({ children }) {
         provider: 'email'
       };
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), userProfileData);
+      await setDoc(doc(db, 'users', user.uid), userProfileData);
 
       // Update local state with consistent structure
       const userObj = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
+        uid: user.uid,
+        email: user.email,
         displayName: userData.username,
-        emailVerified: firebaseUser.emailVerified,
+        emailVerified: user.emailVerified,
         ...userProfileData
       };
 
-      setUser(userObj);
+      setCurrentUser(userObj);
       setUserProfile(userProfileData);
 
-      return firebaseUser;
+      return user;
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
@@ -221,17 +220,17 @@ export function AuthProvider({ children }) {
         if (error.code === 'auth/user-not-found') {
           // Create new user
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const firebaseUser = userCredential.user;
+          const user = userCredential.user;
           
           // Update profile with Google data
-          await updateProfile(firebaseUser, {
+          await updateProfile(user, {
             displayName: name,
             photoURL: picture
           });
 
           // Create user profile in Firestore
           const userProfileData = {
-            uid: firebaseUser.uid,
+            uid: user.uid,
             email: email,
             username: name || email.split('@')[0],
             displayName: name,
@@ -242,21 +241,21 @@ export function AuthProvider({ children }) {
             updatedAt: new Date().toISOString(),
           };
 
-          await setDoc(doc(db, 'users', firebaseUser.uid), userProfileData);
+          await setDoc(doc(db, 'users', user.uid), userProfileData);
           
           // Update local state with consistent structure
           const userObj = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
+            uid: user.uid,
+            email: user.email,
             displayName: name,
-            emailVerified: firebaseUser.emailVerified,
+            emailVerified: user.emailVerified,
             ...userProfileData
           };
 
           setUserProfile(userProfileData);
-          setUser(userObj);
+          setCurrentUser(userObj);
 
-          return firebaseUser;
+          return user;
         } else {
           throw error;
         }
@@ -272,7 +271,7 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       await signOut(auth);
-      setUser(null);
+      setCurrentUser(null);
       setUserProfile(null);
     } catch (error) {
       console.error('Logout error:', error);
@@ -297,7 +296,7 @@ export function AuthProvider({ children }) {
 
   // Update User Profile
   const updateUserProfile = async (updates) => {
-    if (!user) throw new Error('No user logged in');
+    if (!currentUser) throw new Error('No user logged in');
     
     try {
       setLoading(true);
@@ -315,18 +314,18 @@ export function AuthProvider({ children }) {
         updatedAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, 'users', user.uid), updatedData, { merge: true });
+      await setDoc(doc(db, 'users', currentUser.uid), updatedData, { merge: true });
 
       // Update local state
       const newProfile = { ...userProfile, ...updatedData };
       const newUser = {
-        ...user,
-        displayName: updates.username || updates.displayName || user.displayName,
+        ...currentUser,
+        displayName: updates.username || updates.displayName || currentUser.displayName,
         ...updatedData
       };
 
       setUserProfile(newProfile);
-      setUser(newUser);
+      setCurrentUser(newUser);
 
       return newProfile;
     } catch (error) {
@@ -339,20 +338,20 @@ export function AuthProvider({ children }) {
 
   // Get user profile data (useful for refreshing data)
   const refreshUserProfile = async () => {
-    if (!user) return null;
+    if (!currentUser) return null;
     
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setUserProfile(userData);
         
         // Also update user object with latest data
         const updatedUser = {
-          ...user,
+          ...currentUser,
           ...userData
         };
-        setUser(updatedUser);
+        setCurrentUser(updatedUser);
         
         return userData;
       }
@@ -364,8 +363,9 @@ export function AuthProvider({ children }) {
   };
 
   const value = {
-    // User state
-    user,
+    // User state - exposing both currentUser and user for compatibility
+    user: currentUser,
+    currentUser,
     userProfile,
     
     // Authentication methods
@@ -381,7 +381,7 @@ export function AuthProvider({ children }) {
     refreshUserProfile,
     
     // Helper properties
-    isAuthenticated: !!user,
+    isAuthenticated: !!currentUser,
     isLoading: loading
   };
 

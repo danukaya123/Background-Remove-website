@@ -1,7 +1,6 @@
 import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import NotificationComponent from '../components/NotificationComponent';
-import '../styles/globals.css'; // Adjust path if needed
 
 export default function MyApp({ Component, pageProps }) {
   return (

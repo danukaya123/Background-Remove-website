@@ -687,9 +687,51 @@ const resetAll = () => {
             >
               Sign up
             </button>
+          </>
         )}
       </div>
     </div>
+
+    {/* Mobile Menu Toggle */}
+    <div className="mobile-only">
+      <button
+        className="menu-toggle"
+        onClick={toggleMobileMenu}
+        style={{
+          background: "transparent",
+          border: "none",
+          padding: "8px",
+          borderRadius: "6px",
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+        }}
+      >
+        <span style={{ 
+          width: "24px", 
+          height: "2px", 
+          background: "#1e293b",
+          transition: "all 0.3s",
+          transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+        }}></span>
+        <span style={{ 
+          width: "24px", 
+          height: "2px", 
+          background: "#1e293b",
+          transition: "all 0.3s",
+          opacity: mobileMenuOpen ? "0" : "1"
+        }}></span>
+        <span style={{ 
+          width: "24px", 
+          height: "2px", 
+          background: "#1e293b",
+          transition: "all 0.3s",
+          transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+        }}></span>
+      </button>
+    </div>
+  </div>
 
   {/* Mobile Navigation Menu */}
   {mobileMenuOpen && (
@@ -730,36 +772,65 @@ const resetAll = () => {
       ))}
       
       <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-        <button
-          style={{
-            background: "transparent",
-            border: "1px solid #d1d5db",
-            padding: "10px 16px",
-            borderRadius: "6px",
-            color: "#374151",
-            fontWeight: "600",
-            fontSize: "14px",
-            cursor: "pointer",
-            flex: 1,
-          }}
-        >
-          Log in
-        </button>
-        <button
-          style={{
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            border: "none",
-            padding: "10px 16px",
-            borderRadius: "6px",
-            color: "white",
-            fontWeight: "600",
-            fontSize: "14px",
-            cursor: "pointer",
-            flex: 1,
-          }}
-        >
-          Sign up
-        </button>
+        {currentUser ? (
+          <button
+            onClick={logout}
+            style={{
+              background: "transparent",
+              border: "1px solid #d1d5db",
+              padding: "10px 16px",
+              borderRadius: "6px",
+              color: "#374151",
+              fontWeight: "600",
+              fontSize: "14px",
+              cursor: "pointer",
+              flex: 1,
+            }}
+          >
+            Sign Out
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                router.push('/login');
+                setMobileMenuOpen(false);
+              }}
+              style={{
+                background: "transparent",
+                border: "1px solid #d1d5db",
+                padding: "10px 16px",
+                borderRadius: "6px",
+                color: "#374151",
+                fontWeight: "600",
+                fontSize: "14px",
+                cursor: "pointer",
+                flex: 1,
+              }}
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => {
+                router.push('/signup');
+                setMobileMenuOpen(false);
+              }}
+              style={{
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                border: "none",
+                padding: "10px 16px",
+                borderRadius: "6px",
+                color: "white",
+                fontWeight: "600",
+                fontSize: "14px",
+                cursor: "pointer",
+                flex: 1,
+              }}
+            >
+              Sign up
+            </button>
+          </>
+        )}
       </div>
     </div>
   )}

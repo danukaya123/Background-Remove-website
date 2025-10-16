@@ -20,6 +20,7 @@ export default function Home() {
   
   const fileInputRef = useRef(null);
   const resultsSectionRef = useRef(null);
+  const sidebarRef = useRef(null);
   const router = useRouter();
   const { currentUser, userProfile, logout } = useAuth();
 
@@ -38,7 +39,9 @@ export default function Home() {
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (mobileMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.menu-toggle')) {
+      if (mobileMenuOpen && 
+          !event.target.closest('.mobile-sidebar') && 
+          !event.target.closest('.menu-toggle')) {
         setMobileMenuOpen(false);
       }
     };
@@ -46,6 +49,18 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileMenuOpen]);
+
+  // Close sidebar when route changes
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setMobileMenuOpen(false);
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+    };
+  }, [router]);
 
   const handleDownloadEdited = (editedImageUrl) => {
     try {
@@ -235,6 +250,7 @@ export default function Home() {
     try {
       await logout();
       setShowDropdown(false);
+      setMobileMenuOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -265,6 +281,39 @@ export default function Home() {
           font-family: 'Inter', sans-serif;
           scroll-behavior: smooth;
           overflow-x: hidden;
+        }
+        
+        /* Enhanced Responsive Animations */
+        @keyframes slideInLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideOutLeft {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes overlayFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes overlayFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
         }
         
         @keyframes float {
@@ -298,17 +347,6 @@ export default function Home() {
           }
         }
         
-        @keyframes particleFloat {
-          0%, 100% { 
-            transform: translate(0, 0) rotate(0deg);
-            opacity: 0;
-          }
-          10%, 90% { opacity: 1; }
-          50% { 
-            transform: translate(100px, -50px) rotate(180deg);
-          }
-        }
-        
         @keyframes slideUp {
           from { 
             opacity: 0;
@@ -331,16 +369,6 @@ export default function Home() {
           60% { transform: translateY(-3px); }
         }
         
-        @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0; }
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-          100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-        
         .float-animation {
           animation: float 3s ease-in-out infinite;
         }
@@ -361,19 +389,23 @@ export default function Home() {
           animation: textGlow 2s ease-in-out infinite;
         }
         
-        /* Responsive Design */
+        /* Enhanced Responsive Design */
         @media (max-width: 768px) {
           .desktop-only {
             display: none !important;
           }
           
           .mobile-only {
-            display: flex !important;
+            display: block !important;
           }
         }
         
         @media (min-width: 769px) {
           .mobile-only {
+            display: none !important;
+          }
+          
+          .mobile-sidebar {
             display: none !important;
           }
         }
@@ -405,6 +437,7 @@ export default function Home() {
         @media (max-width: 480px) {
           .hero-container {
             gap: 2rem;
+            padding: 0 1rem;
           }
         }
         
@@ -418,6 +451,7 @@ export default function Home() {
         @media (max-width: 768px) {
           .feature-points {
             align-items: center;
+            text-align: center;
           }
         }
         
@@ -426,16 +460,19 @@ export default function Home() {
           display: flex;
           gap: 1rem;
           flex-wrap: wrap;
+          justify-content: center;
         }
         
         @media (max-width: 480px) {
           .cta-buttons {
             flex-direction: column;
             width: 100%;
+            align-items: center;
           }
           
           .cta-buttons button {
             width: 100%;
+            max-width: 280px;
             justify-content: center;
           }
         }
@@ -463,6 +500,7 @@ export default function Home() {
           .responsive-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
+            padding: 0 1rem;
           }
         }
         
@@ -471,6 +509,7 @@ export default function Home() {
           width: 100%;
           height: auto;
           max-width: 100%;
+          object-fit: contain;
         }
         
         /* Text Responsive */
@@ -514,6 +553,7 @@ export default function Home() {
         @media (max-width: 480px) {
           .results-grid {
             grid-template-columns: 1fr;
+            gap: 2rem;
           }
         }
         
@@ -521,10 +561,48 @@ export default function Home() {
         .upload-container {
           max-width: min(800px, 90vw);
           margin: 0 auto;
+          padding: 0 1rem;
+        }
+        
+        /* Mobile Sidebar Styles */
+        .mobile-sidebar {
+          animation: slideInLeft 0.3s ease-out;
+        }
+        
+        .mobile-sidebar.closing {
+          animation: slideOutLeft 0.3s ease-in;
+        }
+        
+        .sidebar-overlay {
+          animation: overlayFadeIn 0.3s ease-out;
+        }
+        
+        .sidebar-overlay.closing {
+          animation: overlayFadeOut 0.3s ease-in;
+        }
+        
+        /* Improved Mobile Navigation */
+        @media (max-width: 768px) {
+          .mobile-nav-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+          }
+          
+          .mobile-nav-item:active {
+            background: #f8fafc;
+          }
+          
+          .mobile-user-section {
+            background: #f8fafc;
+            margin: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+          }
         }
       `}</style>
 
-      {/* Navigation - Keep your current navigation */}
+      {/* Navigation */}
       <nav
         style={{
           borderBottom: "1px solid #e2e8f0",
@@ -797,6 +875,8 @@ export default function Home() {
                 display: "flex",
                 flexDirection: "column",
                 gap: "4px",
+                zIndex: 1001,
+                position: "relative",
               }}
             >
               <span style={{ 
@@ -823,124 +903,198 @@ export default function Home() {
             </button>
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        {mobileMenuOpen && (
-          <div 
-            className="mobile-menu"
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              background: "rgba(255, 255, 255, 0.98)",
-              backdropFilter: "blur(10px)",
-              borderTop: "1px solid #e2e8f0",
-              padding: "1rem 2rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.75rem",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-              zIndex: 1000,
-            }}
-          >
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "16px", 
-                  fontWeight: "500", 
-                  padding: "10px 0",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item}
-              </a>
-            ))}
-            
-            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-              {currentUser ? (
-                <>
-                  <div style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9", width: "100%" }}>
-                    <div style={{ fontSize: "12px", color: "#64748b" }}>Signed in as</div>
-                    <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{currentUser.email}</div>
-                    {userProfile && (
-                      <>
-                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Username: {userProfile.username}</div>
-                        {userProfile.phoneNumber && (
-                          <div style={{ fontSize: "12px", color: "#64748b" }}>Phone: {userProfile.phoneNumber}</div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #d1d5db",
-                      padding: "10px 16px",
-                      borderRadius: "6px",
-                      color: "#374151",
-                      fontWeight: "600",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                      flex: 1,
-                    }}
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => {
-                      router.push('/login');
-                      setMobileMenuOpen(false);
-                    }}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #d1d5db",
-                      padding: "10px 16px",
-                      borderRadius: "6px",
-                      color: "#374151",
-                      fontWeight: "600",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                      flex: 1,
-                    }}
-                  >
-                    Log in
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push('/signup');
-                      setMobileMenuOpen(false);
-                    }}
-                    style={{
-                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                      border: "none",
-                      padding: "10px 16px",
-                      borderRadius: "6px",
-                      color: "white",
-                      fontWeight: "600",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                      flex: 1,
-                    }}
-                  >
-                    Sign up
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
 
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className={`sidebar-overlay ${!mobileMenuOpen ? 'closing' : ''}`}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            zIndex: 999,
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar Navigation */}
+      <div
+        ref={sidebarRef}
+        className={`mobile-sidebar ${!mobileMenuOpen ? 'closing' : ''}`}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: "min(85vw, 320px)",
+          background: "white",
+          zIndex: 1000,
+          boxShadow: "2px 0 20px rgba(0,0,0,0.15)",
+          display: mobileMenuOpen ? "flex" : "none",
+          flexDirection: "column",
+          overflowY: "auto",
+        }}
+      >
+        {/* Sidebar Header */}
+        <div style={{
+          padding: "1.5rem",
+          borderBottom: "1px solid #e2e8f0",
+          background: "linear-gradient(135deg, #f8fafc, #ffffff)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "18px",
+                color: "white",
+              }}
+            >
+              Q
+            </div>
+            <div>
+              <div style={{
+                fontSize: "20px",
+                fontWeight: "800",
+                color: "#1e293b",
+              }}>
+                Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+              </div>
+              <div style={{
+                fontSize: "12px",
+                color: "#64748b",
+                marginTop: "2px"
+              }}>
+                AI Background Remover
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <div style={{ flex: 1, padding: "1rem 0" }}>
+          {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+            <a
+              key={item}
+              href="#"
+              className="mobile-nav-item"
+              style={{
+                display: "block",
+                color: "#64748b",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: "500",
+                transition: "all 0.2s",
+              }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item}
+            </a>
+          ))}
+        </div>
+
+        {/* User Section */}
+        <div style={{
+          padding: "1.5rem",
+          borderTop: "1px solid #e2e8f0",
+          background: "#f8fafc"
+        }}>
+          {currentUser ? (
+            <div>
+              <div style={{ marginBottom: "1rem" }}>
+                <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "4px" }}>
+                  Signed in as
+                </div>
+                <div style={{ fontSize: "16px", fontWeight: "600", color: "#1e293b" }}>
+                  {userProfile?.username || currentUser.email}
+                </div>
+                {userProfile?.phoneNumber && (
+                  <div style={{ fontSize: "14px", color: "#64748b", marginTop: "4px" }}>
+                    {userProfile.phoneNumber}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={handleLogout}
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                  border: "1px solid #dc2626",
+                  color: "#dc2626",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#fef2f2";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <button
+                onClick={() => {
+                  router.push('/login');
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                  border: "1px solid #d1d5db",
+                  color: "#374151",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                }}
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => {
+                  router.push('/signup');
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  width: "100%",
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                  border: "none",
+                  color: "white",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                }}
+              >
+                Sign up
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Rest of your components remain the same */}
       {/* Hero Section */}
       <section
         className="responsive-section"
@@ -2398,7 +2552,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - Old Style */}
+      {/* Footer */}
       <footer
         style={{
           borderTop: "1px solid #e2e8f0",

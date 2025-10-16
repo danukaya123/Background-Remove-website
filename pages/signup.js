@@ -60,18 +60,19 @@ export default function Signup() {
     setLoading(false);
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await signInWithGoogle();
-      router.push('/');
-    } catch (error) {
-      setError('Failed to create account with Google. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleGoogleSignup = async () => {
+  try {
+    setError('');
+    setLoading(true);
+    await signInWithGoogle();
+    // No need to redirect - auth state change will handle it automatically
+  } catch (error) {
+    setError('Failed to create account with Google. Please try again.');
+    console.error('Google signup error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div

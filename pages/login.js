@@ -45,16 +45,19 @@ export default function Login() {
     setLoading(false);
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await signInWithGoogle();
-    } catch (error) {
-      setError('Failed to sign in with Google. Please try again.');
-      setLoading(false);
-    }
-  };
+const handleGoogleLogin = async () => {
+  try {
+    setError('');
+    setLoading(true);
+    await signInWithGoogle();
+    // No need to redirect - auth state change will handle it automatically
+  } catch (error) {
+    setError('Failed to sign in with Google. Please try again.');
+    console.error('Google login error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div

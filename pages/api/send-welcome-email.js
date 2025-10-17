@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     const mailOptions = {
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
-      subject: 'Welcome to Our App! 🎉',
+      subject: 'Welcome to Quizontal Image Background Removal ! 🎉',
       html: `
         <!DOCTYPE html>
         <html>
@@ -78,14 +78,14 @@ export default async function handler(req, res) {
 
               <p style="color: #64748b; font-size: 14px; margin-top: 20px;">
                 Best regards,<br>
-                <strong>The App Team</strong>
+                <strong>Quizontal</strong>
               </p>
             </div>
           </div>
         </body>
         </html>
       `,
-      text: `Welcome to Our App!
+      text: `Welcome to Quizontal Image Background Removal !
 
 Hello ${displayName || username || 'there'},
 

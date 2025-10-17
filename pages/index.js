@@ -671,7 +671,6 @@ export default function Home() {
   >
     Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
   </span>
-      </div>
 </Link>
           
           

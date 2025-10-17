@@ -4,6 +4,7 @@ import ImageEditor from './ImageEditor';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import Head from 'next/head';
+import Link from 'next/link';
 
 
 export default function Home() {

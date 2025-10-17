@@ -70,6 +70,19 @@ export default function Home() {
       router.events.off('routeChangeStart', handleRouteChange);
     };
   }, [router]);
+  
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, [mobileMenuOpen]);
+  
 
   const handleDownloadEdited = (editedImageUrl) => {
     try {
@@ -299,6 +312,12 @@ export default function Home() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
+  /* Simple solution: prevent body scroll when sidebar is open */
+  body.no-scroll {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+  }        
   /* Prevent zooming and ensure full width */
   html {
     width: 100%;

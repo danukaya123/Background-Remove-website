@@ -674,33 +674,41 @@ export default function Home() {
           </div>
           
           {/* Desktop Navigation Links */}
-          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-            {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
-              <a 
-                key={item}
-                href="#" 
-                style={{ 
-                  color: "#64748b", 
-                  textDecoration: "none", 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  transition: "all 0.3s",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#3b82f6";
-                  e.currentTarget.style.background = "#f1f5f9";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#64748b";
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                {item}
-              </a>
-            ))}
+<div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+  {[
+    { name: 'Home', href: '/' },
+    { name: 'Upload', href: '#upload-section' },
+    { name: 'Features', href: '#Features' },
+    { name: 'Examples', href: '#examples' },
+    { name: 'API Documentation', href: '/api' },
+    { name: 'About', href: '/about' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
+  ].map((item) => (
+    <a 
+      key={item.name}
+      href={item.href}
+      style={{ 
+        color: "#64748b", 
+        textDecoration: "none", 
+        fontSize: "14px", 
+        fontWeight: "500", 
+        transition: "all 0.3s",
+        padding: "6px 10px",
+        borderRadius: "6px",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = "#3b82f6";
+        e.currentTarget.style.background = "#f1f5f9";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = "#64748b";
+        e.currentTarget.style.background = "transparent";
+      }}
+    >
+      {item.name}
+    </a>
+  ))}
             
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
               {currentUser ? (
@@ -1002,10 +1010,18 @@ export default function Home() {
 
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
-          {['Uploads', 'Bulk Editing', 'API', 'Integrations', 'Pricing'].map((item) => (
+  {[
+    { name: 'Home', href: '/' },
+    { name: 'Upload', href: '#upload-section' },
+    { name: 'Features', href: '#Features' },
+    { name: 'Examples', href: '#examples' },
+    { name: 'API Documentation', href: '/api' },
+    { name: 'About', href: '/about' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
+  ].map((item) => (
             <a
-              key={item}
-              href="#"
+      key={item.name}
+      href={item.href}
               className="mobile-nav-item"
               style={{
                 display: "block",
@@ -2037,6 +2053,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section
+        id = "Features"
         className="responsive-section"
         style={{
           background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",

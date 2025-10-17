@@ -1033,7 +1033,7 @@ export default function Home() {
               }}
               onClick={() => setMobileMenuOpen(false)}
             >
-              {item}
+              {item.name}   
             </a>
           ))}
         </div>

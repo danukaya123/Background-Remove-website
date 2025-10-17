@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 import Head from 'next/head';
 
 export default function Support() {
@@ -15,10 +16,11 @@ export default function Support() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const sidebarRef = useRef(null);
   const pathname = usePathname();
+  
+  // Use the same AuthContext as your other pages
+  const { currentUser, userProfile, logout } = useAuth();
 
   // Contact form state
   const [formData, setFormData] = useState({
@@ -44,44 +46,27 @@ export default function Support() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileMenuOpen]);
 
-  // Check for user authentication on component mount
+  // Pre-fill form with user data when user is logged in
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const userData = localStorage.getItem('user');
-        const profileData = localStorage.getItem('userProfile');
-        
-        if (userData) {
-          setCurrentUser(JSON.parse(userData));
-          setFormData(prev => ({ ...prev, email: JSON.parse(userData).email || '' }));
-        }
-        if (profileData) {
-          setUserProfile(JSON.parse(profileData));
-          setFormData(prev => ({ ...prev, name: JSON.parse(profileData).username || '' }));
-        }
-      } catch (error) {
-        console.log('No user data found');
-      }
-    };
-
-    checkAuth();
-  }, []);
+    if (currentUser) {
+      setFormData(prev => ({ 
+        ...prev, 
+        email: currentUser.email || '',
+        name: userProfile?.username || ''
+      }));
+    }
+  }, [currentUser, userProfile]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Use the same logout function as your other pages
   const handleLogout = async () => {
     try {
-      localStorage.removeItem('user');
-      localStorage.removeItem('userProfile');
-      
-      setCurrentUser(null);
-      setUserProfile(null);
+      await logout();
       setShowDropdown(false);
       setMobileMenuOpen(false);
-      
-      window.location.href = '/';
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -959,6 +944,7 @@ export default function Support() {
       `}</style>
 
       {/* Navigation */}
+      {/* Navigation - This will now show user account when logged in */}
       <nav
         style={{
           borderBottom: "1px solid #e2e8f0",
@@ -1014,14 +1000,14 @@ export default function Support() {
           {/* Desktop Navigation Links */}
           <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
-    { name: 'Home', href: 'https://rbg.quizontal.cc' },
-    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-    { name: 'Features', href: 'https://rbg.quizontal.cc' },
-    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-    { name: 'API Documentation', href: '/api-documentation' },
-    { name: 'About', href: '/about' },
-    { name: 'Support', href: '/support' },
-    { name: 'Blog', href: 'https://blog.quizontal.cc' }
+              { name: 'Home', href: 'https://rbg.quizontal.cc' },
+              { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+              { name: 'Features', href: 'https://rbg.quizontal.cc' },
+              { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+              { name: 'API Documentation', href: '/api-documentation' },
+              { name: 'About', href: '/about' },
+              { name: 'Support', href: '/support' },
+              { name: 'Blog', href: 'https://blog.quizontal.cc' }
             ].map((item) => (
               <Link 
                 key={item.name}
@@ -1342,14 +1328,14 @@ export default function Support() {
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
-    { name: 'Home', href: 'https://rbg.quizontal.cc' },
-    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-    { name: 'Features', href: 'https://rbg.quizontal.cc' },
-    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-    { name: 'API Documentation', href: '/api-documentation' },
-    { name: 'About', href: '/about' },
-    { name: 'Support', href: '/support' },
-    { name: 'Blog', href: 'https://blog.quizontal.cc' }
+            { name: 'Home', href: 'https://rbg.quizontal.cc' },
+            { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+            { name: 'Features', href: 'https://rbg.quizontal.cc' },
+            { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+            { name: 'API Documentation', href: '/api-documentation' },
+            { name: 'About', href: '/about' },
+            { name: 'Support', href: '/support' },
+            { name: 'Blog', href: 'https://blog.quizontal.cc' }
           ].map((item) => (
             <Link
               key={item.name}

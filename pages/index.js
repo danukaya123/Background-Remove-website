@@ -680,8 +680,8 @@ export default function Home() {
     { name: 'Upload', href: '#upload-section' },
     { name: 'Features', href: '#Features' },
     { name: 'Examples', href: '#examples' },
-    { name: 'API Documentation', href: '/api' },
-    { name: 'About', href: '/about' },
+    { name: 'API Documentation', href: './api' },
+    { name: 'About', href: './about' },
     { name: 'Blog', href: 'https://blog.quizontal.cc' }
   ].map((item) => (
     <a 

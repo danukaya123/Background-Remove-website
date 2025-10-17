@@ -3,8 +3,16 @@ import { Client } from "@gradio/client";
 import ImageEditor from './ImageEditor';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
+import Head from 'next/head';
+
 
 export default function Home() {
+  const pageMeta = {
+  title: 'Quizontal - AI Background Remover',
+  description: 'Remove image backgrounds automatically with AI technology. 100% free, no watermarks, instant processing. Perfect for e-commerce, portraits, and creative projects.',
+  image: 'https://rbg.quizontal.cc/og-image.jpg',
+  url: 'https://rbg.quizontal.cc'
+};
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultUrl, setResultUrl] = useState(null);
@@ -267,6 +275,19 @@ export default function Home() {
         margin: "0",
       }}
     >
+
+      <Head>
+        <title>{pageMeta.title}</title>
+        <meta name="description" content={pageMeta.description} />
+        <meta property="og:title" content={pageMeta.title} />
+        <meta property="og:description" content={pageMeta.description} />
+        <meta property="og:image" content={pageMeta.image} />
+        <meta property="og:url" content={pageMeta.url} />
+        <meta name="twitter:title" content={pageMeta.title} />
+        <meta name="twitter:description" content={pageMeta.description} />
+        <meta name="twitter:image" content={pageMeta.image} />
+      </Head>
+      
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         

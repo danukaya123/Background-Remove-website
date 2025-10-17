@@ -674,6 +674,14 @@ export default function Home() {
           </div>
           
           {/* Desktop Navigation Links */}
+const handleNavigation = (href) => {
+  if (href.startsWith('http') || href.startsWith('#')) {
+    window.location.href = href;
+  } else {
+    router.push(href);
+  }
+};
+
 <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
   {[
     { name: 'Home', href: 'https://rbg.quizontal.cc' },
@@ -681,12 +689,12 @@ export default function Home() {
     { name: 'Features', href: '#Features' },
     { name: 'Examples', href: '#examples' },
     { name: 'API Documentation', href: 'https://rbg.quizontal.cc/api.html' },
-    { name: 'About', href: "about.html" },
+    { name: 'About', href: 'about.html' },
     { name: 'Blog', href: 'https://blog.quizontal.cc' }
   ].map((item) => (
     <a 
       key={item.name}
-      href={item.href}
+      onClick={() => handleNavigation(item.href)}
       style={{ 
         color: "#64748b", 
         textDecoration: "none", 

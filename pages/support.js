@@ -385,6 +385,7 @@ export default function Support() {
           margin: 0 auto 2rem; /* More margin bottom */
           display: block;
           box-shadow: 0 15px 40px rgba(0,0,0,0.4); /* Enhanced shadow */
+          display: none;
         }
 
         .author-name {
@@ -931,8 +932,8 @@ export default function Support() {
           }
 
           .author-image {
-            width: 120px;
-            height: 160px;
+            width: 180px;
+            height: 240px;
           }
 
           .social-links {

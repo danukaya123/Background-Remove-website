@@ -44,7 +44,7 @@ export default async function handler(req, res) {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to Our App! 🎉</h1>
+              <h1>Welcome to Quizontal Image Background Removal ! 🎉</h1>
             </div>
             <div class="content">
               <h2>Hello ${displayName || username || 'there'},</h2>
@@ -101,7 +101,7 @@ Ready to get started? Visit: ${process.env.NEXTAUTH_URL || 'https://your-app.com
 If you have any questions or need help, feel free to reply to this email.
 
 Best regards,
-The App Team`
+Quizontal`
     };
 
     // Send email

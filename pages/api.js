@@ -1,30 +1,59 @@
+'use client';
+
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
 import Head from 'next/head';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function Api() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    // Set active page in navigation
-    const currentPage = window.location.pathname.split('/').pop() || 'index';
-    const navLinks = document.querySelectorAll('.nav-links a, .mobile-nav-item');
-    
-    navLinks.forEach(link => {
-      const linkPage = link.getAttribute('href');
-      if (linkPage === `/${currentPage}` || (currentPage === '' && linkPage === '/')) {
-        link.classList.add('active');
-      }
-    });
-  }, []);
-
-  const toggleMobileMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const pageMeta = {
+    title: 'API - Quizontal AI Background Remover',
+    description: 'Integrate Quizontal AI background removal into your applications with our simple REST API. Free, fast, and easy to use.',
+    image: 'https://rbg.quizontal.cc/og-image.jpg',
+    url: 'https://rbg.quizontal.cc/api'
   };
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const sidebarRef = useRef(null);
+  const pathname = usePathname();
+  const { currentUser, userProfile, logout } = useAuth();
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuOpen && 
+          !event.target.closest('.mobile-sidebar') && 
+          !event.target.closest('.menu-toggle')) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowDropdown(false);
+      setMobileMenuOpen(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  // Copy code functionality
   const copyCode = (button) => {
     const codeBlock = button.parentElement;
-    const code = codeBlock.querySelector('pre').textContent;
+    const code = codeBlock.querySelector('pre').innerText;
     
     navigator.clipboard.writeText(code).then(() => {
       button.innerHTML = '✅ Copied!';
@@ -41,114 +70,1020 @@ export default function Api() {
   };
 
   return (
-    <>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%)",
+        color: "#1e293b",
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        padding: "0",
+        margin: "0",
+      }}
+    >
       <Head>
-        <title>API - Quizontal AI Background Remover</title>
-        <meta name="description" content="Integrate Quizontal's AI background removal into your applications with our simple REST API." />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+        <title>{pageMeta.title}</title>
+        <meta name="description" content={pageMeta.description} />
+        <meta property="og:title" content={pageMeta.title} />
+        <meta property="og:description" content={pageMeta.description} />
+        <meta property="og:image" content={pageMeta.image} />
+        <meta property="og:url" content={pageMeta.url} />
+        <meta name="twitter:title" content={pageMeta.title} />
+        <meta name="twitter:description" content={pageMeta.description} />
+        <meta name="twitter:image" content={pageMeta.image} />
       </Head>
+      
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+          margin: 0;
+          padding: 0;
+          background: #ffffff;
+          font-family: 'Inter', sans-serif;
+          scroll-behavior: smooth;
+          overflow-x: hidden;
+        }
+        
+        /* Enhanced Responsive Animations */
+        @keyframes slideInLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideOutLeft {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes overlayFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes overlayFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .slide-up {
+          animation: slideUp 0.6s ease-out;
+        }
+        
+        /* Enhanced Responsive Design */
+        @media (max-width: 768px) {
+          .desktop-only {
+            display: none !important;
+          }
+          
+          .mobile-only {
+            display: block !important;
+          }
+        }
+        
+        @media (min-width: 769px) {
+          .mobile-only {
+            display: none !important;
+          }
+          
+          .mobile-sidebar {
+            display: none !important;
+          }
+        }
+        
+        /* Content Sections */
+        .content-section {
+          background: white;
+          border-radius: 20px;
+          padding: clamp(1.5rem, 4vw, 2.5rem);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          margin-bottom: 2rem;
+          border: 1px solid #f1f5f9;
+        }
+        
+        /* Code Block Styling */
+        .code-block {
+          background: #1e293b;
+          color: #e2e8f0;
+          padding: 1.5rem;
+          border-radius: 12px;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-size: clamp(12px, 2vw, 14px);
+          line-height: 1.5;
+          overflow-x: auto;
+          margin: 1.5rem 0;
+          position: relative;
+          max-width: 100%;
+        }
+
+        .code-block pre {
+          margin: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          min-width: 0;
+        }
+
+        .code-keyword {
+          color: #3b82f6;
+        }
+
+        .code-string {
+          color: #10b981;
+        }
+
+        .code-comment {
+          color: #64748b;
+        }
+
+        .code-function {
+          color: #f59e0b;
+        }
+
+        .copy-btn {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: rgba(255,255,255,0.1);
+          border: none;
+          border-radius: 4px;
+          padding: 6px 10px;
+          color: white;
+          cursor: pointer;
+          font-size: 12px;
+          transition: all 0.3s;
+          z-index: 2;
+        }
+
+        .copy-btn:hover {
+          background: rgba(255,255,255,0.2);
+        }
+
+        /* API Endpoints */
+        .endpoint-card {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: clamp(1rem, 3vw, 1.5rem);
+          margin-bottom: 1.5rem;
+          transition: all 0.3s ease;
+          width: 100%;
+          overflow: hidden;
+        }
+
+        .endpoint-card:hover {
+          border-color: #3b82f6;
+          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.1);
+        }
+
+        .endpoint-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 1rem;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+
+        .endpoint-method {
+          display: inline-block;
+          padding: 4px 12px;
+          background: #3b82f6;
+          color: white;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+
+        .endpoint-path {
+          font-family: 'Monaco', 'Menlo', monospace;
+          color: #1e293b;
+          font-weight: 500;
+          font-size: clamp(14px, 2vw, 1rem);
+          word-break: break-all;
+        }
+
+        .endpoint-description {
+          color: #64748b;
+          margin: 1rem 0;
+          line-height: 1.6;
+          font-size: clamp(14px, 2vw, 1rem);
+        }
+
+        .parameter-table-container {
+          width: 100%;
+          overflow-x: auto;
+          margin: 1rem 0;
+        }
+
+        .parameter-table {
+          width: 100%;
+          border-collapse: collapse;
+          min-width: 500px;
+        }
+
+        .parameter-table th,
+        .parameter-table td {
+          padding: clamp(0.5rem, 2vw, 0.75rem);
+          text-align: left;
+          border-bottom: 1px solid #e2e8f0;
+          font-size: clamp(12px, 2vw, 14px);
+        }
+
+        .parameter-table th {
+          background: #f8fafc;
+          font-weight: 600;
+          color: #1e293b;
+          white-space: nowrap;
+        }
+
+        .parameter-table td {
+          color: #64748b;
+        }
+
+        .param-required {
+          color: #ef4444;
+          font-weight: 600;
+          font-size: 12px;
+        }
+
+        /* Examples Grid */
+        .examples-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+          gap: clamp(1rem, 3vw, 2rem);
+          margin-top: 2rem;
+          width: 100%;
+        }
+
+        .example-card {
+          background: white;
+          padding: clamp(1.5rem, 3vw, 2rem);
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+          transition: all 0.3s ease;
+          border: 1px solid #f1f5f9;
+          text-align: center;
+          width: 100%;
+          overflow: hidden;
+        }
+
+        .example-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .example-icon {
+          font-size: clamp(2rem, 5vw, 2.5rem);
+          margin-bottom: 1.5rem;
+        }
+
+        .example-title {
+          font-size: clamp(1.1rem, 3vw, 1.25rem);
+          font-weight: 600;
+          color: #1e293b;
+          margin-bottom: 1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+          gap: clamp(1rem, 3vw, 2rem);
+          margin-top: 1.5rem;
+        }
+
+        .stat-card {
+          text-align: center;
+          padding: clamp(1rem, 3vw, 2rem);
+          background: linear-gradient(135deg, #f8fafc, #ffffff);
+          border-radius: 15px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .stat-number {
+          font-size: clamp(1.5rem, 4vw, 2.5rem);
+          font-weight: 800;
+          color: #3b82f6;
+          margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+          color: #64748b;
+          font-weight: 500;
+          font-size: clamp(12px, 2vw, 14px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .nav-links,
+          .auth-buttons {
+            display: none;
+          }
+
+          .mobile-menu-toggle {
+            display: flex;
+          }
+
+          .endpoint-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+
+          .parameter-table {
+            min-width: 400px;
+          }
+
+          .examples-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .nav-container {
+            padding: 1rem;
+          }
+
+          .container {
+            padding: 0 1rem;
+          }
+
+          .content-section {
+            padding: 1.5rem 1rem;
+            border-radius: 16px;
+          }
+
+          .code-block {
+            padding: 1rem;
+            font-size: 12px;
+          }
+
+          .parameter-table {
+            min-width: 350px;
+            font-size: 11px;
+          }
+
+          .parameter-table th,
+          .parameter-table td {
+            padding: 0.5rem 0.25rem;
+          }
+        }
+
+        /* Mobile Sidebar Styles */
+        .mobile-sidebar {
+          animation: slideInLeft 0.3s ease-out;
+        }
+
+        .mobile-sidebar.closing {
+          animation: slideOutLeft 0.3s ease-in;
+        }
+
+        .sidebar-overlay {
+          animation: overlayFadeIn 0.3s ease-out;
+        }
+
+        .sidebar-overlay.closing {
+          animation: overlayFadeOut 0.3s ease-in;
+        }
+
+        /* Improved Mobile Navigation */
+        @media (max-width: 768px) {
+          .mobile-nav-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+          }
+          
+          .mobile-nav-item:active {
+            background: #f8fafc;
+          }
+          
+          .mobile-user-section {
+            background: #f8fafc;
+            margin: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+          }
+        }
+      `}</style>
 
       {/* Navigation */}
-      <nav>
-        <div className="nav-container">
-          <Link href="/" className="logo">
-            <div className="logo-icon">Q</div>
-            <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
+      <nav
+        style={{
+          borderBottom: "1px solid #e2e8f0",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          className="nav-container"
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "1rem clamp(1rem, 3vw, 2rem)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          {/* Logo */}
+          <Link href="/" className="logo" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: 'none' }}>
+            <div className="logo-icon" style={{
+              width: "32px",
+              height: "32px",
+              background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: "16px",
+              color: "white",
+            }}>
+              Q
+            </div>
+            <div className="logo-text" style={{
+              fontSize: "clamp(18px, 4vw, 24px)",
+              fontWeight: "800",
+              color: "#1e293b",
+              letterSpacing: "-0.5px",
+            }}>
+              Quizontal<span className="logo-accent" style={{ color: "#3b82f6" }}>RBG</span>
+            </div>
           </Link>
           
-          <div className="nav-links">
-            <Link href="/">Home</Link>
-            <Link href="/upload">Upload</Link>
-            <Link href="/examples">Examples</Link>
-            <Link href="/api" className="active">API</Link>
-            <Link href="/about">About</Link>
-          </div>
-          
-          <div className="auth-buttons">
-            <a href="#" className="btn btn-outline">Log in</a>
-            <a href="#" className="btn btn-primary">Sign up</a>
+          {/* Desktop Navigation Links */}
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "clamp(0.75rem, 2vw, 1.5rem)", alignItems: "center" }}>
+            {[
+              { name: 'Home', href: '/' },
+              { name: 'Upload', href: '/#upload-section' },
+              { name: 'Features', href: '/#Features' },
+              { name: 'Examples', href: '/#examples' },
+              { name: 'API Documentation', href: '/api' },
+              { name: 'About', href: '/about' },
+              { name: 'Blog', href: 'https://blog.quizontal.cc' }
+            ].map((item) => (
+              <Link 
+                key={item.name}
+                href={item.href}
+                style={{ 
+                  color: pathname === item.href ? "#3b82f6" : "#64748b", 
+                  textDecoration: "none", 
+                  fontSize: "clamp(12px, 2vw, 14px)", 
+                  fontWeight: "500", 
+                  transition: "all 0.3s",
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  whiteSpace: "nowrap",
+                  background: pathname === item.href ? "#f1f5f9" : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (pathname !== item.href) {
+                    e.currentTarget.style.color = "#3b82f6";
+                    e.currentTarget.style.background = "#f1f5f9";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== item.href) {
+                    e.currentTarget.style.color = "#64748b";
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                {item.name}
+              </Link>
+            ))}
+            
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginLeft: "0.5rem" }}>
+              {currentUser ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  {/* User Profile Dropdown */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #d1d5db",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        color: "#374151",
+                        fontWeight: "600",
+                        fontSize: "clamp(12px, 2vw, 14px)",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.borderColor = "#9ca3af";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "#d1d5db";
+                      }}
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    >
+                      <div
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          color: "white",
+                        }}
+                      >
+                        {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      {userProfile?.username || currentUser?.email || "User"}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showDropdown && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          right: 0,
+                          background: "white",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "12px",
+                          padding: "0.75rem",
+                          marginTop: "0.5rem",
+                          minWidth: "200px",
+                          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                          zIndex: 1000,
+                        }}
+                      >
+                        <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                          Signed in as<br />
+                          <strong style={{ color: "#1e293b" }}>{currentUser?.email || "User"}</strong>
+                        </div>
+                        {userProfile && (
+                          <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
+                            <div style={{ fontSize: "12px", color: "#64748b" }}>Username:</div>
+                            <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.username}</div>
+                            {userProfile.phoneNumber && (
+                              <>
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Phone:</div>
+                                <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.phoneNumber}</div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        <button
+                          onClick={handleLogout}
+                          style={{
+                            width: "100%",
+                            background: "transparent",
+                            border: "none",
+                            padding: "0.75rem",
+                            textAlign: "left",
+                            color: "#dc2626",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            borderRadius: "6px",
+                            transition: "all 0.3s",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#fef2f2";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                          </svg>
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="btn btn-outline"
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      padding: "6px clamp(12px, 3vw, 16px)",
+                      borderRadius: "6px",
+                      color: "#374151",
+                      fontWeight: "600",
+                      fontSize: "clamp(12px, 2vw, 14px)",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      whiteSpace: "nowrap",
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#9ca3af";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                    }}
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="btn btn-primary"
+                    style={{
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      border: "none",
+                      padding: "6px clamp(12px, 3vw, 16px)",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "clamp(12px, 2vw, 14px)",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                      whiteSpace: "nowrap",
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+                    }}
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
 
-          <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+          {/* Mobile Menu Toggle */}
+          <div className="mobile-only">
+            <button
+              className="mobile-menu-toggle menu-toggle"
+              onClick={toggleMobileMenu}
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: "8px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                zIndex: 1001,
+                position: "relative",
+              }}
+            >
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+              }}></span>
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                opacity: mobileMenuOpen ? "0" : "1"
+              }}></span>
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+              }}></span>
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Mobile Sidebar */}
-      {isMenuOpen && (
-        <>
-          <div className="sidebar-overlay" onClick={toggleMobileMenu}></div>
-          <div className="mobile-sidebar">
-            <div className="sidebar-header">
-              <div className="sidebar-logo">
-                <div className="logo-icon">Q</div>
-                <div>
-                  <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
-                  <div className="logo-subtitle">AI Background Remover</div>
-                </div>
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className={`sidebar-overlay ${!mobileMenuOpen ? 'closing' : ''}`}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            zIndex: 999,
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar Navigation */}
+      <div
+        ref={sidebarRef}
+        className={`mobile-sidebar ${!mobileMenuOpen ? 'closing' : ''}`}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: "min(85vw, 320px)",
+          background: "white",
+          zIndex: 1000,
+          boxShadow: "2px 0 20px rgba(0,0,0,0.15)",
+          display: mobileMenuOpen ? "flex" : "none",
+          flexDirection: "column",
+          overflowY: "auto",
+        }}
+      >
+        {/* Sidebar Header */}
+        <div className="sidebar-header" style={{
+          padding: "1.5rem",
+          borderBottom: "1px solid #e2e8f0",
+          background: "linear-gradient(135deg, #f8fafc, #ffffff)"
+        }}>
+          <div className="sidebar-logo" style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+            <div className="logo-icon" style={{
+              width: "40px",
+              height: "40px",
+              background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: "18px",
+              color: "white",
+            }}>
+              Q
+            </div>
+            <div>
+              <div className="logo-text" style={{
+                fontSize: "20px",
+                fontWeight: "800",
+                color: "#1e293b",
+              }}>
+                Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
               </div>
-            </div>
-
-            <div className="sidebar-nav">
-              <Link href="/" className="mobile-nav-item">Home</Link>
-              <Link href="/upload" className="mobile-nav-item">Upload</Link>
-              <Link href="/examples" className="mobile-nav-item">Examples</Link>
-              <Link href="/api" className="mobile-nav-item">API</Link>
-              <Link href="/about" className="mobile-nav-item">About</Link>
-            </div>
-
-            <div className="sidebar-footer">
-              <div className="sidebar-buttons">
-                <a href="#" className="btn btn-outline">Log in</a>
-                <a href="#" className="btn btn-primary">Sign up</a>
+              <div style={{
+                fontSize: "12px",
+                color: "#64748b",
+                marginTop: "2px"
+              }}>
+                AI Background Remover
               </div>
             </div>
           </div>
-        </>
-      )}
+        </div>
+
+        {/* Navigation Items */}
+        <div className="sidebar-nav" style={{ flex: 1, padding: "1rem 0" }}>
+          {[
+            { name: 'Home', href: '/' },
+            { name: 'Upload', href: '/#upload-section' },
+            { name: 'Features', href: '/#Features' },
+            { name: 'Examples', href: '/#examples' },
+            { name: 'API Documentation', href: '/api' },
+            { name: 'About', href: '/about' },
+            { name: 'Blog', href: 'https://blog.quizontal.cc' }
+          ].map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="mobile-nav-item"
+              style={{
+                display: "block",
+                color: pathname === item.href ? "#3b82f6" : "#64748b",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: "500",
+                transition: "all 0.2s",
+                padding: "1rem 1.5rem",
+                borderBottom: "1px solid #f1f5f9",
+                background: pathname === item.href ? "#f1f5f9" : "transparent",
+              }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.name}   
+            </Link>
+          ))}
+        </div>
+
+        {/* User Section */}
+        <div className="sidebar-footer" style={{
+          padding: "1.5rem",
+          borderTop: "1px solid #e2e8f0",
+          background: "#f8fafc"
+        }}>
+          {currentUser ? (
+            <div>
+              <div style={{ marginBottom: "1rem" }}>
+                <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "4px" }}>
+                  Signed in as
+                </div>
+                <div style={{ fontSize: "16px", fontWeight: "600", color: "#1e293b" }}>
+                  {userProfile?.username || currentUser.email}
+                </div>
+                {userProfile?.phoneNumber && (
+                  <div style={{ fontSize: "14px", color: "#64748b", marginTop: "4px" }}>
+                    {userProfile.phoneNumber}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={handleLogout}
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                  border: "1px solid #dc2626",
+                  color: "#dc2626",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#fef2f2";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <Link
+                href="/login"
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                  border: "1px solid #d1d5db",
+                  color: "#374151",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  textDecoration: 'none',
+                  textAlign: 'center'
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                style={{
+                  width: "100%",
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                  border: "none",
+                  color: "white",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                  textDecoration: 'none',
+                  textAlign: 'center'
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Main Content */}
       <main>
-        <div className="container">
+        <div className="container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 clamp(1rem, 3vw, 2rem)", width: "100%", overflowX: "hidden" }}>
           {/* Page Header */}
-          <section className="page-header">
-            <h1 className="page-title">API Documentation</h1>
-            <p className="page-subtitle">
+          <section className="page-header" style={{ textAlign: "center", marginBottom: "3rem", padding: "clamp(2rem, 6vw, 4rem) 0 clamp(1rem, 3vw, 2rem)", width: "100%" }}>
+            <h1 className="page-title" style={{ 
+              fontSize: "clamp(2rem, 6vw, 3rem)", 
+              fontWeight: "800", 
+              background: "linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)", 
+              WebkitBackgroundClip: "text", 
+              WebkitTextFillColor: "transparent", 
+              backgroundClip: "text", 
+              marginBottom: "1rem", 
+              lineHeight: "1.1", 
+              wordWrap: "break-word" 
+            }}>
+              API Documentation
+            </h1>
+            <p className="page-subtitle" style={{ 
+              fontSize: "clamp(1rem, 3vw, 1.2rem)", 
+              color: "#64748b", 
+              maxWidth: "600px", 
+              margin: "0 auto", 
+              lineHeight: "1.6", 
+              padding: "0 1rem" 
+            }}>
               Integrate Quizontal&apos;s AI background removal into your applications with our simple REST API.
             </p>
           </section>
 
           {/* Quick Start */}
           <section className="content-section slide-up">
-            <h2 className="section-title">Quick Start</h2>
-            <p className="section-description">
+            <h2 className="section-title" style={{ 
+              fontSize: "clamp(1.5rem, 4vw, 2rem)", 
+              fontWeight: "700", 
+              color: "#1e293b", 
+              marginBottom: "1.5rem", 
+              wordWrap: "break-word" 
+            }}>
+              Quick Start
+            </h2>
+            <p style={{ color: "#64748b", marginBottom: "1.5rem", lineHeight: "1.7", fontSize: "clamp(14px, 2vw, 1rem)" }}>
               Get started with our API in minutes. The Quizontal API provides programmatic access to 
               our AI-powered background removal technology. All API endpoints are free to use and 
               require no authentication for basic usage.
             </p>
             
             <div className="code-block">
-              <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-              <pre>{`from gradio_client import Client, handle_file
+              <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
+              <pre><span className="code-keyword">from</span> gradio_client <span className="code-keyword">import</span> Client, handle_file
 
-# Initialize the client
-client = Client("danuka21/quizontal-Background-Remover-C1")
+<span className="code-comment"># Initialize the client</span>
+client = Client(<span className="code-string">"danuka21/quizontal-Background-Remover-C1"</span>)
 
-# Remove background from an image
+<span className="code-comment"># Remove background from an image</span>
 result = client.predict(
-    image=handle_file('https://example.com/image.png'),
-    api_name="/image"
+    image=handle_file(<span className="code-string">'https://example.com/image.png'</span>),
+    api_name=<span className="code-string">"/image"</span>
 )
-print(result)`}</pre>
+<span className="code-keyword">print</span>(result)</pre>
             </div>
           </section>
 
           {/* API Endpoints */}
           <section className="content-section slide-up">
-            <h2 className="section-title">API Endpoints</h2>
+            <h2 className="section-title" style={{ 
+              fontSize: "clamp(1.5rem, 4vw, 2rem)", 
+              fontWeight: "700", 
+              color: "#1e293b", 
+              marginBottom: "1.5rem", 
+              wordWrap: "break-word" 
+            }}>
+              API Endpoints
+            </h2>
             
             <div className="endpoint-card">
               <div className="endpoint-header">
@@ -159,7 +1094,7 @@ print(result)`}</pre>
                 Remove background from a single image. Supports PNG, JPG, and WEBP formats up to 25MB.
               </p>
               
-              <h4 className="parameter-title">Parameters</h4>
+              <h4 style={{ color: "#1e293b", margin: "1.5rem 0 1rem", fontSize: "clamp(1.1rem, 3vw, 1.25rem)" }}>Parameters</h4>
               <div className="parameter-table-container">
                 <table className="parameter-table">
                   <thead>
@@ -181,15 +1116,15 @@ print(result)`}</pre>
                       <td>api_name</td>
                       <td>String</td>
                       <td><span className="param-required">Yes</span></td>
-                      <td>Must be &quot;/image&quot;</td>
+                      <td>Must be "/image"</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               
-              <h4 className="response-title">Response</h4>
+              <h4 style={{ color: "#1e293b", margin: "1.5rem 0 1rem", fontSize: "clamp(1.1rem, 3vw, 1.25rem)" }}>Response</h4>
               <div className="code-block">
-                <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
+                <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
                 <pre>{`{
   "data": [
     [
@@ -208,57 +1143,65 @@ print(result)`}</pre>
 
           {/* Usage Examples */}
           <section className="content-section slide-up">
-            <h2 className="section-title">Usage Examples</h2>
+            <h2 className="section-title" style={{ 
+              fontSize: "clamp(1.5rem, 4vw, 2rem)", 
+              fontWeight: "700", 
+              color: "#1e293b", 
+              marginBottom: "1.5rem", 
+              wordWrap: "break-word" 
+            }}>
+              Usage Examples
+            </h2>
             
             <div className="examples-grid">
               <div className="example-card">
                 <div className="example-icon">🐍</div>
                 <h3 className="example-title">Python</h3>
-                <div className="code-block">
-                  <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-                  <pre>{`import requests
-from gradio_client import Client
+                <div className="code-block" style={{ margin: "1rem 0" }}>
+                  <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
+                  <pre><span className="code-keyword">import</span> requests
+<span className="code-keyword">from</span> gradio_client <span className="code-keyword">import</span> Client
 
-client = Client("danuka21/quizontal-Background-Remover-C1")
+client = Client(<span className="code-string">"danuka21/quizontal-Background-Remover-C1"</span>)
 result = client.predict(
-    image="path/to/image.jpg",
-    api_name="/image"
-)`}</pre>
+    image=<span className="code-string">"path/to/image.jpg"</span>,
+    api_name=<span className="code-string">"/image"</span>
+)</pre>
                 </div>
               </div>
               
               <div className="example-card">
                 <div className="example-icon">🟨</div>
                 <h3 className="example-title">JavaScript</h3>
-                <div className="code-block">
-                  <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-                  <pre>{`// Using fetch API
-const formData = new FormData();
-formData.append('image', imageFile);
+                <div className="code-block" style={{ margin: "1rem 0" }}>
+                  <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
+                  <pre><span className="code-comment">// Using fetch API</span>
+<span className="code-keyword">const</span> formData = <span className="code-keyword">new</span> FormData();
+formData.append(<span className="code-string">'image'</span>, imageFile);
 
-const response = await fetch(
-  'https://huggingface.co/spaces/danuka21/quizontal-Background-Remover-C1',
+<span className="code-keyword">const</span> response = <span className="code-keyword">await</span> fetch(
+  <span className="code-string">'https://huggingface.co/spaces/danuka21/quizontal-Background-Remover-C1'</span>,
   {
-    method: 'POST',
+    method: <span className="code-string">'POST'</span>,
     body: formData
   }
-);`}</pre>
+);</pre>
                 </div>
               </div>
               
               <div className="example-card">
                 <div className="example-icon">📱</div>
                 <h3 className="example-title">Mobile Apps</h3>
-                <div className="code-block">
-                  <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-                  <pre>{`// Swift example
-let client = Client(
-  src: "danuka21/quizontal-Background-Remover-C1"
+                <div className="code-block" style={{ margin: "1rem 0" }}>
+                  <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
+                  <pre><span className="code-comment">// Swift example</span>
+<span className="code-keyword">let</span> client = Client(
+  src: <span className="code-string">"danuka21/quizontal-Background-Remover-C1"</span>
 )
-let result = client.predict(
-  inputs: ["image": imageData],
-  endpoint: "/image"
-)`}</pre>
+<span className="code-keyword">let</span> result = client.predict(
+  inputs: [<span className="code-string">"image"</span>: imageData],
+  endpoint: <span className="code-string">"/image"</span>
+)</pre>
                 </div>
               </div>
             </div>
@@ -266,10 +1209,18 @@ let result = client.predict(
 
           {/* Rate Limits & Pricing */}
           <section className="content-section slide-up">
-            <h2 className="section-title">Rate Limits & Pricing</h2>
-            <div className="pricing-card">
-              <h3 className="pricing-title">🎉 Completely Free!</h3>
-              <p className="pricing-description">
+            <h2 className="section-title" style={{ 
+              fontSize: "clamp(1.5rem, 4vw, 2rem)", 
+              fontWeight: "700", 
+              color: "#1e293b", 
+              marginBottom: "1.5rem", 
+              wordWrap: "break-word" 
+            }}>
+              Rate Limits & Pricing
+            </h2>
+            <div style={{ background: "#f0f9ff", padding: "clamp(1.5rem, 3vw, 2rem)", borderRadius: "12px", border: "1px solid #bae6fd" }}>
+              <h3 style={{ color: "#0369a1", marginBottom: "1rem", fontSize: "clamp(1.25rem, 3vw, 1.5rem)" }}>🎉 Completely Free!</h3>
+              <p style={{ color: "#64748b", lineHeight: "1.7", fontSize: "clamp(14px, 2vw, 1rem)" }}>
                 The Quizontal API is completely free to use with no rate limits for individual users. 
                 We believe in making AI accessible to everyone. For high-volume commercial use, 
                 please contact us for enterprise solutions.
@@ -293,626 +1244,45 @@ let result = client.predict(
 
           {/* Support */}
           <section className="content-section slide-up">
-            <h2 className="section-title">Support</h2>
-            <p className="support-description">
+            <h2 className="section-title" style={{ 
+              fontSize: "clamp(1.5rem, 4vw, 2rem)", 
+              fontWeight: "700", 
+              color: "#1e293b", 
+              marginBottom: "1.5rem", 
+              wordWrap: "break-word" 
+            }}>
+              Support
+            </h2>
+            <p style={{ color: "#64748b", marginBottom: "1.5rem", lineHeight: "1.7", fontSize: "clamp(14px, 2vw, 1rem)" }}>
               Need help integrating our API? Check out our documentation or contact our support team.
             </p>
-            <div className="support-buttons">
-              <a href="#" className="btn btn-primary">View Full Documentation</a>
-              <a href="#" className="btn btn-outline">Contact Support</a>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+              <a href="#" className="btn btn-primary" style={{ fontSize: "clamp(14px, 2vw, 1rem)", padding: "10px 20px", textDecoration: 'none' }}>View Full Documentation</a>
+              <a href="#" className="btn btn-outline" style={{ fontSize: "clamp(14px, 2vw, 1rem)", padding: "10px 20px", textDecoration: 'none' }}>Contact Support</a>
             </div>
           </section>
         </div>
       </main>
 
       {/* Footer */}
-      <footer>
-        <div className="footer-content">
-          <div className="footer-logo">
-            <div className="logo-icon">Q</div>
-            <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
+      <footer style={{ borderTop: "1px solid #e2e8f0", padding: "clamp(2rem, 4vw, 3rem) 1rem", background: "#f8fafc", marginTop: "4rem", width: "100%" }}>
+        <div className="footer-content" style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center", padding: "0 1rem" }}>
+          <div className="footer-logo" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "1rem", flexWrap: "wrap" }}>
+            <div className="logo-icon" style={{ width: "24px", height: "24px", background: "linear-gradient(135deg, #3b82f6, #1d4ed8)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "12px", color: "white" }}>
+              Q
+            </div>
+            <div className="logo-text" style={{ fontSize: "18px", fontWeight: "700", color: "#1e293b" }}>
+              Quizontal<span className="logo-accent" style={{ color: "#3b82f6" }}>RBG</span>
+            </div>
           </div>
-          <p className="footer-text">
+          <p className="footer-text" style={{ color: "#64748b", margin: "0.5rem 0", fontSize: "clamp(12px, 2vw, 14px)", lineHeight: "1.5" }}>
             AI-powered background removal made simple and free
           </p>
-          <p className="footer-copyright">
+          <p className="footer-copyright" style={{ color: "#94a3b8", fontSize: "12px", marginTop: "1rem" }}>
             &copy; 2024 QuizontalRBG. All rights reserved.
           </p>
         </div>
       </footer>
-
-      <style jsx>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        body {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
-          color: #1e293b;
-          line-height: 1.6;
-        }
-
-        /* Navigation */
-        nav {
-          border-bottom: 1px solid #e2e8f0;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .nav-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 1rem 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .logo {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          text-decoration: none;
-        }
-
-        .logo-icon {
-          width: 32px;
-          height: 32px;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 16px;
-          color: white;
-        }
-
-        .logo-text {
-          font-size: 24px;
-          font-weight: 800;
-          color: #1e293b;
-        }
-
-        .logo-accent {
-          color: #3b82f6;
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-
-        .nav-links a {
-          color: #64748b;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 500;
-          transition: all 0.3s;
-          padding: 6px 10px;
-          border-radius: 6px;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-          color: #3b82f6;
-          background: #f1f5f9;
-        }
-
-        .auth-buttons {
-          display: flex;
-          gap: 0.75rem;
-          align-items: center;
-        }
-
-        .btn {
-          padding: 6px 16px;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.3s;
-          border: none;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          white-space: nowrap;
-        }
-
-        .btn-outline {
-          background: transparent;
-          border: 1px solid #d1d5db;
-          color: #374151;
-        }
-
-        .btn-outline:hover {
-          background: #f8fafc;
-          border-color: #9ca3af;
-        }
-
-        .btn-primary {
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          color: white;
-          box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-        }
-
-        .mobile-menu-toggle {
-          display: none;
-          flex-direction: column;
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 4px;
-          gap: 4px;
-        }
-
-        .mobile-menu-toggle span {
-          width: 20px;
-          height: 2px;
-          background: #64748b;
-          transition: all 0.3s;
-        }
-
-        /* Mobile Sidebar */
-        .sidebar-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0,0,0,0.5);
-          z-index: 998;
-        }
-
-        .mobile-sidebar {
-          position: fixed;
-          top: 0;
-          right: 0;
-          width: 300px;
-          height: 100%;
-          background: white;
-          z-index: 999;
-          display: flex;
-          flex-direction: column;
-          box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-        }
-
-        .sidebar-header {
-          padding: 1.5rem;
-          border-bottom: 1px solid #e2e8f0;
-        }
-
-        .sidebar-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .logo-subtitle {
-          font-size: 12px;
-          color: #64748b;
-          margin-top: 2px;
-        }
-
-        .sidebar-nav {
-          flex: 1;
-          padding: 1rem 0;
-        }
-
-        .mobile-nav-item {
-          display: block;
-          padding: 1rem 1.5rem;
-          color: #64748b;
-          text-decoration: none;
-          font-weight: 500;
-          border-left: 3px solid transparent;
-        }
-
-        .mobile-nav-item:hover,
-        .mobile-nav-item.active {
-          color: #3b82f6;
-          background: #f8fafc;
-          border-left-color: #3b82f6;
-        }
-
-        .sidebar-footer {
-          padding: 1.5rem;
-          border-top: 1px solid #e2e8f0;
-        }
-
-        .sidebar-buttons {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        /* Main Content */
-        main {
-          padding: 2rem 0;
-        }
-
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-        }
-
-        .page-header {
-          text-align: center;
-          margin-bottom: 3rem;
-          padding: 2rem 0;
-        }
-
-        .page-title {
-          font-size: clamp(2rem, 4vw, 3rem);
-          font-weight: 800;
-          background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin-bottom: 1rem;
-        }
-
-        .page-subtitle {
-          font-size: clamp(1rem, 2vw, 1.2rem);
-          color: #64748b;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .content-section {
-          background: white;
-          border-radius: 20px;
-          padding: 2.5rem;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-          margin-bottom: 2rem;
-          border: 1px solid #f1f5f9;
-        }
-
-        .section-title {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 1.5rem;
-          text-align: center;
-        }
-
-        .section-description {
-          color: #64748b;
-          margin-bottom: 1.5rem;
-          line-height: 1.7;
-          font-size: 1.1rem;
-        }
-
-        /* Code Blocks */
-        .code-block {
-          position: relative;
-          background: #1e293b;
-          border-radius: 12px;
-          padding: 1.5rem;
-          margin: 1.5rem 0;
-        }
-
-        .code-block pre {
-          color: #e2e8f0;
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-          font-size: 14px;
-          line-height: 1.5;
-          margin: 0;
-          white-space: pre-wrap;
-          overflow-x: auto;
-        }
-
-        .copy-btn {
-          position: absolute;
-          top: 0.75rem;
-          right: 0.75rem;
-          background: rgba(255,255,255,0.1);
-          border: 1px solid rgba(255,255,255,0.2);
-          color: white;
-          padding: 6px 12px;
-          border-radius: 6px;
-          font-size: 12px;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .copy-btn:hover {
-          background: rgba(255,255,255,0.2);
-        }
-
-        /* Endpoint Cards */
-        .endpoint-card {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 2rem;
-          border: 1px solid #e2e8f0;
-        }
-
-        .endpoint-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1rem;
-        }
-
-        .endpoint-method {
-          background: #10b981;
-          color: white;
-          padding: 4px 12px;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 14px;
-        }
-
-        .endpoint-path {
-          font-family: monospace;
-          color: #1e293b;
-          font-weight: 600;
-          font-size: 16px;
-        }
-
-        .endpoint-description {
-          color: #64748b;
-          margin-bottom: 1.5rem;
-          line-height: 1.6;
-        }
-
-        .parameter-title,
-        .response-title {
-          color: #1e293b;
-          margin: 1.5rem 0 1rem;
-          font-size: 1.25rem;
-        }
-
-        /* Parameter Table */
-        .parameter-table-container {
-          overflow-x: auto;
-          margin: 1rem 0;
-        }
-
-        .parameter-table {
-          width: 100%;
-          border-collapse: collapse;
-          background: white;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .parameter-table th {
-          background: #f1f5f9;
-          padding: 1rem;
-          text-align: left;
-          font-weight: 600;
-          color: #1e293b;
-          border-bottom: 1px solid #e2e8f0;
-        }
-
-        .parameter-table td {
-          padding: 1rem;
-          border-bottom: 1px solid #f1f5f9;
-          color: #64748b;
-        }
-
-        .param-required {
-          background: #fef2f2;
-          color: #dc2626;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        /* Examples Grid */
-        .examples-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 2rem;
-          margin-top: 2rem;
-        }
-
-        .example-card {
-          background: white;
-          border-radius: 15px;
-          padding: 2rem;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-          border: 1px solid #f1f5f9;
-          text-align: center;
-        }
-
-        .example-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-
-        .example-title {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1e293b;
-          margin-bottom: 1rem;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 1.5rem;
-          margin-top: 2rem;
-        }
-
-        .stat-card {
-          text-align: center;
-          padding: 1.5rem;
-          background: white;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-        }
-
-        .stat-number {
-          font-size: 2rem;
-          font-weight: 800;
-          color: #3b82f6;
-          margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-          color: #64748b;
-          font-weight: 500;
-          font-size: 14px;
-        }
-
-        /* Pricing Section */
-        .pricing-card {
-          background: #f0f9ff;
-          padding: 2rem;
-          border-radius: 12px;
-          border: 1px solid #bae6fd;
-        }
-
-        .pricing-title {
-          color: #0369a1;
-          margin-bottom: 1rem;
-          font-size: 1.5rem;
-        }
-
-        .pricing-description {
-          color: #64748b;
-          line-height: 1.7;
-          font-size: 1.1rem;
-        }
-
-        /* Support Section */
-        .support-description {
-          color: #64748b;
-          margin-bottom: 1.5rem;
-          line-height: 1.7;
-          font-size: 1.1rem;
-        }
-
-        .support-buttons {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        /* Footer */
-        footer {
-          border-top: 1px solid #e2e8f0;
-          padding: 3rem 1rem;
-          background: #f8fafc;
-          margin-top: 4rem;
-        }
-
-        .footer-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          text-align: center;
-        }
-
-        .footer-logo {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          margin-bottom: 1rem;
-          flex-wrap: wrap;
-        }
-
-        .footer-logo .logo-icon {
-          width: 24px;
-          height: 24px;
-          font-size: 12px;
-        }
-
-        .footer-text {
-          color: #64748b;
-          margin: 0.5rem 0;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-
-        .footer-copyright {
-          color: #94a3b8;
-          font-size: 12px;
-          margin-top: 1rem;
-        }
-
-        /* Animations */
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .slide-up {
-          animation: slideUp 0.6s ease-out;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-          .nav-links,
-          .auth-buttons {
-            display: none;
-          }
-
-          .mobile-menu-toggle {
-            display: flex;
-          }
-
-          .nav-container {
-            padding: 1rem;
-          }
-
-          .content-section {
-            padding: 1.5rem;
-          }
-
-          .examples-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .support-buttons {
-            flex-direction: column;
-          }
-
-          .support-buttons .btn {
-            width: 100%;
-            justify-content: center;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .stats-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .endpoint-card {
-            padding: 1.5rem;
-          }
-        }
-      `}</style>
-    </>
+    </div>
   );
 }

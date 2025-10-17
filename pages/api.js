@@ -69,6 +69,64 @@ export default function Api() {
     });
   };
 
+  // Code examples
+  const codeExamples = {
+    quickStart: `from gradio_client import Client, handle_file
+
+# Initialize the client
+client = Client("danuka21/quizontal-Background-Remover-C1")
+
+# Remove background from an image
+result = client.predict(
+    image=handle_file('https://example.com/image.png'),
+    api_name="/image"
+)
+print(result)`,
+
+    responseExample: `{
+  "data": [
+    [
+      {
+        "url": "https://processed-image-url.com/result.png",
+        "size": [800, 600],
+        "original_name": "input.jpg"
+      }
+    ]
+  ],
+  "duration": 2.1
+}`,
+
+    pythonExample: `import requests
+from gradio_client import Client
+
+client = Client("danuka21/quizontal-Background-Remover-C1")
+result = client.predict(
+    image="path/to/image.jpg",
+    api_name="/image"
+)`,
+
+    javascriptExample: `// Using fetch API
+const formData = new FormData();
+formData.append('image', imageFile);
+
+const response = await fetch(
+  'https://huggingface.co/spaces/danuka21/quizontal-Background-Remover-C1',
+  {
+    method: 'POST',
+    body: formData
+  }
+);`,
+
+    swiftExample: `// Swift example
+let client = Client(
+  src: "danuka21/quizontal-Background-Remover-C1"
+)
+let result = client.predict(
+  inputs: ["image": imageData],
+  endpoint: "/image"
+)`
+  };
+
   return (
     <div
       style={{
@@ -203,22 +261,6 @@ export default function Api() {
           white-space: pre-wrap;
           word-wrap: break-word;
           min-width: 0;
-        }
-
-        .code-keyword {
-          color: #3b82f6;
-        }
-
-        .code-string {
-          color: #10b981;
-        }
-
-        .code-comment {
-          color: #64748b;
-        }
-
-        .code-function {
-          color: #f59e0b;
         }
 
         .copy-btn {
@@ -1059,17 +1101,7 @@ export default function Api() {
             
             <div className="code-block">
               <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
-              <pre><span className="code-keyword">from</span> gradio_client <span className="code-keyword">import</span> Client, handle_file
-
-<span className="code-comment"># Initialize the client</span>
-client = Client(<span className="code-string">"danuka21/quizontal-Background-Remover-C1"</span>)
-
-<span className="code-comment"># Remove background from an image</span>
-result = client.predict(
-    image=handle_file(<span className="code-string">'https://example.com/image.png'</span>),
-    api_name=<span className="code-string">"/image"</span>
-)
-<span className="code-keyword">print</span>(result)</pre>
+              <pre>{codeExamples.quickStart}</pre>
             </div>
           </section>
 
@@ -1125,18 +1157,7 @@ result = client.predict(
               <h4 style={{ color: "#1e293b", margin: "1.5rem 0 1rem", fontSize: "clamp(1.1rem, 3vw, 1.25rem)" }}>Response</h4>
               <div className="code-block">
                 <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
-                <pre>{`{
-  "data": [
-    [
-      {
-        "url": "https://processed-image-url.com/result.png",
-        "size": [800, 600],
-        "original_name": "input.jpg"
-      }
-    ]
-  ],
-  "duration": 2.1
-}`}</pre>
+                <pre>{codeExamples.responseExample}</pre>
               </div>
             </div>
           </section>
@@ -1159,14 +1180,7 @@ result = client.predict(
                 <h3 className="example-title">Python</h3>
                 <div className="code-block" style={{ margin: "1rem 0" }}>
                   <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
-                  <pre><span className="code-keyword">import</span> requests
-<span className="code-keyword">from</span> gradio_client <span className="code-keyword">import</span> Client
-
-client = Client(<span className="code-string">"danuka21/quizontal-Background-Remover-C1"</span>)
-result = client.predict(
-    image=<span className="code-string">"path/to/image.jpg"</span>,
-    api_name=<span className="code-string">"/image"</span>
-)</pre>
+                  <pre>{codeExamples.pythonExample}</pre>
                 </div>
               </div>
               
@@ -1175,17 +1189,7 @@ result = client.predict(
                 <h3 className="example-title">JavaScript</h3>
                 <div className="code-block" style={{ margin: "1rem 0" }}>
                   <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
-                  <pre><span className="code-comment">// Using fetch API</span>
-<span className="code-keyword">const</span> formData = <span className="code-keyword">new</span> FormData();
-formData.append(<span className="code-string">'image'</span>, imageFile);
-
-<span className="code-keyword">const</span> response = <span className="code-keyword">await</span> fetch(
-  <span className="code-string">'https://huggingface.co/spaces/danuka21/quizontal-Background-Remover-C1'</span>,
-  {
-    method: <span className="code-string">'POST'</span>,
-    body: formData
-  }
-);</pre>
+                  <pre>{codeExamples.javascriptExample}</pre>
                 </div>
               </div>
               
@@ -1194,14 +1198,7 @@ formData.append(<span className="code-string">'image'</span>, imageFile);
                 <h3 className="example-title">Mobile Apps</h3>
                 <div className="code-block" style={{ margin: "1rem 0" }}>
                   <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
-                  <pre><span className="code-comment">// Swift example</span>
-<span className="code-keyword">let</span> client = Client(
-  src: <span className="code-string">"danuka21/quizontal-Background-Remover-C1"</span>
-)
-<span className="code-keyword">let</span> result = client.predict(
-  inputs: [<span className="code-string">"image"</span>: imageData],
-  endpoint: <span className="code-string">"/image"</span>
-)</pre>
+                  <pre>{codeExamples.swiftExample}</pre>
                 </div>
               </div>
             </div>

@@ -194,226 +194,73 @@ let result = client.predict(
           overflow-x: hidden;
         }
 
-        /* Navigation Base Styles */
-        nav {
-          border-bottom: 1px solid #e2e8f0;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          width: 100%;
+        /* Enhanced Responsive Animations */
+        @keyframes slideInLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideOutLeft {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes overlayFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes overlayFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .slide-up {
+          animation: slideUp 0.6s ease-out;
         }
 
-        .nav-container {
-          max-width: 100%;
-          margin: 0 auto;
-          padding: 1rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          width: 100%;
+        /* Enhanced Responsive Design */
+        @media (max-width: 768px) {
+          .desktop-only {
+            display: none !important;
+          }
+          
+          .mobile-only {
+            display: block !important;
+          }
         }
-
-        .logo {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          text-decoration: none;
-        }
-
-        .logo-icon {
-          width: 32px;
-          height: 32px;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 16px;
-          color: white;
-          flex-shrink: 0;
-        }
-
-        .logo-text {
-          font-size: 24px;
-          font-weight: 800;
-          color: #1e293b;
-          letter-spacing: -0.5px;
-        }
-
-        .logo-accent {
-          color: #3b82f6;
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-
-        .nav-links a {
-          color: #64748b;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 500;
-          transition: all 0.3s;
-          padding: 6px 10px;
-          border-radius: 6px;
-          white-space: nowrap;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-          color: #3b82f6;
-          background: #f1f5f9;
-        }
-
-        .auth-buttons {
-          display: flex;
-          gap: 0.75rem;
-          align-items: center;
-          margin-left: 0.5rem;
-        }
-
-        /* FIXED: Desktop Navigation Button Styles */
-        .btn {
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-weight: 600;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: none;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          white-space: nowrap;
-          min-height: 40px;
-        }
-
-        .btn-outline {
-          background: transparent;
-          border: 2px solid #3b82f6;
-          color: #3b82f6;
-          font-weight: 600;
-        }
-
-        .btn-outline:hover {
-          background: #3b82f6;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary {
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          color: white;
-          border: 2px solid transparent;
-          font-weight: 600;
-          box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-          background: linear-gradient(135deg, #2563eb, #1e40af);
-        }
-
-        .mobile-menu-toggle {
-          display: none;
-          background: transparent;
-          border: none;
-          padding: 8px;
-          border-radius: 6px;
-          cursor: pointer;
-          flex-direction: column;
-          gap: 4px;
-          z-index: 1001;
-          position: relative;
-        }
-
-        .mobile-menu-toggle span {
-          width: 24px;
-          height: 2px;
-          background: #1e293b;
-          transition: all 0.3s;
-        }
-
-        /* Mobile Sidebar */
-        .sidebar-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 999;
-          display: none;
-        }
-
-        .mobile-sidebar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          width: min(85vw, 320px);
-          background: white;
-          z-index: 1000;
-          box-shadow: 2px 0 20px rgba(0,0,0,0.15);
-          display: none;
-          flex-direction: column;
-          overflow-y: auto;
-        }
-
-        .sidebar-header {
-          padding: 1.5rem;
-          border-bottom: 1px solid #e2e8f0;
-          background: linear-gradient(135deg, #f8fafc, #ffffff);
-        }
-
-        .sidebar-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 1rem;
-        }
-
-        .sidebar-logo .logo-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          font-size: 18px;
-        }
-
-        .sidebar-nav {
-          flex: 1;
-          padding: 1rem 0;
-        }
-
-        .mobile-nav-item {
-          display: block;
-          color: #64748b;
-          text-decoration: none;
-          font-size: 16px;
-          font-weight: 500;
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid #f1f5f9;
-          transition: all 0.2s;
-        }
-
-        .mobile-nav-item:active {
-          background: #f8fafc;
-        }
-
-        .sidebar-footer {
-          padding: 1.5rem;
-          border-top: 1px solid #e2e8f0;
-          background: #f8fafc;
+        
+        @media (min-width: 769px) {
+          .mobile-only {
+            display: none !important;
+          }
+          
+          .mobile-sidebar {
+            display: none !important;
+          }
         }
 
         /* Main Content */
@@ -468,7 +315,7 @@ let result = client.predict(
           margin-bottom: 1.5rem;
         }
 
-        /* Code Block Styling */
+        /* IMPROVED: Code Block Styling for Mobile */
         .code-block {
           background: #1e293b;
           color: #e2e8f0;
@@ -607,7 +454,7 @@ let result = client.predict(
           font-size: 12px;
         }
 
-        /* Examples Grid */
+        /* IMPROVED: Examples Grid for Mobile */
         .examples-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -747,64 +594,25 @@ let result = client.predict(
           margin-top: 1rem;
         }
 
-        /* Animations */
-        @keyframes slideInLeft {
-          from {
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+        /* Mobile Sidebar Styles */
+        .mobile-sidebar {
+          animation: slideInLeft 0.3s ease-out;
+        }
+        
+        .mobile-sidebar.closing {
+          animation: slideOutLeft 0.3s ease-in;
+        }
+        
+        .sidebar-overlay {
+          animation: overlayFadeIn 0.3s ease-out;
+        }
+        
+        .sidebar-overlay.closing {
+          animation: overlayFadeOut 0.3s ease-in;
         }
 
-        @keyframes slideOutLeft {
-          from {
-            transform: translateX(0);
-            opacity: 1;
-          }
-          to {
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-        }
-
-        @keyframes overlayFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .slide-up {
-          animation: slideUp 0.6s ease-out;
-        }
-
-        /* Responsive Design */
+        /* IMPROVED: Responsive Design for Mobile */
         @media (max-width: 768px) {
-          .nav-links,
-          .auth-buttons {
-            display: none;
-          }
-
-          .mobile-menu-toggle {
-            display: flex;
-          }
-
-          .nav-container {
-            padding: 1rem;
-          }
-
           .container {
             padding: 0 1rem;
           }
@@ -828,9 +636,10 @@ let result = client.predict(
           }
 
           .section-title {
-            fontSize: 1.5rem;
+            font-size: 1.5rem;
           }
 
+          /* IMPROVED: Code blocks for mobile */
           .code-block {
             padding: 1rem;
             font-size: 12px;
@@ -852,6 +661,7 @@ let result = client.predict(
             min-width: 400px;
           }
 
+          /* IMPROVED: Examples grid for mobile */
           .examples-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
@@ -883,27 +693,6 @@ let result = client.predict(
           .support-buttons .btn {
             width: 100%;
             max-width: 280px;
-          }
-
-          /* Mobile button styles - different from desktop */
-          .btn {
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            min-height: 48px;
-          }
-
-          .btn-outline {
-            background: transparent;
-            border: 2px solid #3b82f6;
-            color: #3b82f6;
-          }
-
-          .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            border: 2px solid transparent;
           }
         }
 
@@ -954,6 +743,7 @@ let result = client.predict(
             gap: 0.5rem;
           }
 
+          /* IMPROVED: Better code wrapping on very small screens */
           .code-block pre {
             word-break: break-word;
             overflow-wrap: break-word;
@@ -971,30 +761,63 @@ let result = client.predict(
             max-width: 1200px;
           }
         }
-
-        /* Mobile Sidebar Active States */
-        .mobile-sidebar {
-          animation: slideInLeft 0.3s ease-out;
-        }
-
-        .mobile-sidebar.closing {
-          animation: slideOutLeft 0.3s ease-in;
-        }
-
-        .sidebar-overlay {
-          animation: overlayFadeIn 0.3s ease-out;
-        }
       `}</style>
 
-      {/* Navigation */}
-      <nav>
-        <div className="nav-container">
-          <Link href="/" className="logo">
-            <div className="logo-icon">Q</div>
-            <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
+      {/* Navigation - Using the exact same styles from About page */}
+      <nav
+        style={{
+          borderBottom: "1px solid #e2e8f0",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          className="nav-container"
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "1rem 2rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {/* Logo */}
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: 'none' }}>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+                color: "white",
+              }}
+            >
+              Q
+            </div>
+            <span
+              style={{
+                fontSize: "24px",
+                fontWeight: "800",
+                color: "#1e293b",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+            </span>
           </Link>
           
-          <div className="nav-links">
+          {/* Desktop Navigation Links */}
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
             {[
               { name: 'Home', href: '/' },
               { name: 'Upload', href: '/#upload-section' },
@@ -1009,26 +832,62 @@ let result = client.predict(
                 href={item.href}
                 style={{ 
                   color: pathname === item.href ? "#3b82f6" : "#64748b", 
+                  textDecoration: "none", 
+                  fontSize: "14px", 
+                  fontWeight: "500", 
+                  transition: "all 0.3s",
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  whiteSpace: "nowrap",
                   background: pathname === item.href ? "#f1f5f9" : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (pathname !== item.href) {
+                    e.currentTarget.style.color = "#3b82f6";
+                    e.currentTarget.style.background = "#f1f5f9";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== item.href) {
+                    e.currentTarget.style.color = "#64748b";
+                    e.currentTarget.style.background = "transparent";
+                  }
                 }}
               >
                 {item.name}
               </Link>
             ))}
             
-            <div className="auth-buttons">
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
               {currentUser ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  {/* User Profile Dropdown */}
                   <div style={{ position: "relative" }}>
                     <button
-                      className="btn btn-outline"
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        padding: '8px 16px'
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #d1d5db",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        color: "#374151",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                       }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.borderColor = "#9ca3af";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "#d1d5db";
+                      }}
+                      onClick={() => setShowDropdown(!showDropdown)}
                     >
                       <div
                         style={{
@@ -1047,6 +906,9 @@ let result = client.predict(
                         {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
                       </div>
                       {userProfile?.username || currentUser?.email || "User"}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
                     </button>
                     
                     {showDropdown && (
@@ -1069,6 +931,18 @@ let result = client.predict(
                           Signed in as<br />
                           <strong style={{ color: "#1e293b" }}>{currentUser?.email || "User"}</strong>
                         </div>
+                        {userProfile && (
+                          <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
+                            <div style={{ fontSize: "12px", color: "#64748b" }}>Username:</div>
+                            <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.username}</div>
+                            {userProfile.phoneNumber && (
+                              <>
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Phone:</div>
+                                <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.phoneNumber}</div>
+                              </>
+                            )}
+                          </div>
+                        )}
                         <button
                           onClick={handleLogout}
                           style={{
@@ -1087,7 +961,16 @@ let result = client.predict(
                             alignItems: "center",
                             gap: "8px",
                           }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#fef2f2";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                          }}
                         >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                          </svg>
                           Sign Out
                         </button>
                       </div>
@@ -1096,25 +979,125 @@ let result = client.predict(
                 </div>
               ) : (
                 <>
-                  <Link href="/login" className="btn btn-outline">Log in</Link>
-                  <Link href="/signup" className="btn btn-primary">Sign up</Link>
+                  <Link
+                    href="/login"
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
+                      color: "#374151",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      whiteSpace: "nowrap",
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#9ca3af";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                    }}
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    style={{
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      border: "none",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                      whiteSpace: "nowrap",
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
+                    }}
+                  >
+                    Sign up
+                  </Link>
                 </>
               )}
             </div>
           </div>
 
-          <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-            <span style={{ transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }}></span>
-            <span style={{ opacity: mobileMenuOpen ? "0" : "1" }}></span>
-            <span style={{ transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none" }}></span>
-          </button>
+          {/* Mobile Menu Toggle */}
+          <div className="mobile-only">
+            <button
+              className="menu-toggle"
+              onClick={toggleMobileMenu}
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: "8px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                zIndex: 1001,
+                position: "relative",
+              }}
+            >
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+              }}></span>
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                opacity: mobileMenuOpen ? "0" : "1"
+              }}></span>
+              <span style={{ 
+                width: "24px", 
+                height: "2px", 
+                background: "#1e293b",
+                transition: "all 0.3s",
+                transform: mobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+              }}></span>
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div
-          className="sidebar-overlay"
+          className={`sidebar-overlay ${!mobileMenuOpen ? 'closing' : ''}`}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            zIndex: 999,
+          }}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -1122,22 +1105,65 @@ let result = client.predict(
       {/* Mobile Sidebar Navigation */}
       <div
         ref={sidebarRef}
-        className="mobile-sidebar"
-        style={{ display: mobileMenuOpen ? "flex" : "none" }}
+        className={`mobile-sidebar ${!mobileMenuOpen ? 'closing' : ''}`}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: "min(85vw, 320px)",
+          background: "white",
+          zIndex: 1000,
+          boxShadow: "2px 0 20px rgba(0,0,0,0.15)",
+          display: mobileMenuOpen ? "flex" : "none",
+          flexDirection: "column",
+          overflowY: "auto",
+        }}
       >
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="logo-icon">Q</div>
+        {/* Sidebar Header */}
+        <div style={{
+          padding: "1.5rem",
+          borderBottom: "1px solid #e2e8f0",
+          background: "linear-gradient(135deg, #f8fafc, #ffffff)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "18px",
+                color: "white",
+              }}
+            >
+              Q
+            </div>
             <div>
-              <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+              <div style={{
+                fontSize: "20px",
+                fontWeight: "800",
+                color: "#1e293b",
+              }}>
+                Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+              </div>
+              <div style={{
+                fontSize: "12px",
+                color: "#64748b",
+                marginTop: "2px"
+              }}>
                 AI Background Remover
               </div>
             </div>
           </div>
         </div>
 
-        <div className="sidebar-nav">
+        {/* Navigation Items */}
+        <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
             { name: 'Home', href: '/' },
             { name: 'Upload', href: '/#upload-section' },
@@ -1152,7 +1178,14 @@ let result = client.predict(
               href={item.href}
               className="mobile-nav-item"
               style={{
+                display: "block",
                 color: pathname === item.href ? "#3b82f6" : "#64748b",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: "500",
+                transition: "all 0.2s",
+                padding: "1rem 1.5rem",
+                borderBottom: "1px solid #f1f5f9",
                 background: pathname === item.href ? "#f1f5f9" : "transparent",
               }}
               onClick={() => setMobileMenuOpen(false)}
@@ -1162,7 +1195,12 @@ let result = client.predict(
           ))}
         </div>
 
-        <div className="sidebar-footer">
+        {/* User Section */}
+        <div style={{
+          padding: "1.5rem",
+          borderTop: "1px solid #e2e8f0",
+          background: "#f8fafc"
+        }}>
           {currentUser ? (
             <div>
               <div style={{ marginBottom: "1rem" }}>
@@ -1172,21 +1210,74 @@ let result = client.predict(
                 <div style={{ fontSize: "16px", fontWeight: "600", color: "#1e293b" }}>
                   {userProfile?.username || currentUser.email}
                 </div>
+                {userProfile?.phoneNumber && (
+                  <div style={{ fontSize: "14px", color: "#64748b", marginTop: "4px" }}>
+                    {userProfile.phoneNumber}
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleLogout}
-                className="btn btn-outline"
-                style={{ width: "100%", borderColor: "#dc2626", color: "#dc2626" }}
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                  border: "1px solid #dc2626",
+                  color: "#dc2626",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#fef2f2";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
                 Sign Out
               </button>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <Link href="/login" className="btn btn-outline" onClick={() => setMobileMenuOpen(false)}>
+              <Link
+                href="/login"
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                  border: "1px solid #d1d5db",
+                  color: "#374151",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  textDecoration: 'none',
+                  textAlign: 'center'
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Log in
               </Link>
-              <Link href="/signup" className="btn btn-primary" onClick={() => setMobileMenuOpen(false)}>
+              <Link
+                href="/signup"
+                style={{
+                  width: "100%",
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                  border: "none",
+                  color: "white",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
+                  textDecoration: 'none',
+                  textAlign: 'center'
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Sign up
               </Link>
             </div>

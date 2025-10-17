@@ -142,11 +142,11 @@ export default function Support() {
       color: '#1877F2'
     },
     {
-      icon: 'fab fa-twitter',
-      title: 'Twitter',
+      icon: 'fab fa-youtube',
+      title: 'Youtube',
       description: 'Follow us for updates',
       contact: '@quizontal',
-      link: 'https://twitter.com/quizontal',
+      link: 'https://www.youtube.com/@quizontal',
       color: '#1DA1F2'
     }
   ];
@@ -845,8 +845,8 @@ export default function Support() {
           }
 
           .author-image {
-            width: 140px; /* Adjusted for mobile */
-            height: 186px;
+            width: 180px; /* Adjusted for mobile */
+            height: 240px;
           }
 
           .contact-methods-grid {
@@ -1493,7 +1493,7 @@ export default function Support() {
             <div className="contact-card">
               <img 
                 src="https://github.com/danukaya123/MY-NEW-WEB/blob/main/img/Danuka%20Disanayaka.jpg?raw=true" 
-                alt="Danuka Awantha"
+                alt="Danuka Dissanayake"
                 className="author-image"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -1519,7 +1519,7 @@ export default function Support() {
                 <i className="fas fa-user"></i>
               </div>
               
-              <h2 className="author-name">Danuka Awantha</h2>
+              <h2 className="author-name">Danuka Dissanayake</h2>
               <p className="author-role">Founder & Lead Developer</p>
               <p className="author-bio">
                 Hi! I'm the creator of Quizontal. I'm passionate about making AI accessible to everyone. 
@@ -1536,8 +1536,8 @@ export default function Support() {
                 <a href="mailto:business.quizontal@gmail.com" className="social-link">
                   <i className="fas fa-envelope"></i>
                 </a>
-                <a href="https://twitter.com/quizontal" className="social-link" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-twitter"></i>
+                <a href="https://www.youtube.com/@quizontal" className="social-link" target="_blank" rel="noopener noreferrer">
+                  <i className="fab fa-youtube"></i>
                 </a>
               </div>
             </div>
@@ -1706,17 +1706,8 @@ export default function Support() {
             AI-powered background removal made simple and free for everyone. 
             Remove backgrounds instantly with our advanced AI technology.
           </p>
-          <div className="footer-links">
-            <Link href="/" className="footer-link">Home</Link>
-            <Link href="/api" className="footer-link">API</Link>
-            <Link href="/about" className="footer-link">About</Link>
-            <Link href="/support" className="footer-link">Support</Link>
-            <Link href="https://blog.quizontal.cc" className="footer-link">Blog</Link>
-            <Link href="#" className="footer-link">Privacy</Link>
-            <Link href="#" className="footer-link">Terms</Link>
-          </div>
           <p className="footer-copyright">
-            &copy; 2024 QuizontalRBG. All rights reserved. Made with <i className="fas fa-heart" style={{ color: '#ef4444' }}></i> for the community.
+            &copy; 2024 QuizontalRBG. All rights reserved.
           </p>
         </div>
       </footer>

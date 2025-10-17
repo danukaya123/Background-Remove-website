@@ -1686,8 +1686,9 @@ export default function Support() {
             <div className="footer-logo-text">Quizontal<span className="footer-logo-accent">RBG</span></div>
           </div>
           <p className="footer-text">
-            AI-powered background removal made simple and free for everyone. 
-            Remove backgrounds instantly with our advanced AI technology.
+AI-powered background removal made simple and free.
+
+
           </p>
           <p className="footer-copyright">
             &copy; 2024 QuizontalRBG. All rights reserved.

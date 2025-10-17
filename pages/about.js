@@ -337,9 +337,9 @@ export default function About() {
           <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
     { name: 'Home', href: 'https://rbg.quizontal.cc' },
-    { name: 'Upload', href: '#upload-section' },
-    { name: 'Features', href: '#Features' },
-    { name: 'Examples', href: '#examples' },
+    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+    { name: 'Features', href: 'https://rbg.quizontal.cc' },
+    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
     { name: 'API Documentation', href: '/api-documentation' },
     { name: 'About', href: '/about' },
     { name: 'Support', href: '/support' },
@@ -684,9 +684,9 @@ export default function About() {
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
     { name: 'Home', href: 'https://rbg.quizontal.cc' },
-    { name: 'Upload', href: '#upload-section' },
-    { name: 'Features', href: '#Features' },
-    { name: 'Examples', href: '#examples' },
+    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+    { name: 'Features', href: 'https://rbg.quizontal.cc' },
+    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
     { name: 'API Documentation', href: '/api-documentation' },
     { name: 'About', href: '/about' },
     { name: 'Support', href: '/support' },

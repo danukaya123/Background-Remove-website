@@ -278,41 +278,50 @@ let result = client.predict(
           margin-left: 0.5rem;
         }
 
+        /* FIXED: Desktop Navigation Button Styles */
         .btn {
-          padding: 8px 16px;
-          border-radius: 6px;
+          padding: 10px 20px;
+          border-radius: 8px;
           font-weight: 600;
           font-size: 14px;
           cursor: pointer;
-          transition: all 0.3s;
+          transition: all 0.3s ease;
           border: none;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
           white-space: nowrap;
+          min-height: 40px;
         }
 
         .btn-outline {
           background: transparent;
-          border: 1px solid #d1d5db;
-          color: #374151;
+          border: 2px solid #3b82f6;
+          color: #3b82f6;
+          font-weight: 600;
         }
 
         .btn-outline:hover {
-          background: #f8fafc;
-          border-color: #9ca3af;
+          background: #3b82f6;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .btn-primary {
           background: linear-gradient(135deg, #3b82f6, #1d4ed8);
           color: white;
+          border: 2px solid transparent;
+          font-weight: 600;
           box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
         }
 
         .btn-primary:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+          background: linear-gradient(135deg, #2563eb, #1e40af);
         }
 
         .mobile-menu-toggle {
@@ -459,7 +468,7 @@ let result = client.predict(
           margin-bottom: 1.5rem;
         }
 
-        /* IMPROVED: Code Block Styling for Mobile */
+        /* Code Block Styling */
         .code-block {
           background: #1e293b;
           color: #e2e8f0;
@@ -598,7 +607,7 @@ let result = client.predict(
           font-size: 12px;
         }
 
-        /* IMPROVED: Examples Grid for Mobile */
+        /* Examples Grid */
         .examples-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -781,7 +790,7 @@ let result = client.predict(
           animation: slideUp 0.6s ease-out;
         }
 
-        /* IMPROVED: Responsive Design for Mobile */
+        /* Responsive Design */
         @media (max-width: 768px) {
           .nav-links,
           .auth-buttons {
@@ -819,10 +828,9 @@ let result = client.predict(
           }
 
           .section-title {
-            font-size: 1.5rem;
+            fontSize: 1.5rem;
           }
 
-          /* IMPROVED: Code blocks for mobile */
           .code-block {
             padding: 1rem;
             font-size: 12px;
@@ -844,7 +852,6 @@ let result = client.predict(
             min-width: 400px;
           }
 
-          /* IMPROVED: Examples grid for mobile */
           .examples-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
@@ -876,6 +883,27 @@ let result = client.predict(
           .support-buttons .btn {
             width: 100%;
             max-width: 280px;
+          }
+
+          /* Mobile button styles - different from desktop */
+          .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            min-height: 48px;
+          }
+
+          .btn-outline {
+            background: transparent;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+          }
+
+          .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: 2px solid transparent;
           }
         }
 
@@ -926,7 +954,6 @@ let result = client.predict(
             gap: 0.5rem;
           }
 
-          /* IMPROVED: Better code wrapping on very small screens */
           .code-block pre {
             word-break: break-word;
             overflow-wrap: break-word;
@@ -996,6 +1023,12 @@ let result = client.predict(
                     <button
                       className="btn btn-outline"
                       onClick={() => setShowDropdown(!showDropdown)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        padding: '8px 16px'
+                      }}
                     >
                       <div
                         style={{

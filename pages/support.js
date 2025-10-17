@@ -362,6 +362,7 @@ export default function Support() {
           box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
           position: relative;
           overflow: hidden;
+          display: none;
         }
 
         .contact-card::before {

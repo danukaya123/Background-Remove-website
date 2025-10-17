@@ -459,7 +459,7 @@ let result = client.predict(
           margin-bottom: 1.5rem;
         }
 
-        /* Code Block Styling */
+        /* IMPROVED: Code Block Styling for Mobile */
         .code-block {
           background: #1e293b;
           color: #e2e8f0;
@@ -472,13 +472,23 @@ let result = client.predict(
           margin: 1.5rem 0;
           position: relative;
           max-width: 100%;
+          -webkit-overflow-scrolling: touch;
         }
 
         .code-block pre {
           margin: 0;
           white-space: pre-wrap;
           word-wrap: break-word;
+          word-break: break-all;
           min-width: 0;
+          overflow-wrap: break-word;
+        }
+
+        .code-block code {
+          display: block;
+          white-space: pre-wrap;
+          word-break: break-word;
+          overflow-wrap: anywhere;
         }
 
         .copy-btn {
@@ -554,6 +564,7 @@ let result = client.predict(
           width: 100%;
           overflow-x: auto;
           margin: 1rem 0;
+          -webkit-overflow-scrolling: touch;
         }
 
         .parameter-table {
@@ -587,10 +598,10 @@ let result = client.predict(
           font-size: 12px;
         }
 
-        /* Examples Grid */
+        /* IMPROVED: Examples Grid for Mobile */
         .examples-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 2rem;
           margin-top: 2rem;
           width: 100%;
@@ -605,6 +616,8 @@ let result = client.predict(
           border: 1px solid #f1f5f9;
           text-align: center;
           width: 100%;
+          display: flex;
+          flex-direction: column;
         }
 
         .example-card:hover {
@@ -622,6 +635,17 @@ let result = client.predict(
           font-weight: 600;
           color: #1e293b;
           margin-bottom: 1rem;
+        }
+
+        .example-card .code-block {
+          flex: 1;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .example-card .code-block pre {
+          flex: 1;
         }
 
         /* Stats Grid */
@@ -757,7 +781,7 @@ let result = client.predict(
           animation: slideUp 0.6s ease-out;
         }
 
-        /* Responsive Design */
+        /* IMPROVED: Responsive Design for Mobile */
         @media (max-width: 768px) {
           .nav-links,
           .auth-buttons {
@@ -798,9 +822,16 @@ let result = client.predict(
             font-size: 1.5rem;
           }
 
+          /* IMPROVED: Code blocks for mobile */
           .code-block {
             padding: 1rem;
             font-size: 12px;
+            margin: 1rem 0;
+          }
+
+          .code-block pre {
+            font-size: 11px;
+            line-height: 1.4;
           }
 
           .endpoint-header {
@@ -813,6 +844,7 @@ let result = client.predict(
             min-width: 400px;
           }
 
+          /* IMPROVED: Examples grid for mobile */
           .examples-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
@@ -820,6 +852,11 @@ let result = client.predict(
 
           .example-card {
             padding: 1.5rem;
+            margin: 0;
+          }
+
+          .example-card .code-block {
+            padding: 1rem;
           }
 
           .stats-grid {
@@ -849,10 +886,16 @@ let result = client.predict(
 
           .content-section {
             padding: 1.25rem;
+            margin-bottom: 1.5rem;
           }
 
           .code-block {
             padding: 0.75rem;
+            font-size: 11px;
+          }
+
+          .code-block pre {
+            font-size: 10px;
           }
 
           .parameter-table {
@@ -863,6 +906,15 @@ let result = client.predict(
           .parameter-table th,
           .parameter-table td {
             padding: 0.5rem;
+            font-size: 12px;
+          }
+
+          .examples-grid {
+            gap: 1rem;
+          }
+
+          .example-card {
+            padding: 1.25rem;
           }
 
           .stats-grid {
@@ -872,6 +924,17 @@ let result = client.predict(
           .footer-logo {
             flex-direction: column;
             gap: 0.5rem;
+          }
+
+          /* IMPROVED: Better code wrapping on very small screens */
+          .code-block pre {
+            word-break: break-word;
+            overflow-wrap: break-word;
+          }
+
+          .endpoint-path {
+            font-size: 0.9rem;
+            word-break: break-word;
           }
         }
 
@@ -1180,7 +1243,7 @@ let result = client.predict(
               <div className="example-card">
                 <div className="example-icon">🐍</div>
                 <h3 className="example-title">Python</h3>
-                <div className="code-block" style={{ margin: "1rem 0" }}>
+                <div className="code-block">
                   <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
                   <pre>{codeExamples.pythonExample}</pre>
                 </div>
@@ -1189,7 +1252,7 @@ let result = client.predict(
               <div className="example-card">
                 <div className="example-icon">🟨</div>
                 <h3 className="example-title">JavaScript</h3>
-                <div className="code-block" style={{ margin: "1rem 0" }}>
+                <div className="code-block">
                   <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
                   <pre>{codeExamples.javascriptExample}</pre>
                 </div>
@@ -1198,7 +1261,7 @@ let result = client.predict(
               <div className="example-card">
                 <div className="example-icon">📱</div>
                 <h3 className="example-title">Mobile Apps</h3>
-                <div className="code-block" style={{ margin: "1rem 0" }}>
+                <div className="code-block">
                   <button className="copy-btn" onClick={(e) => copyCode(e.currentTarget)}>📋 Copy</button>
                   <pre>{codeExamples.swiftExample}</pre>
                 </div>

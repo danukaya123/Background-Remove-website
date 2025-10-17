@@ -644,34 +644,36 @@ export default function Home() {
           }}
         >
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "white",
-              }}
-            >
-              Q
-            </div>
-            <span
-              style={{
-                fontSize: "24px",
-                fontWeight: "800",
-                color: "#1e293b",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
-            </span>
-          </div>
+<Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: 'none' }}>
+  <div
+    style={{
+      width: "32px",
+      height: "32px",
+      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+      borderRadius: "8px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: "bold",
+      fontSize: "16px",
+      color: "white",
+    }}
+  >
+    Q
+  </div>
+  <span
+    style={{
+      fontSize: "24px",
+      fontWeight: "800",
+      color: "#1e293b",
+      letterSpacing: "-0.5px",
+    }}
+  >
+    Quizontal<span style={{ color: "#3b82f6" }}>RBG</span>
+  </span>
+      </div>
+</Link>
+          
           
           {/* Desktop Navigation Links */}
 

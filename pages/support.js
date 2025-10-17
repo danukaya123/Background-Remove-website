@@ -425,7 +425,7 @@ export default function Support() {
 
         /* IMPROVED: Contact Methods Grid with Font Awesome */
         .contact-methods-grid {
-          display: grid;
+          
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 1.5rem;
           margin-top: 2rem;
@@ -835,7 +835,7 @@ export default function Support() {
           }
 
           .contact-methods-grid {
-            grid-template-columns: 1fr;
+           
           }
 
           .contact-form {

@@ -847,7 +847,6 @@ export default function Support() {
           .author-image {
             width: 180px; /* Adjusted for mobile */
             height: 240px;
-            display: none;
           }
 
           .contact-methods-grid {

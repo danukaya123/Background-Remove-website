@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 import Head from 'next/head';
 
 export default function Api() {
@@ -15,10 +16,11 @@ export default function Api() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const sidebarRef = useRef(null);
   const pathname = usePathname();
+  
+  // Use the same AuthContext as your About page
+  const { currentUser, userProfile, logout } = useAuth(); // Replace local storage with AuthContext
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -34,42 +36,16 @@ export default function Api() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileMenuOpen]);
 
-  // Check for user authentication on component mount
-  useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const userData = localStorage.getItem('user');
-        const profileData = localStorage.getItem('userProfile');
-        
-        if (userData) {
-          setCurrentUser(JSON.parse(userData));
-        }
-        if (profileData) {
-          setUserProfile(JSON.parse(profileData));
-        }
-      } catch (error) {
-        console.log('No user data found');
-      }
-    };
-
-    checkAuth();
-  }, []);
-
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Use the same logout function as your About page
   const handleLogout = async () => {
     try {
-      localStorage.removeItem('user');
-      localStorage.removeItem('userProfile');
-      
-      setCurrentUser(null);
-      setUserProfile(null);
+      await logout();
       setShowDropdown(false);
       setMobileMenuOpen(false);
-      
-      window.location.href = '/';
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -938,14 +914,14 @@ let result = client.predict(
           {/* Desktop Navigation Links */}
           <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
-    { name: 'Home', href: 'https://rbg.quizontal.cc' },
-    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-    { name: 'Features', href: 'https://rbg.quizontal.cc' },
-    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-    { name: 'API Documentation', href: '/api-documentation' },
-    { name: 'About', href: '/about' },
-    { name: 'Support', href: '/support' },
-    { name: 'Blog', href: 'https://blog.quizontal.cc' }
+              { name: 'Home', href: 'https://rbg.quizontal.cc' },
+              { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+              { name: 'Features', href: 'https://rbg.quizontal.cc' },
+              { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+              { name: 'API Documentation', href: '/api-documentation' },
+              { name: 'About', href: '/about' },
+              { name: 'Support', href: '/support' },
+              { name: 'Blog', href: 'https://blog.quizontal.cc' }
             ].map((item) => (
               <Link 
                 key={item.name}
@@ -1285,14 +1261,14 @@ let result = client.predict(
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
-    { name: 'Home', href: 'https://rbg.quizontal.cc' },
-    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-    { name: 'Features', href: 'https://rbg.quizontal.cc' },
-    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-    { name: 'API Documentation', href: '/api-documentation' },
-    { name: 'About', href: '/about' },
-    { name: 'Support', href: '/support' },
-    { name: 'Blog', href: 'https://blog.quizontal.cc' }
+            { name: 'Home', href: 'https://rbg.quizontal.cc' },
+            { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+            { name: 'Features', href: 'https://rbg.quizontal.cc' },
+            { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+            { name: 'API Documentation', href: '/api-documentation' },
+            { name: 'About', href: '/about' },
+            { name: 'Support', href: '/support' },
+            { name: 'Blog', href: 'https://blog.quizontal.cc' }
           ].map((item) => (
             <Link
               key={item.name}

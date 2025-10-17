@@ -936,15 +936,16 @@ let result = client.predict(
           </Link>
           
           {/* Desktop Navigation Links */}
-          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
-              { name: 'Home', href: '/' },
-              { name: 'Upload', href: '/#upload-section' },
-              { name: 'Features', href: '/#Features' },
-              { name: 'Examples', href: '/#examples' },
-              { name: 'API Documentation', href: '/api' },
-              { name: 'About', href: '/about' },
-              { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: '#upload-section' },
+    { name: 'Features', href: '#Features' },
+    { name: 'Examples', href: '#examples' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
             ].map((item) => (
               <Link 
                 key={item.name}
@@ -1284,13 +1285,14 @@ let result = client.predict(
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
-            { name: 'Home', href: '/' },
-            { name: 'Upload', href: '/#upload-section' },
-            { name: 'Features', href: '/#Features' },
-            { name: 'Examples', href: '/#examples' },
-            { name: 'API Documentation', href: '/api' },
-            { name: 'About', href: '/about' },
-            { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: '#upload-section' },
+    { name: 'Features', href: '#Features' },
+    { name: 'Examples', href: '#examples' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
           ].map((item) => (
             <Link
               key={item.name}
@@ -1556,7 +1558,7 @@ let result = client.predict(
                 </svg>
                 View Full Documentation
               </a>
-              <a href="#" className="support-btn support-btn-outline">
+              <a href="/support" className="support-btn support-btn-outline">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                 </svg>
@@ -1575,19 +1577,10 @@ let result = client.predict(
             <div className="footer-logo-text">Quizontal<span className="footer-logo-accent">RBG</span></div>
           </div>
           <p className="footer-text">
-            AI-powered background removal made simple and free for everyone. 
-            Remove backgrounds instantly with our advanced AI technology.
+            AI-powered background removal made simple and free
           </p>
-          <div className="footer-links">
-            <Link href="/" className="footer-link">Home</Link>
-            <Link href="/api" className="footer-link">API</Link>
-            <Link href="/about" className="footer-link">About</Link>
-            <Link href="https://blog.quizontal.cc" className="footer-link">Blog</Link>
-            <Link href="#" className="footer-link">Privacy</Link>
-            <Link href="#" className="footer-link">Terms</Link>
-          </div>
           <p className="footer-copyright">
-            &copy; 2024 QuizontalRBG. All rights reserved. Made with ❤️ for the community.
+            &copy; 2025 QuizontalRBG. All rights reserved.
           </p>
         </div>
       </footer>

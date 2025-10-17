@@ -914,14 +914,14 @@ let result = client.predict(
           {/* Desktop Navigation Links */}
           <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
-              { name: 'Home', href: 'https://rbg.quizontal.cc' },
-              { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-              { name: 'Features', href: 'https://rbg.quizontal.cc' },
-              { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-              { name: 'API Documentation', href: '/api-documentation' },
-              { name: 'About', href: '/about' },
-              { name: 'Support', href: '/support' },
-              { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+    { name: 'Features', href: 'https://rbg.quizontal.cc' },
+    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
             ].map((item) => (
               <Link 
                 key={item.name}
@@ -1261,14 +1261,14 @@ let result = client.predict(
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
-            { name: 'Home', href: 'https://rbg.quizontal.cc' },
-            { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-            { name: 'Features', href: 'https://rbg.quizontal.cc' },
-            { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-            { name: 'API Documentation', href: '/api-documentation' },
-            { name: 'About', href: '/about' },
-            { name: 'Support', href: '/support' },
-            { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+    { name: 'Features', href: 'https://rbg.quizontal.cc' },
+    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
           ].map((item) => (
             <Link
               key={item.name}

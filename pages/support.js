@@ -1502,23 +1502,6 @@ export default function Support() {
                   if (fallback) fallback.style.display = 'flex';
                 }}
               />
-              <div style={{
-                display: 'none',
-                width: '180px',
-                height: '240px',
-                borderRadius: '20px',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-                margin: '0 auto 2rem',
-                border: '4px solid rgba(255,255,255,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '4rem',
-                color: 'rgba(255,255,255,0.7)'
-              }}>
-                <i className="fas fa-user"></i>
-              </div>
-              
               <h2 className="author-name">Danuka Dissanayake</h2>
               <p className="author-role">Founder & Lead Developer</p>
               <p className="author-bio">

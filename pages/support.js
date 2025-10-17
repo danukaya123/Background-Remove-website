@@ -115,9 +115,10 @@ export default function Support() {
     }, 2000);
   };
 
+  // Updated contact methods with Font Awesome icons
   const contactMethods = [
     {
-      icon: '📧',
+      icon: 'fas fa-envelope',
       title: 'Email Us',
       description: 'Send us an email anytime',
       contact: 'business.quizontal@gmail.com',
@@ -125,7 +126,7 @@ export default function Support() {
       color: '#3b82f6'
     },
     {
-      icon: '💬',
+      icon: 'fab fa-whatsapp',
       title: 'WhatsApp',
       description: 'Chat with us directly',
       contact: '+94 77 491 5917',
@@ -133,15 +134,15 @@ export default function Support() {
       color: '#25D366'
     },
     {
-      icon: '📱',
+      icon: 'fab fa-facebook',
       title: 'Facebook',
       description: 'Message us on Facebook',
-      contact: '@quizontal',
-      link: 'https://facebook.com/quizontal',
+      contact: '@danuka dissanayake',
+      link: 'https://web.facebook.com/danuka.disanayaka.3701/',
       color: '#1877F2'
     },
     {
-      icon: '🐦',
+      icon: 'fab fa-twitter',
       title: 'Twitter',
       description: 'Follow us for updates',
       contact: '@quizontal',
@@ -189,6 +190,15 @@ export default function Support() {
         <meta name="twitter:title" content={pageMeta.title} />
         <meta name="twitter:description" content={pageMeta.description} />
         <meta name="twitter:image" content={pageMeta.image} />
+        
+        {/* Font Awesome CDN */}
+        <link 
+          rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossOrigin="anonymous" 
+          referrerPolicy="no-referrer" 
+        />
       </Head>
       
       <style jsx global>{`
@@ -342,7 +352,7 @@ export default function Support() {
           margin-bottom: 1.5rem;
         }
 
-        /* Contact Card Styles */
+        /* IMPROVED: Contact Card Styles with Larger Image */
         .contact-card {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           border-radius: 20px;
@@ -365,35 +375,36 @@ export default function Support() {
           pointer-events: none;
         }
 
+        /* LARGER AUTHOR IMAGE */
         .author-image {
-          width: 120px;
-          height: 160px;
-          border-radius: 15px;
+          width: 180px; /* Increased from 120px */
+          height: 240px; /* Increased from 160px */
+          border-radius: 20px; /* Slightly larger radius */
           object-fit: cover;
-          border: 4px solid rgba(255,255,255,0.2);
-          margin: 0 auto 1.5rem;
+          border: 4px solid rgba(255,255,255,0.3); /* Thicker border */
+          margin: 0 auto 2rem; /* More margin bottom */
           display: block;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          box-shadow: 0 15px 40px rgba(0,0,0,0.4); /* Enhanced shadow */
         }
 
         .author-name {
-          font-size: 1.5rem;
+          font-size: 1.75rem; /* Slightly larger */
           font-weight: 700;
           margin-bottom: 0.5rem;
         }
 
         .author-role {
-          font-size: 1rem;
+          font-size: 1.1rem; /* Slightly larger */
           opacity: 0.9;
           margin-bottom: 1.5rem;
         }
 
         .author-bio {
-          font-size: 0.95rem;
+          font-size: 1rem; /* Slightly larger */
           line-height: 1.6;
           opacity: 0.8;
           margin-bottom: 2rem;
-          max-width: 400px;
+          max-width: 450px; /* Slightly wider */
           margin-left: auto;
           margin-right: auto;
         }
@@ -406,10 +417,10 @@ export default function Support() {
         }
 
         .social-link {
-          width: 45px;
-          height: 45px;
+          width: 50px; /* Slightly larger */
+          height: 50px;
           border-radius: 50%;
-          background: rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.15); /* Slightly more visible */
           display: flex;
           align-items: center;
           justify-content: center;
@@ -417,16 +428,17 @@ export default function Support() {
           text-decoration: none;
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.2);
+          border: 1px solid rgba(255,255,255,0.3); /* Thicker border */
+          font-size: 1.2rem; /* Larger icons */
         }
 
         .social-link:hover {
-          background: rgba(255,255,255,0.2);
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+          background: rgba(255,255,255,0.25);
+          transform: translateY(-3px); /* More lift on hover */
+          box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
 
-        /* Contact Methods Grid */
+        /* IMPROVED: Contact Methods Grid with Font Awesome */
         .contact-methods-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -450,7 +462,6 @@ export default function Support() {
         }
 
         .method-icon {
-          font-size: 3rem;
           margin-bottom: 1rem;
         }
 
@@ -476,6 +487,60 @@ export default function Support() {
 
         .method-contact:hover {
           color: #1d4ed8;
+        }
+
+        /* IMPROVED: Auth Section Styles */
+        .auth-section {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .user-avatar {
+          width: 36px;
+          height: 36px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 14px;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .user-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .user-name {
+          font-weight: 600;
+          font-size: 14px;
+          color: #1e293b;
+          white-space: nowrap;
+        }
+
+        .user-email {
+          font-size: 12px;
+          color: #64748b;
+          white-space: nowrap;
+        }
+
+        .auth-dropdown {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 0.75rem;
+          margin-top: 0.5rem;
+          min-width: 220px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          z-index: 1000;
         }
 
         /* Form Styles */
@@ -780,8 +845,8 @@ export default function Support() {
           }
 
           .author-image {
-            width: 100px;
-            height: 133px;
+            width: 140px; /* Adjusted for mobile */
+            height: 186px;
           }
 
           .contact-methods-grid {
@@ -836,6 +901,19 @@ export default function Support() {
             font-size: 0.9rem;
             padding: 6px 10px;
           }
+
+          /* Mobile auth improvements */
+          .auth-section {
+            gap: 0.5rem;
+          }
+
+          .user-name {
+            font-size: 13px;
+          }
+
+          .user-email {
+            font-size: 11px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -853,8 +931,8 @@ export default function Support() {
           }
 
           .author-image {
-            width: 90px;
-            height: 120px;
+            width: 120px;
+            height: 160px;
           }
 
           .social-links {
@@ -862,8 +940,9 @@ export default function Support() {
           }
 
           .social-link {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
           }
 
           .support-btn {
@@ -978,14 +1057,14 @@ export default function Support() {
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
               {currentUser ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  {/* User Profile Dropdown */}
+                  {/* IMPROVED: User Profile Dropdown */}
                   <div style={{ position: "relative" }}>
                     <button
                       style={{
                         background: "transparent",
                         border: "1px solid #d1d5db",
-                        padding: "6px 12px",
-                        borderRadius: "6px",
+                        padding: "8px 16px",
+                        borderRadius: "8px",
                         color: "#374151",
                         fontWeight: "600",
                         fontSize: "14px",
@@ -994,7 +1073,7 @@ export default function Support() {
                         whiteSpace: "nowrap",
                         display: "flex",
                         alignItems: "center",
-                        gap: "8px",
+                        gap: "10px",
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = "#f8fafc";
@@ -1006,55 +1085,33 @@ export default function Support() {
                       }}
                       onClick={() => setShowDropdown(!showDropdown)}
                     >
-                      <div
-                        style={{
-                          width: "24px",
-                          height: "24px",
-                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          color: "white",
-                        }}
-                      >
+                      <div className="user-avatar">
                         {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
                       </div>
-                      {userProfile?.username || currentUser?.email || "User"}
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <div className="user-info">
+                        <div className="user-name">
+                          {userProfile?.username || "User"}
+                        </div>
+                        <div className="user-email">
+                          {currentUser?.email || ""}
+                        </div>
+                      </div>
+                      <i className="fas fa-chevron-down" style={{ fontSize: '12px', color: '#64748b' }}></i>
                     </button>
                     
                     {showDropdown && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "100%",
-                          right: 0,
-                          background: "white",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "12px",
-                          padding: "0.75rem",
-                          marginTop: "0.5rem",
-                          minWidth: "200px",
-                          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                          zIndex: 1000,
-                        }}
-                      >
-                        <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
-                          Signed in as<br />
-                          <strong style={{ color: "#1e293b" }}>{currentUser?.email || "User"}</strong>
+                      <div className="auth-dropdown">
+                        <div style={{ padding: "0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ fontWeight: "600", color: "#1e293b", marginBottom: "4px" }}>Account</div>
+                          <div>{currentUser?.email || "User"}</div>
                         </div>
                         {userProfile && (
-                          <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
-                            <div style={{ fontSize: "12px", color: "#64748b" }}>Username:</div>
+                          <div style={{ padding: "0.75rem", borderBottom: "1px solid #f1f5f9" }}>
+                            <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>Username</div>
                             <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.username}</div>
                             {userProfile.phoneNumber && (
                               <>
-                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Phone:</div>
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "8px", marginBottom: "4px" }}>Phone</div>
                                 <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.phoneNumber}</div>
                               </>
                             )}
@@ -1076,7 +1133,8 @@ export default function Support() {
                             transition: "all 0.3s",
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
+                            gap: "10px",
+                            marginTop: "0.5rem",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = "#fef2f2";
@@ -1085,9 +1143,7 @@ export default function Support() {
                             e.currentTarget.style.background = "transparent";
                           }}
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-                          </svg>
+                          <i className="fas fa-sign-out-alt"></i>
                           Sign Out
                         </button>
                       </div>
@@ -1101,8 +1157,8 @@ export default function Support() {
                     style={{
                       background: "transparent",
                       border: "1px solid #d1d5db",
-                      padding: "6px 16px",
-                      borderRadius: "6px",
+                      padding: "8px 20px",
+                      borderRadius: "8px",
                       color: "#374151",
                       fontWeight: "600",
                       fontSize: "14px",
@@ -1111,7 +1167,8 @@ export default function Support() {
                       whiteSpace: "nowrap",
                       textDecoration: 'none',
                       display: 'inline-flex',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      gap: '8px'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "#f8fafc";
@@ -1122,6 +1179,7 @@ export default function Support() {
                       e.currentTarget.style.borderColor = "#d1d5db";
                     }}
                   >
+                    <i className="fas fa-sign-in-alt"></i>
                     Log in
                   </Link>
                   <Link
@@ -1129,8 +1187,8 @@ export default function Support() {
                     style={{
                       background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                       border: "none",
-                      padding: "6px 16px",
-                      borderRadius: "6px",
+                      padding: "8px 20px",
+                      borderRadius: "8px",
                       color: "white",
                       fontWeight: "600",
                       fontSize: "14px",
@@ -1140,7 +1198,8 @@ export default function Support() {
                       whiteSpace: "nowrap",
                       textDecoration: 'none',
                       display: 'inline-flex',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      gap: '8px'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-1px)";
@@ -1151,6 +1210,7 @@ export default function Support() {
                       e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
                     }}
                   >
+                    <i className="fas fa-user-plus"></i>
                     Sign up
                   </Link>
                 </>
@@ -1346,6 +1406,10 @@ export default function Support() {
                   fontWeight: "600",
                   cursor: "pointer",
                   transition: "all 0.3s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#fef2f2";
@@ -1354,6 +1418,7 @@ export default function Support() {
                   e.currentTarget.style.background = "transparent";
                 }}
               >
+                <i className="fas fa-sign-out-alt"></i>
                 Sign Out
               </button>
             </div>
@@ -1372,10 +1437,15 @@ export default function Support() {
                   cursor: "pointer",
                   transition: "all 0.3s",
                   textDecoration: 'none',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
                 onClick={() => setMobileMenuOpen(false)}
               >
+                <i className="fas fa-sign-in-alt"></i>
                 Log in
               </Link>
               <Link
@@ -1392,10 +1462,15 @@ export default function Support() {
                   transition: "all 0.3s",
                   boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
                   textDecoration: 'none',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
                 onClick={() => setMobileMenuOpen(false)}
               >
+                <i className="fas fa-user-plus"></i>
                 Sign up
               </Link>
             </div>
@@ -1416,31 +1491,32 @@ export default function Support() {
           {/* Author Contact Card */}
           <section className="content-section slide-up">
             <div className="contact-card">
-              {/* Replace with your actual image path */}
               <img 
-                src="/images/author.jpg" 
+                src="https://github.com/danukaya123/MY-NEW-WEB/blob/main/img/Danuka%20Disanayaka.jpg?raw=true" 
                 alt="Danuka Awantha"
                 className="author-image"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   // Show fallback if image fails to load
-                  e.target.nextSibling.style.display = 'block';
+                  const fallback = e.target.nextSibling;
+                  if (fallback) fallback.style.display = 'flex';
                 }}
               />
               <div style={{
                 display: 'none',
-                width: '120px',
-                height: '160px',
-                borderRadius: '15px',
+                width: '180px',
+                height: '240px',
+                borderRadius: '20px',
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
-                margin: '0 auto 1.5rem',
-                border: '4px solid rgba(255,255,255,0.2)',
+                margin: '0 auto 2rem',
+                border: '4px solid rgba(255,255,255,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '3rem'
+                fontSize: '4rem',
+                color: 'rgba(255,255,255,0.7)'
               }}>
-                👨‍💻
+                <i className="fas fa-user"></i>
               </div>
               
               <h2 className="author-name">Danuka Awantha</h2>
@@ -1451,17 +1527,17 @@ export default function Support() {
               </p>
               
               <div className="social-links">
-                <a href="https://facebook.com/yourprofile" className="social-link" target="_blank" rel="noopener noreferrer">
-                  📘
+                <a href="https://web.facebook.com/danuka.disanayaka.3701/" className="social-link" target="_blank" rel="noopener noreferrer">
+                  <i className="fab fa-facebook-f"></i>
                 </a>
-                <a href="https://wa.me/94771234567" className="social-link" target="_blank" rel="noopener noreferrer">
-                  💬
+                <a href="https://wa.me/94774915917" className="social-link" target="_blank" rel="noopener noreferrer">
+                  <i className="fab fa-whatsapp"></i>
                 </a>
-                <a href="mailto:danuka@quizontal.cc" className="social-link">
-                  📧
+                <a href="mailto:business.quizontal@gmail.com" className="social-link">
+                  <i className="fas fa-envelope"></i>
                 </a>
-                <a href="https://twitter.com/yourprofile" className="social-link" target="_blank" rel="noopener noreferrer">
-                  🐦
+                <a href="https://twitter.com/quizontal" className="social-link" target="_blank" rel="noopener noreferrer">
+                  <i className="fab fa-twitter"></i>
                 </a>
               </div>
             </div>
@@ -1478,7 +1554,9 @@ export default function Support() {
             <div className="contact-methods-grid">
               {contactMethods.map((method, index) => (
                 <div key={index} className="contact-method">
-                  <div className="method-icon">{method.icon}</div>
+                  <div className="method-icon">
+                    <i className={method.icon} style={{ color: method.color, fontSize: '2.5rem' }}></i>
+                  </div>
                   <h3 className="method-title">{method.title}</h3>
                   <p className="method-description">{method.description}</p>
                   <a href={method.link} className="method-contact" target="_blank" rel="noopener noreferrer">
@@ -1554,12 +1632,23 @@ export default function Support() {
                 className="submit-btn"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Sending...' : 'Send Message'}
+                {isSubmitting ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin" style={{ marginRight: '8px' }}></i>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane" style={{ marginRight: '8px' }}></i>
+                    Send Message
+                  </>
+                )}
               </button>
               
               {submitStatus === 'success' && (
                 <div className="status-message status-success">
-                  ✅ Thank you! Your message has been sent successfully. We'll get back to you soon.
+                  <i className="fas fa-check-circle" style={{ marginRight: '8px' }}></i>
+                  Thank you! Your message has been sent successfully. We'll get back to you soon.
                 </div>
               )}
             </form>
@@ -1575,8 +1664,14 @@ export default function Support() {
             <div className="faq-grid">
               {faqs.map((faq, index) => (
                 <div key={index} className="faq-item">
-                  <h3 className="faq-question">{faq.question}</h3>
-                  <p className="faq-answer">{faq.answer}</p>
+                  <h3 className="faq-question">
+                    <i className="fas fa-question-circle" style={{ color: '#3b82f6', marginRight: '8px' }}></i>
+                    {faq.question}
+                  </h3>
+                  <p className="faq-answer">
+                    <i className="fas fa-arrow-right" style={{ color: '#64748b', marginRight: '8px', fontSize: '12px' }}></i>
+                    {faq.answer}
+                  </p>
                 </div>
               ))}
             </div>
@@ -1586,11 +1681,13 @@ export default function Support() {
                 Still have questions? We're here to help!
               </p>
               <div className="support-buttons">
-                <a href="mailto:support@quizontal.cc" className="support-btn support-btn-primary">
-                  📧 Email Support
+                <a href="mailto:business.quizontal@gmail.com" className="support-btn support-btn-primary">
+                  <i className="fas fa-envelope"></i>
+                  Email Support
                 </a>
-                <a href="https://wa.me/94771234567" className="support-btn support-btn-outline" target="_blank" rel="noopener noreferrer">
-                  💬 WhatsApp Chat
+                <a href="https://wa.me/94774915917" className="support-btn support-btn-outline" target="_blank" rel="noopener noreferrer">
+                  <i className="fab fa-whatsapp"></i>
+                  WhatsApp Chat
                 </a>
               </div>
             </div>
@@ -1619,7 +1716,7 @@ export default function Support() {
             <Link href="#" className="footer-link">Terms</Link>
           </div>
           <p className="footer-copyright">
-            &copy; 2024 QuizontalRBG. All rights reserved. Made with ❤️ for the community.
+            &copy; 2024 QuizontalRBG. All rights reserved. Made with <i className="fas fa-heart" style={{ color: '#ef4444' }}></i> for the community.
           </p>
         </div>
       </footer>

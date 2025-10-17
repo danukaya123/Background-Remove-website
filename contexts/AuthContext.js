@@ -24,12 +24,44 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const previousUserRef = useRef(null); // Track previous user state
-  const notificationSentRef = useRef(false); // Track if notification was sent
+  const previousUserRef = useRef(null);
+  const notificationSentRef = useRef(false);
+
+  // Send welcome email function
+  const sendWelcomeEmail = async (email, displayName, username) => {
+    try {
+      const response = await fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          displayName,
+          username
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        console.warn('Failed to send welcome email:', result.error);
+        // Don't throw error - email failure shouldn't block signup
+        return false;
+      }
+
+      console.log('Welcome email sent successfully');
+      return true;
+    } catch (error) {
+      console.warn('Error sending welcome email:', error);
+      // Don't throw error - email failure shouldn't block signup
+      return false;
+    }
+  };
 
   // Notification functions
   const showLoginNotification = (user) => {
-    if (notificationSentRef.current) return; // Prevent duplicate notifications
+    if (notificationSentRef.current) return;
     
     notificationSentRef.current = true;
     const event = new CustomEvent('showNotification', {
@@ -41,14 +73,13 @@ export function AuthProvider({ children }) {
     });
     window.dispatchEvent(event);
     
-    // Reset after a short delay
     setTimeout(() => {
       notificationSentRef.current = false;
     }, 1000);
   };
 
   const showLogoutNotification = () => {
-    if (notificationSentRef.current) return; // Prevent duplicate notifications
+    if (notificationSentRef.current) return;
     
     notificationSentRef.current = true;
     const event = new CustomEvent('showNotification', {
@@ -60,7 +91,6 @@ export function AuthProvider({ children }) {
     });
     window.dispatchEvent(event);
     
-    // Reset after a short delay
     setTimeout(() => {
       notificationSentRef.current = false;
     }, 1000);
@@ -80,14 +110,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       const previousUser = previousUserRef.current;
-      previousUserRef.current = user; // Update ref for next comparison
+      previousUserRef.current = user;
 
-      // Check for login/logout events
       if (user && !previousUser) {
-        // User just logged in (was null, now has user)
         showLoginNotification(user);
       } else if (!user && previousUser) {
-        // User just logged out (had user, now null)
         showLogoutNotification();
       }
 
@@ -137,9 +164,9 @@ export function AuthProvider({ children }) {
     });
 
     return unsubscribe;
-  }, []); // Remove currentUser from dependencies
+  }, []);
 
-  // Email/Password Signup with Email Verification
+  // Email/Password Signup with Email Verification and Welcome Email
   const signup = async (email, password, userData) => {
     try {
       setLoading(true);
@@ -182,6 +209,19 @@ export function AuthProvider({ children }) {
       setCurrentUser(userObj);
       setUserProfile(userProfileData);
 
+      // Send welcome email (non-blocking)
+      sendWelcomeEmail(email, userData.username, userData.username)
+        .then(success => {
+          if (success) {
+            console.log('Welcome email sent successfully');
+          } else {
+            console.warn('Welcome email failed to send, but user was created');
+          }
+        })
+        .catch(error => {
+          console.warn('Error in welcome email process:', error);
+        });
+
       return user;
     } catch (error) {
       console.error('Signup error:', error);
@@ -192,22 +232,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Email/Password Login
-  const login = async (email, password) => {
-    try {
-      setLoading(true);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
-    } catch (error) {
-      console.error('Login error:', error);
-      showErrorNotification('Login Failed', error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Social Auth Providers (Google + GitHub Only)
+  // Social Auth with Welcome Email
   const signInWithSocial = async (providerName) => {
     try {
       setLoading(true);
@@ -229,8 +254,9 @@ export function AuthProvider({ children }) {
       
       // Check if user already exists in Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const isNewUser = !userDoc.exists();
       
-      if (!userDoc.exists()) {
+      if (isNewUser) {
         const userProfileData = {
           uid: user.uid,
           email: user.email,
@@ -256,6 +282,19 @@ export function AuthProvider({ children }) {
 
         setCurrentUser(userObj);
         setUserProfile(userProfileData);
+
+        // Send welcome email for new social signups (non-blocking)
+        sendWelcomeEmail(user.email, user.displayName, userProfileData.username)
+          .then(success => {
+            if (success) {
+              console.log('Welcome email sent to social signup user');
+            } else {
+              console.warn('Welcome email failed for social signup');
+            }
+          })
+          .catch(error => {
+            console.warn('Error in welcome email for social signup:', error);
+          });
       }
       
       return user;
@@ -268,7 +307,21 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Resend Email Verification
+  // ... rest of your existing functions (login, logout, forgotPassword, etc.) remain the same
+  const login = async (email, password) => {
+    try {
+      setLoading(true);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('Login error:', error);
+      showErrorNotification('Login Failed', error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resendEmailVerification = async () => {
     if (!currentUser) throw new Error('No user logged in');
     
@@ -276,7 +329,6 @@ export function AuthProvider({ children }) {
       setLoading(true);
       await sendEmailVerification(currentUser);
       
-      // Show success notification
       const event = new CustomEvent('showNotification', {
         detail: {
           type: 'success',
@@ -294,13 +346,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Forgot Password
   const forgotPassword = async (email) => {
     try {
       setLoading(true);
       await sendPasswordResetEmail(auth, email);
       
-      // Show success notification
       const event = new CustomEvent('showNotification', {
         detail: {
           type: 'success',
@@ -318,12 +368,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Logout
   const logout = async () => {
     try {
       setLoading(true);
       await signOut(auth);
-      // The onAuthStateChanged will handle the notification
     } catch (error) {
       console.error('Logout error:', error);
       showErrorNotification('Logout Failed', 'There was an issue signing out. Please try again.');
@@ -333,7 +381,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Update User Profile
   const updateUserProfile = async (updates) => {
     if (!currentUser) throw new Error('No user logged in');
     
@@ -363,7 +410,6 @@ export function AuthProvider({ children }) {
       setUserProfile(newProfile);
       setCurrentUser(newUser);
 
-      // Show success notification
       const event = new CustomEvent('showNotification', {
         detail: {
           type: 'success',
@@ -384,23 +430,16 @@ export function AuthProvider({ children }) {
   };
 
   const value = {
-    // User state
     user: currentUser,
     currentUser,
     userProfile,
-    
-    // Authentication methods
     login,
     signup,
     logout,
     forgotPassword,
     signInWithSocial,
     resendEmailVerification,
-    
-    // Profile management
     updateUserProfile,
-    
-    // Helper properties
     isAuthenticated: !!currentUser,
     isLoading: loading
   };

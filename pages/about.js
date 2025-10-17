@@ -19,14 +19,14 @@ export default function About() {
           </section>
 
           <section className="content-section slide-up">
-            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>Our Story</h2>
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <p style={{ color: '#64748b', lineHeight: '1.7', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+            <h2 className="section-title">Our Story</h2>
+            <div className="story-content">
+              <p>
                 Quizontal was born from a simple idea: everyone should have access to professional-quality 
                 background removal technology without the high costs and complexity. Founded in 2023, our 
                 mission has been to democratize AI-powered image editing tools.
               </p>
-              <p style={{ color: '#64748b', lineHeight: '1.7', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+              <p>
                 We believe that powerful technology should be accessible to students, small businesses, 
                 content creators, and anyone who needs to edit images. That&apos;s why we&apos;ve built Quizontal 
                 RBG - a completely free, no-watermark background removal service powered by cutting-edge 
@@ -36,7 +36,7 @@ export default function About() {
           </section>
 
           <section className="content-section slide-up">
-            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>Our Mission</h2>
+            <h2 className="section-title">Our Mission</h2>
             <div className="content-grid">
               <div className="feature-card">
                 <div className="feature-icon">🎯</div>
@@ -59,7 +59,7 @@ export default function About() {
           </section>
 
           <section className="content-section slide-up">
-            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>Our Impact</h2>
+            <h2 className="section-title">Our Impact</h2>
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-number">50K+</div>
@@ -81,16 +81,16 @@ export default function About() {
           </section>
 
           <section className="content-section slide-up">
-            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>The Technology</h2>
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <p style={{ color: '#64748b', lineHeight: '1.7', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+            <h2 className="section-title">The Technology</h2>
+            <div className="tech-content">
+              <p>
                 Quizontal RBG leverages state-of-the-art deep learning models trained on millions of images 
                 to deliver exceptional background removal results. Our AI understands complex image contexts, 
                 handles fine details like hair and transparent objects, and maintains original image quality.
               </p>
-              <div style={{ background: '#f8fafc', padding: '2rem', borderRadius: '12px', marginTop: '2rem' }}>
-                <h4 style={{ color: '#1e293b', marginBottom: '1rem' }}>Key Technical Features:</h4>
-                <ul style={{ color: '#64748b', lineHeight: '1.8', paddingLeft: '1.5rem' }}>
+              <div className="tech-features">
+                <h4>Key Technical Features:</h4>
+                <ul>
                   <li>Advanced neural networks for precise edge detection</li>
                   <li>Real-time processing optimization</li>
                   <li>Support for all major image formats (PNG, JPG, WEBP)</li>
@@ -102,13 +102,13 @@ export default function About() {
           </section>
 
           <section className="content-section slide-up">
-            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>Join Our Community</h2>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '1.1rem' }}>
+            <h2 className="section-title">Join Our Community</h2>
+            <div className="cta-section">
+              <p>
                 We&apos;re constantly improving our technology and adding new features. Join thousands of users 
                 who trust Quizontal for their image editing needs.
               </p>
-              <Link href="/" className="btn btn-primary" style={{ fontSize: '1.1rem', padding: '12px 24px' }}>
+              <Link href="/" className="btn btn-primary cta-button">
                 Start Removing Backgrounds Now
               </Link>
             </div>
@@ -193,6 +193,24 @@ export default function About() {
           border: 1px solid #f1f5f9;
         }
 
+        .section-title {
+          text-align: center;
+          margin-bottom: 2rem;
+          color: #1e293b;
+        }
+
+        .story-content {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .story-content p {
+          color: #64748b;
+          line-height: 1.7;
+          margin-bottom: 1.5rem;
+          font-size: 1.1rem;
+        }
+
         .content-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
@@ -257,6 +275,53 @@ export default function About() {
         .stat-label {
           color: #64748b;
           font-weight: 500;
+        }
+
+        /* Technology Section */
+        .tech-content {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .tech-content p {
+          color: #64748b;
+          line-height: 1.7;
+          margin-bottom: 1.5rem;
+          font-size: 1.1rem;
+        }
+
+        .tech-features {
+          background: #f8fafc;
+          padding: 2rem;
+          border-radius: 12px;
+          margin-top: 2rem;
+        }
+
+        .tech-features h4 {
+          color: #1e293b;
+          margin-bottom: 1rem;
+        }
+
+        .tech-features ul {
+          color: #64748b;
+          line-height: 1.8;
+          padding-left: 1.5rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+          text-align: center;
+        }
+
+        .cta-section p {
+          color: #64748b;
+          margin-bottom: 2rem;
+          font-size: 1.1rem;
+        }
+
+        .cta-button {
+          font-size: 1.1rem;
+          padding: 12px 24px;
         }
 
         /* Animations */
@@ -367,14 +432,14 @@ function Header() {
           color: #64748b;
           font-weight: 500;
           font-size: 14px;
-          transition: var(--transition);
+          transition: all 0.3s ease;
           padding: 6px 10px;
           border-radius: 6px;
         }
 
         .nav-links a:hover,
         .nav-links a.active {
-          color: var(--primary);
+          color: #3b82f6;
           background: #f1f5f9;
         }
 
@@ -391,7 +456,7 @@ function Header() {
           font-weight: 600;
           font-size: 14px;
           cursor: pointer;
-          transition: var(--transition);
+          transition: all 0.3s ease;
           border: none;
           text-decoration: none;
           display: inline-flex;

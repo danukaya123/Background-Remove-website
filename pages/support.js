@@ -1012,7 +1012,7 @@ export default function Support() {
           </Link>
           
           {/* Desktop Navigation Links */}
-          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
               { name: 'Home', href: '/' },
               { name: 'Upload', href: '/#upload-section' },

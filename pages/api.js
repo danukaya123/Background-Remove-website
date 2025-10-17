@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
 import Head from 'next/head';
 
 export default function Api() {
@@ -16,9 +15,10 @@ export default function Api() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const sidebarRef = useRef(null);
   const pathname = usePathname();
-  const { currentUser, userProfile, logout } = useAuth();
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -34,6 +34,29 @@ export default function Api() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileMenuOpen]);
 
+  // Check for user authentication on component mount
+  useEffect(() => {
+    // Check if user is logged in (you can replace this with your actual auth check)
+    const checkAuth = () => {
+      try {
+        // Example: Check localStorage or cookies for auth token
+        const userData = localStorage.getItem('user');
+        const profileData = localStorage.getItem('userProfile');
+        
+        if (userData) {
+          setCurrentUser(JSON.parse(userData));
+        }
+        if (profileData) {
+          setUserProfile(JSON.parse(profileData));
+        }
+      } catch (error) {
+        console.log('No user data found');
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   // Toggle mobile menu
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -42,9 +65,17 @@ export default function Api() {
   // Handle logout
   const handleLogout = async () => {
     try {
-      await logout();
+      // Clear user data from localStorage
+      localStorage.removeItem('user');
+      localStorage.removeItem('userProfile');
+      
+      setCurrentUser(null);
+      setUserProfile(null);
       setShowDropdown(false);
       setMobileMenuOpen(false);
+      
+      // Redirect to home page or login page
+      window.location.href = '/';
     } catch (error) {
       console.error("Logout error:", error);
     }

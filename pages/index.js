@@ -2382,7 +2382,7 @@ export default function Home() {
                   alt="Portrait photography"
                   className="responsive-image"
                   style={{
-                    height: "100%",
+                    height: "120%",
                     objectFit: "cover",
                     transition: "transform 0.3s ease",
                   }}

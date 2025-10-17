@@ -848,7 +848,7 @@ export default function About() {
               <Link
                 href="/login"
                 style={{
-                  width: "100%",
+                  // width: "100%",
                   background: "transparent",
                   border: "1px solid #d1d5db",
                   color: "#374151",

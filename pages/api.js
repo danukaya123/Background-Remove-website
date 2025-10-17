@@ -7,12 +7,12 @@ export default function Api() {
 
   useEffect(() => {
     // Set active page in navigation
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPage = window.location.pathname.split('/').pop() || 'index';
     const navLinks = document.querySelectorAll('.nav-links a, .mobile-nav-item');
     
     navLinks.forEach(link => {
       const linkPage = link.getAttribute('href');
-      if (linkPage === currentPage) {
+      if (linkPage === `/${currentPage}` || (currentPage === '' && linkPage === '/')) {
         link.classList.add('active');
       }
     });
@@ -24,7 +24,7 @@ export default function Api() {
 
   const copyCode = (button) => {
     const codeBlock = button.parentElement;
-    const code = codeBlock.querySelector('pre').innerText;
+    const code = codeBlock.querySelector('pre').textContent;
     
     navigator.clipboard.writeText(code).then(() => {
       button.innerHTML = '✅ Copied!';
@@ -78,35 +78,37 @@ export default function Api() {
       </nav>
 
       {/* Mobile Sidebar */}
-      <div className={`sidebar-overlay ${isMenuOpen ? 'active' : ''}`} onClick={toggleMobileMenu}></div>
-      <div className={`mobile-sidebar ${isMenuOpen ? 'active' : ''}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="logo-icon">Q</div>
-            <div>
-              <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                AI Background Remover
+      {isMenuOpen && (
+        <>
+          <div className="sidebar-overlay" onClick={toggleMobileMenu}></div>
+          <div className="mobile-sidebar">
+            <div className="sidebar-header">
+              <div className="sidebar-logo">
+                <div className="logo-icon">Q</div>
+                <div>
+                  <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
+                  <div className="logo-subtitle">AI Background Remover</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-nav">
+              <Link href="/" className="mobile-nav-item">Home</Link>
+              <Link href="/upload" className="mobile-nav-item">Upload</Link>
+              <Link href="/examples" className="mobile-nav-item">Examples</Link>
+              <Link href="/api" className="mobile-nav-item">API</Link>
+              <Link href="/about" className="mobile-nav-item">About</Link>
+            </div>
+
+            <div className="sidebar-footer">
+              <div className="sidebar-buttons">
+                <a href="#" className="btn btn-outline">Log in</a>
+                <a href="#" className="btn btn-primary">Sign up</a>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="sidebar-nav">
-          <Link href="/" className="mobile-nav-item">Home</Link>
-          <Link href="/upload" className="mobile-nav-item">Upload</Link>
-          <Link href="/examples" className="mobile-nav-item">Examples</Link>
-          <Link href="/api" className="mobile-nav-item">API</Link>
-          <Link href="/about" className="mobile-nav-item">About</Link>
-        </div>
-
-        <div className="sidebar-footer">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <a href="#" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }}>Log in</a>
-            <a href="#" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Sign up</a>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Main Content */}
       <main>
@@ -122,7 +124,7 @@ export default function Api() {
           {/* Quick Start */}
           <section className="content-section slide-up">
             <h2 className="section-title">Quick Start</h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', lineHeight: '1.7', fontSize: 'clamp(14px, 2vw, 1rem)' }}>
+            <p className="section-description">
               Get started with our API in minutes. The Quizontal API provides programmatic access to 
               our AI-powered background removal technology. All API endpoints are free to use and 
               require no authentication for basic usage.
@@ -130,17 +132,17 @@ export default function Api() {
             
             <div className="code-block">
               <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-              <pre><span className="code-keyword">from</span> gradio_client <span className="code-keyword">import</span> Client, handle_file
+              <pre>{`from gradio_client import Client, handle_file
 
-<span className="code-comment"># Initialize the client</span>
-client = Client(<span className="code-string">&quot;danuka21/quizontal-Background-Remover-C1&quot;</span>)
+# Initialize the client
+client = Client("danuka21/quizontal-Background-Remover-C1")
 
-<span className="code-comment"># Remove background from an image</span>
+# Remove background from an image
 result = client.predict(
-    image=handle_file(<span className="code-string">&apos;https://example.com/image.png&apos;</span>),
-    api_name=<span className="code-string">&quot;/image&quot;</span>
+    image=handle_file('https://example.com/image.png'),
+    api_name="/image"
 )
-<span className="code-keyword">print</span>(result)</pre>
+print(result)`}</pre>
             </div>
           </section>
 
@@ -157,7 +159,7 @@ result = client.predict(
                 Remove background from a single image. Supports PNG, JPG, and WEBP formats up to 25MB.
               </p>
               
-              <h4 style={{ color: '#1e293b', margin: '1.5rem 0 1rem', fontSize: 'clamp(1.1rem, 3vw, 1.25rem)' }}>Parameters</h4>
+              <h4 className="parameter-title">Parameters</h4>
               <div className="parameter-table-container">
                 <table className="parameter-table">
                   <thead>
@@ -185,7 +187,7 @@ result = client.predict(
                 </table>
               </div>
               
-              <h4 style={{ color: '#1e293b', margin: '1.5rem 0 1rem', fontSize: 'clamp(1.1rem, 3vw, 1.25rem)' }}>Response</h4>
+              <h4 className="response-title">Response</h4>
               <div className="code-block">
                 <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
                 <pre>{`{
@@ -212,51 +214,51 @@ result = client.predict(
               <div className="example-card">
                 <div className="example-icon">🐍</div>
                 <h3 className="example-title">Python</h3>
-                <div className="code-block" style={{ margin: '1rem 0' }}>
+                <div className="code-block">
                   <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-                  <pre><span className="code-keyword">import</span> requests
-<span className="code-keyword">from</span> gradio_client <span className="code-keyword">import</span> Client
+                  <pre>{`import requests
+from gradio_client import Client
 
-client = Client(<span className="code-string">&quot;danuka21/quizontal-Background-Remover-C1&quot;</span>)
+client = Client("danuka21/quizontal-Background-Remover-C1")
 result = client.predict(
-    image=<span className="code-string">&quot;path/to/image.jpg&quot;</span>,
-    api_name=<span className="code-string">&quot;/image&quot;</span>
-)</pre>
+    image="path/to/image.jpg",
+    api_name="/image"
+)`}</pre>
                 </div>
               </div>
               
               <div className="example-card">
                 <div className="example-icon">🟨</div>
                 <h3 className="example-title">JavaScript</h3>
-                <div className="code-block" style={{ margin: '1rem 0' }}>
+                <div className="code-block">
                   <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-                  <pre><span className="code-comment">// Using fetch API</span>
-<span className="code-keyword">const</span> formData = <span className="code-keyword">new</span> FormData();
-formData.append(<span className="code-string">&apos;image&apos;</span>, imageFile);
+                  <pre>{`// Using fetch API
+const formData = new FormData();
+formData.append('image', imageFile);
 
-<span className="code-keyword">const</span> response = <span className="code-keyword">await</span> fetch(
-  <span className="code-string">&apos;https://huggingface.co/spaces/danuka21/quizontal-Background-Remover-C1&apos;</span>,
+const response = await fetch(
+  'https://huggingface.co/spaces/danuka21/quizontal-Background-Remover-C1',
   {
-    method: <span className="code-string">&apos;POST&apos;</span>,
+    method: 'POST',
     body: formData
   }
-);</pre>
+);`}</pre>
                 </div>
               </div>
               
               <div className="example-card">
                 <div className="example-icon">📱</div>
                 <h3 className="example-title">Mobile Apps</h3>
-                <div className="code-block" style={{ margin: '1rem 0' }}>
+                <div className="code-block">
                   <button className="copy-btn" onClick={(e) => copyCode(e.target)}>📋 Copy</button>
-                  <pre><span className="code-comment">// Swift example</span>
-<span className="code-keyword">let</span> client = Client(
-  src: <span className="code-string">&quot;danuka21/quizontal-Background-Remover-C1&quot;</span>
+                  <pre>{`// Swift example
+let client = Client(
+  src: "danuka21/quizontal-Background-Remover-C1"
 )
-<span className="code-keyword">let</span> result = client.predict(
-  inputs: [<span className="code-string">&quot;image&quot;</span>: imageData],
-  endpoint: <span className="code-string">&quot;/image&quot;</span>
-)</pre>
+let result = client.predict(
+  inputs: ["image": imageData],
+  endpoint: "/image"
+)`}</pre>
                 </div>
               </div>
             </div>
@@ -265,9 +267,9 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           {/* Rate Limits & Pricing */}
           <section className="content-section slide-up">
             <h2 className="section-title">Rate Limits & Pricing</h2>
-            <div style={{ background: '#f0f9ff', padding: 'clamp(1.5rem, 3vw, 2rem)', borderRadius: '12px', border: '1px solid #bae6fd' }}>
-              <h3 style={{ color: '#0369a1', marginBottom: '1rem', fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>🎉 Completely Free!</h3>
-              <p style={{ color: '#64748b', lineHeight: '1.7', fontSize: 'clamp(14px, 2vw, 1rem)' }}>
+            <div className="pricing-card">
+              <h3 className="pricing-title">🎉 Completely Free!</h3>
+              <p className="pricing-description">
                 The Quizontal API is completely free to use with no rate limits for individual users. 
                 We believe in making AI accessible to everyone. For high-volume commercial use, 
                 please contact us for enterprise solutions.
@@ -292,12 +294,12 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           {/* Support */}
           <section className="content-section slide-up">
             <h2 className="section-title">Support</h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', lineHeight: '1.7', fontSize: 'clamp(14px, 2vw, 1rem)' }}>
+            <p className="support-description">
               Need help integrating our API? Check out our documentation or contact our support team.
             </p>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <a href="#" className="btn btn-primary" style={{ fontSize: 'clamp(14px, 2vw, 1rem)', padding: '10px 20px' }}>View Full Documentation</a>
-              <a href="#" className="btn btn-outline" style={{ fontSize: 'clamp(14px, 2vw, 1rem)', padding: '10px 20px' }}>Contact Support</a>
+            <div className="support-buttons">
+              <a href="#" className="btn btn-primary">View Full Documentation</a>
+              <a href="#" className="btn btn-outline">Contact Support</a>
             </div>
           </section>
         </div>
@@ -331,11 +333,7 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           min-height: 100vh;
           background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
           color: #1e293b;
-          padding: 0;
-          margin: 0;
-          scroll-behavior: smooth;
-          overflow-x: hidden;
-          width: 100%;
+          line-height: 1.6;
         }
 
         /* Navigation */
@@ -347,17 +345,15 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           top: 0;
           z-index: 100;
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          width: 100%;
         }
 
         .nav-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 1rem clamp(1rem, 3vw, 2rem);
+          padding: 1rem 2rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          width: 100%;
         }
 
         .logo {
@@ -381,10 +377,9 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
         }
 
         .logo-text {
-          font-size: clamp(18px, 4vw, 24px);
+          font-size: 24px;
           font-weight: 800;
           color: #1e293b;
-          letter-spacing: -0.5px;
         }
 
         .logo-accent {
@@ -393,19 +388,18 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
 
         .nav-links {
           display: flex;
-          gap: clamp(0.75rem, 2vw, 1.5rem);
+          gap: 1.5rem;
           align-items: center;
         }
 
         .nav-links a {
           color: #64748b;
           text-decoration: none;
-          font-size: clamp(12px, 2vw, 14px);
+          font-size: 14px;
           font-weight: 500;
           transition: all 0.3s;
           padding: 6px 10px;
           border-radius: 6px;
-          white-space: nowrap;
         }
 
         .nav-links a:hover,
@@ -416,23 +410,22 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
 
         .auth-buttons {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.75rem;
           align-items: center;
-          margin-left: 0.5rem;
         }
 
         .btn {
-          padding: 6px clamp(12px, 3vw, 16px);
+          padding: 6px 16px;
           border-radius: 6px;
           font-weight: 600;
-          font-size: clamp(12px, 2vw, 14px);
+          font-size: 14px;
           cursor: pointer;
           transition: all 0.3s;
           border: none;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           white-space: nowrap;
         }
 
@@ -458,7 +451,6 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
         }
 
-        /* Mobile Menu */
         .mobile-menu-toggle {
           display: none;
           flex-direction: column;
@@ -476,6 +468,7 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           transition: all 0.3s;
         }
 
+        /* Mobile Sidebar */
         .sidebar-overlay {
           position: fixed;
           top: 0;
@@ -484,32 +477,19 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           height: 100%;
           background: rgba(0,0,0,0.5);
           z-index: 998;
-          opacity: 0;
-          visibility: hidden;
-          transition: all 0.3s;
-        }
-
-        .sidebar-overlay.active {
-          opacity: 1;
-          visibility: visible;
         }
 
         .mobile-sidebar {
           position: fixed;
           top: 0;
-          right: -100%;
+          right: 0;
           width: 300px;
           height: 100%;
           background: white;
           z-index: 999;
-          transition: right 0.3s;
           display: flex;
           flex-direction: column;
-          box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-        }
-
-        .mobile-sidebar.active {
-          right: 0;
+          box-shadow: -2px 0 10px rgba(0,0,0,0.1);
         }
 
         .sidebar-header {
@@ -523,6 +503,12 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           gap: 12px;
         }
 
+        .logo-subtitle {
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 2px;
+        }
+
         .sidebar-nav {
           flex: 1;
           padding: 1rem 0;
@@ -534,7 +520,6 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           color: #64748b;
           text-decoration: none;
           font-weight: 500;
-          transition: all 0.3s;
           border-left: 3px solid transparent;
         }
 
@@ -550,27 +535,31 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           border-top: 1px solid #e2e8f0;
         }
 
+        .sidebar-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
         /* Main Content */
         main {
-          padding: clamp(2rem, 4vw, 3rem) 0;
-          width: 100%;
+          padding: 2rem 0;
         }
 
         .container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 clamp(1rem, 3vw, 2rem);
-          width: 100%;
+          padding: 0 20px;
         }
 
         .page-header {
           text-align: center;
-          margin-bottom: clamp(2rem, 4vw, 3rem);
-          padding: clamp(1rem, 3vw, 2rem) 0;
+          margin-bottom: 3rem;
+          padding: 2rem 0;
         }
 
         .page-title {
-          font-size: clamp(2rem, 6vw, 3rem);
+          font-size: clamp(2rem, 4vw, 3rem);
           font-weight: 800;
           background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
           -webkit-background-clip: text;
@@ -580,28 +569,34 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
         }
 
         .page-subtitle {
-          font-size: clamp(1rem, 3vw, 1.2rem);
+          font-size: clamp(1rem, 2vw, 1.2rem);
           color: #64748b;
           max-width: 600px;
           margin: 0 auto;
-          line-height: 1.6;
         }
 
         .content-section {
           background: white;
           border-radius: 20px;
-          padding: clamp(1.5rem, 4vw, 2.5rem);
+          padding: 2.5rem;
           box-shadow: 0 20px 40px rgba(0,0,0,0.1);
           margin-bottom: 2rem;
           border: 1px solid #f1f5f9;
         }
 
         .section-title {
-          font-size: clamp(1.5rem, 4vw, 2rem);
+          font-size: 2rem;
           font-weight: 700;
           color: #1e293b;
           margin-bottom: 1.5rem;
           text-align: center;
+        }
+
+        .section-description {
+          color: #64748b;
+          margin-bottom: 1.5rem;
+          line-height: 1.7;
+          font-size: 1.1rem;
         }
 
         /* Code Blocks */
@@ -611,17 +606,16 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           border-radius: 12px;
           padding: 1.5rem;
           margin: 1.5rem 0;
-          overflow-x: auto;
         }
 
         .code-block pre {
           color: #e2e8f0;
           font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-          font-size: clamp(12px, 2vw, 14px);
+          font-size: 14px;
           line-height: 1.5;
           margin: 0;
           white-space: pre-wrap;
-          word-wrap: break-word;
+          overflow-x: auto;
         }
 
         .copy-btn {
@@ -640,19 +634,6 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
 
         .copy-btn:hover {
           background: rgba(255,255,255,0.2);
-        }
-
-        .code-keyword {
-          color: #f472b6;
-        }
-
-        .code-string {
-          color: #86efac;
-        }
-
-        .code-comment {
-          color: #94a3b8;
-          font-style: italic;
         }
 
         /* Endpoint Cards */
@@ -690,6 +671,13 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           color: #64748b;
           margin-bottom: 1.5rem;
           line-height: 1.6;
+        }
+
+        .parameter-title,
+        .response-title {
+          color: #1e293b;
+          margin: 1.5rem 0 1rem;
+          font-size: 1.25rem;
         }
 
         /* Parameter Table */
@@ -734,7 +722,7 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
         /* Examples Grid */
         .examples-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 2rem;
           margin-top: 2rem;
         }
@@ -789,12 +777,47 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           font-size: 14px;
         }
 
+        /* Pricing Section */
+        .pricing-card {
+          background: #f0f9ff;
+          padding: 2rem;
+          border-radius: 12px;
+          border: 1px solid #bae6fd;
+        }
+
+        .pricing-title {
+          color: #0369a1;
+          margin-bottom: 1rem;
+          font-size: 1.5rem;
+        }
+
+        .pricing-description {
+          color: #64748b;
+          line-height: 1.7;
+          font-size: 1.1rem;
+        }
+
+        /* Support Section */
+        .support-description {
+          color: #64748b;
+          margin-bottom: 1.5rem;
+          line-height: 1.7;
+          font-size: 1.1rem;
+        }
+
+        .support-buttons {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
         /* Footer */
         footer {
           border-top: 1px solid #e2e8f0;
           padding: 3rem 1rem;
           background: #f8fafc;
-          margin-top: auto;
+          margin-top: 4rem;
         }
 
         .footer-content {
@@ -810,6 +833,12 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
           gap: 8px;
           margin-bottom: 1rem;
           flex-wrap: wrap;
+        }
+
+        .footer-logo .logo-icon {
+          width: 24px;
+          height: 24px;
+          font-size: 12px;
         }
 
         .footer-text {
@@ -852,21 +881,25 @@ formData.append(<span className="code-string">&apos;image&apos;</span>, imageFil
             display: flex;
           }
 
+          .nav-container {
+            padding: 1rem;
+          }
+
+          .content-section {
+            padding: 1.5rem;
+          }
+
           .examples-grid {
             grid-template-columns: 1fr;
           }
 
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+          .support-buttons {
+            flex-direction: column;
           }
 
-          .parameter-table {
-            font-size: 14px;
-          }
-
-          .parameter-table th,
-          .parameter-table td {
-            padding: 0.75rem;
+          .support-buttons .btn {
+            width: 100%;
+            justify-content: center;
           }
         }
 

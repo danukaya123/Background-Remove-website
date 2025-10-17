@@ -1000,14 +1000,14 @@ export default function Support() {
           {/* Desktop Navigation Links */}
           <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
-              { name: 'Home', href: 'https://rbg.quizontal.cc' },
-              { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-              { name: 'Features', href: 'https://rbg.quizontal.cc' },
-              { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-              { name: 'API Documentation', href: '/api-documentation' },
-              { name: 'About', href: '/about' },
-              { name: 'Support', href: '/support' },
-              { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+    { name: 'Features', href: 'https://rbg.quizontal.cc' },
+    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
             ].map((item) => (
               <Link 
                 key={item.name}
@@ -1043,14 +1043,14 @@ export default function Support() {
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginLeft: "0.5rem" }}>
               {currentUser ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  {/* IMPROVED: User Profile Dropdown */}
+                  {/* User Profile Dropdown */}
                   <div style={{ position: "relative" }}>
                     <button
                       style={{
                         background: "transparent",
                         border: "1px solid #d1d5db",
-                        padding: "8px 16px",
-                        borderRadius: "8px",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
                         color: "#374151",
                         fontWeight: "600",
                         fontSize: "14px",
@@ -1059,7 +1059,7 @@ export default function Support() {
                         whiteSpace: "nowrap",
                         display: "flex",
                         alignItems: "center",
-                        gap: "10px",
+                        gap: "8px",
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = "#f8fafc";
@@ -1071,33 +1071,55 @@ export default function Support() {
                       }}
                       onClick={() => setShowDropdown(!showDropdown)}
                     >
-                      <div className="user-avatar">
+                      <div
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          color: "white",
+                        }}
+                      >
                         {userProfile?.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
                       </div>
-                      <div className="user-info">
-                        <div className="user-name">
-                          {userProfile?.username || "User"}
-                        </div>
-                        <div className="user-email">
-                          {currentUser?.email || ""}
-                        </div>
-                      </div>
-                      <i className="fas fa-chevron-down" style={{ fontSize: '12px', color: '#64748b' }}></i>
+                      {userProfile?.username || currentUser?.email || "User"}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 9l-7 7-7-7" />
+                      </svg>
                     </button>
                     
                     {showDropdown && (
-                      <div className="auth-dropdown">
-                        <div style={{ padding: "0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
-                          <div style={{ fontWeight: "600", color: "#1e293b", marginBottom: "4px" }}>Account</div>
-                          <div>{currentUser?.email || "User"}</div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          right: 0,
+                          background: "white",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "12px",
+                          padding: "0.75rem",
+                          marginTop: "0.5rem",
+                          minWidth: "200px",
+                          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                          zIndex: 1000,
+                        }}
+                      >
+                        <div style={{ padding: "0.5rem 0.75rem", color: "#64748b", fontSize: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                          Signed in as<br />
+                          <strong style={{ color: "#1e293b" }}>{currentUser?.email || "User"}</strong>
                         </div>
                         {userProfile && (
-                          <div style={{ padding: "0.75rem", borderBottom: "1px solid #f1f5f9" }}>
-                            <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>Username</div>
+                          <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid #f1f5f9" }}>
+                            <div style={{ fontSize: "12px", color: "#64748b" }}>Username:</div>
                             <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.username}</div>
                             {userProfile.phoneNumber && (
                               <>
-                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "8px", marginBottom: "4px" }}>Phone</div>
+                                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Phone:</div>
                                 <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>{userProfile.phoneNumber}</div>
                               </>
                             )}
@@ -1119,8 +1141,7 @@ export default function Support() {
                             transition: "all 0.3s",
                             display: "flex",
                             alignItems: "center",
-                            gap: "10px",
-                            marginTop: "0.5rem",
+                            gap: "8px",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = "#fef2f2";
@@ -1129,7 +1150,9 @@ export default function Support() {
                             e.currentTarget.style.background = "transparent";
                           }}
                         >
-                          <i className="fas fa-sign-out-alt"></i>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                          </svg>
                           Sign Out
                         </button>
                       </div>
@@ -1143,8 +1166,8 @@ export default function Support() {
                     style={{
                       background: "transparent",
                       border: "1px solid #d1d5db",
-                      padding: "8px 20px",
-                      borderRadius: "8px",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
                       color: "#374151",
                       fontWeight: "600",
                       fontSize: "14px",
@@ -1153,8 +1176,7 @@ export default function Support() {
                       whiteSpace: "nowrap",
                       textDecoration: 'none',
                       display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px'
+                      alignItems: 'center'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "#f8fafc";
@@ -1165,7 +1187,6 @@ export default function Support() {
                       e.currentTarget.style.borderColor = "#d1d5db";
                     }}
                   >
-                    <i className="fas fa-sign-in-alt"></i>
                     Log in
                   </Link>
                   <Link
@@ -1173,8 +1194,8 @@ export default function Support() {
                     style={{
                       background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                       border: "none",
-                      padding: "8px 20px",
-                      borderRadius: "8px",
+                      padding: "6px 16px",
+                      borderRadius: "6px",
                       color: "white",
                       fontWeight: "600",
                       fontSize: "14px",
@@ -1184,8 +1205,7 @@ export default function Support() {
                       whiteSpace: "nowrap",
                       textDecoration: 'none',
                       display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px'
+                      alignItems: 'center'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-1px)";
@@ -1196,7 +1216,6 @@ export default function Support() {
                       e.currentTarget.style.boxShadow = "0 2px 10px rgba(59, 130, 246, 0.3)";
                     }}
                   >
-                    <i className="fas fa-user-plus"></i>
                     Sign up
                   </Link>
                 </>
@@ -1328,14 +1347,14 @@ export default function Support() {
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
-            { name: 'Home', href: 'https://rbg.quizontal.cc' },
-            { name: 'Upload', href: 'https://rbg.quizontal.cc' },
-            { name: 'Features', href: 'https://rbg.quizontal.cc' },
-            { name: 'Examples', href: 'https://rbg.quizontal.cc' },
-            { name: 'API Documentation', href: '/api-documentation' },
-            { name: 'About', href: '/about' },
-            { name: 'Support', href: '/support' },
-            { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: 'https://rbg.quizontal.cc' },
+    { name: 'Features', href: 'https://rbg.quizontal.cc' },
+    { name: 'Examples', href: 'https://rbg.quizontal.cc' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
           ].map((item) => (
             <Link
               key={item.name}
@@ -1392,10 +1411,6 @@ export default function Support() {
                   fontWeight: "600",
                   cursor: "pointer",
                   transition: "all 0.3s",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#fef2f2";
@@ -1404,7 +1419,6 @@ export default function Support() {
                   e.currentTarget.style.background = "transparent";
                 }}
               >
-                <i className="fas fa-sign-out-alt"></i>
                 Sign Out
               </button>
             </div>
@@ -1423,15 +1437,10 @@ export default function Support() {
                   cursor: "pointer",
                   transition: "all 0.3s",
                   textDecoration: 'none',
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
+                  textAlign: 'center'
                 }}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <i className="fas fa-sign-in-alt"></i>
                 Log in
               </Link>
               <Link
@@ -1448,15 +1457,10 @@ export default function Support() {
                   transition: "all 0.3s",
                   boxShadow: "0 2px 10px rgba(59, 130, 246, 0.3)",
                   textDecoration: 'none',
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
+                  textAlign: 'center'
                 }}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <i className="fas fa-user-plus"></i>
                 Sign up
               </Link>
             </div>

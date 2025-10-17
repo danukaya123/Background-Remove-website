@@ -266,16 +266,19 @@ export default function Home() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%)",
-        color: "#1e293b",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        padding: "0",
-        margin: "0",
-      }}
-    >
+<div
+  style={{
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%)",
+    color: "#1e293b",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    padding: "0",
+    margin: "0",
+    width: "100%", // Ensure full width
+    overflowX: "hidden", // Hide horizontal overflow
+    position: "relative",
+  }}
+>
 
       <Head>
         <title>{pageMeta.title}</title>
@@ -288,20 +291,67 @@ export default function Home() {
         <meta name="twitter:description" content={pageMeta.description} />
         <meta name="twitter:image" content={pageMeta.image} />
       </Head>
+        <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" 
+  />
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-
-        
-        body {
-          margin: 0;
-          padding: 0;
-          background: #ffffff;
-          font-family: 'Inter', sans-serif;
-          scroll-behavior: smooth;
-          overflow-x: hidden;
-        }
+  /* Prevent zooming and ensure full width */
+  html {
+    width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    touch-action: pan-y;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Lock body scroll but allow vertical scrolling */
+  body {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+  }
+  
+  /* Prevent zoom on double-tap */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection where needed */
+  p, h1, h2, h3, h4, h5, h6, span, div {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  /* Main container - ensure full width */
+  #__next {
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
+  }
         
         /* Enhanced Responsive Animations */
         @keyframes slideInLeft {

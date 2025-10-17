@@ -674,13 +674,6 @@ export default function Home() {
           </div>
           
           {/* Desktop Navigation Links */}
-const handleNavigation = (href) => {
-  if (href.startsWith('http') || href.startsWith('#')) {
-    window.location.href = href;
-  } else {
-    router.push(href);
-  }
-};
 
 <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
   {[
@@ -694,7 +687,7 @@ const handleNavigation = (href) => {
   ].map((item) => (
     <a 
       key={item.name}
-      onClick={() => handleNavigation(item.href)}
+      href={item.href}
       style={{ 
         color: "#64748b", 
         textDecoration: "none", 

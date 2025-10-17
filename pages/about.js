@@ -2,20 +2,26 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function About() {
+  const pathname = usePathname();
+
   useEffect(() => {
     // Set active page in navigation
-    const currentPage = window.location.pathname.split('/').pop() || '';
     const navLinks = document.querySelectorAll('.nav-links a');
     
     navLinks.forEach(link => {
-      const linkPage = link.getAttribute('href');
-      if (linkPage === currentPage || (linkPage === '/' && currentPage === '')) {
+      const linkHref = link.getAttribute('href');
+      // Remove active class from all links first
+      link.classList.remove('active');
+      
+      // Add active class to current page link
+      if (linkHref === pathname) {
         link.classList.add('active');
       }
     });
-  }, []);
+  }, [pathname]);
 
   return (
     <div className="page-container">
@@ -32,12 +38,12 @@ export default function About() {
               <li><Link href="/upload">Upload</Link></li>
               <li><Link href="/examples">Examples</Link></li>
               <li><Link href="/api">API</Link></li>
-              <li><Link href="/about" className="active">About</Link></li>
+              <li><Link href="/about">About</Link></li>
             </ul>
             
             <div className="auth-buttons">
-              <Link href="#" className="btn btn-outline">Log in</Link>
-              <Link href="#" className="btn btn-primary">Sign up</Link>
+              <a href="#" className="btn btn-outline">Log in</a>
+              <a href="#" className="btn btn-primary">Sign up</a>
             </div>
           </nav>
         </div>
@@ -227,6 +233,10 @@ export default function About() {
           gap: 8px;
         }
 
+        .logo:hover {
+          color: #1e293b;
+        }
+
         .logo-icon {
           width: 32px;
           height: 32px;
@@ -384,61 +394,6 @@ export default function About() {
           line-height: 1.6;
         }
 
-        /* Team Section */
-        .team-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 2rem;
-          margin-top: 2rem;
-        }
-
-        .team-member {
-          text-align: center;
-          padding: 2rem;
-          background: white;
-          border-radius: 15px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-          transition: var(--transition);
-        }
-
-        .team-member:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-        }
-
-        .member-avatar {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          margin: 0 auto 1rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2rem;
-          color: white;
-          font-weight: bold;
-        }
-
-        .member-name {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1e293b;
-          margin-bottom: 0.5rem;
-        }
-
-        .member-role {
-          color: #64748b;
-          font-size: 0.9rem;
-          margin-bottom: 1rem;
-        }
-
-        .member-bio {
-          color: #64748b;
-          font-size: 0.9rem;
-          line-height: 1.5;
-        }
-
         /* Stats Section */
         .stats-grid {
           display: grid;
@@ -538,7 +493,6 @@ export default function About() {
           }
           
           .content-grid,
-          .team-grid,
           .stats-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;

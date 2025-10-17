@@ -1682,7 +1682,7 @@ AI-powered background removal made simple and free.
 
           </p>
           <p className="footer-copyright">
-            &copy; 2024 QuizontalRBG. All rights reserved.
+            &copy; 2025 QuizontalRBG. All rights reserved.
           </p>
         </div>
       </footer>

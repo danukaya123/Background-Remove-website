@@ -676,7 +676,7 @@ export default function Home() {
           {/* Desktop Navigation Links */}
 <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
   {[
-    { name: 'Home', href: '/' },
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
     { name: 'Upload', href: '#upload-section' },
     { name: 'Features', href: '#Features' },
     { name: 'Examples', href: '#examples' },
@@ -1011,7 +1011,7 @@ export default function Home() {
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
   {[
-    { name: 'Home', href: '/' },
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
     { name: 'Upload', href: '#upload-section' },
     { name: 'Features', href: '#Features' },
     { name: 'Examples', href: '#examples' },

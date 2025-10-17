@@ -265,9 +265,9 @@ let result = client.predict(
 
         /* Main Content */
         .container {
-          max-width: 100%;
+          max-width: 1200px;
           margin: 0 auto;
-          padding: 0 1rem;
+          padding: 0 2rem;
           width: 100%;
           overflow-x: hidden;
         }
@@ -533,30 +533,63 @@ let result = client.predict(
           font-size: 14px;
         }
 
-        /* Support Section Buttons */
+        /* IMPROVED: Support Section Buttons */
         .support-buttons {
           display: flex;
           gap: 1rem;
           flex-wrap: wrap;
           justify-content: center;
-          margin-top: 1rem;
+          margin-top: 2rem;
         }
 
-        .support-buttons .btn {
-          padding: 12px 24px;
+        .support-btn {
+          padding: 12px 32px;
+          border-radius: 10px;
+          font-weight: 600;
           font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: none;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          gap: 8px;
+          min-height: 50px;
         }
 
-        /* Footer */
+        .support-btn-primary {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .support-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+          background: linear-gradient(135deg, #2563eb, #1e40af);
+        }
+
+        .support-btn-outline {
+          background: transparent;
+          border: 2px solid #3b82f6;
+          color: #3b82f6;
+          font-weight: 600;
+        }
+
+        .support-btn-outline:hover {
+          background: #3b82f6;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        /* IMPROVED: Footer Section */
         footer {
           border-top: 1px solid #e2e8f0;
-          padding: 3rem 1rem;
+          padding: 4rem 2rem 3rem;
           background: #f8fafc;
-          margin-top: 4rem;
+          margin-top: 6rem;
           width: 100%;
         }
 
@@ -570,28 +603,73 @@ let result = client.predict(
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          margin-bottom: 1rem;
+          gap: 12px;
+          margin-bottom: 1.5rem;
           flex-wrap: wrap;
         }
 
-        .footer-logo .logo-icon {
-          width: 24px;
-          height: 24px;
-          font-size: 12px;
+        .footer-logo-icon {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 16px;
+          color: white;
+        }
+
+        .footer-logo-text {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #1e293b;
+          letter-spacing: -0.5px;
+        }
+
+        .footer-logo-accent {
+          color: #3b82f6;
         }
 
         .footer-text {
           color: #64748b;
-          margin: 0.5rem 0;
-          font-size: 14px;
-          line-height: 1.5;
+          margin: 1rem 0;
+          font-size: 1.1rem;
+          line-height: 1.6;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .footer-links {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
+          margin: 2rem 0;
+          flex-wrap: wrap;
+        }
+
+        .footer-link {
+          color: #64748b;
+          text-decoration: none;
+          font-weight: 500;
+          transition: all 0.3s;
+          padding: 8px 12px;
+          border-radius: 6px;
+        }
+
+        .footer-link:hover {
+          color: #3b82f6;
+          background: #f1f5f9;
         }
 
         .footer-copyright {
           color: #94a3b8;
-          font-size: 12px;
-          margin-top: 1rem;
+          font-size: 0.9rem;
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid #e2e8f0;
         }
 
         /* Mobile Sidebar Styles */
@@ -685,14 +763,51 @@ let result = client.predict(
             padding: 1.5rem;
           }
 
+          /* IMPROVED: Support buttons for mobile */
           .support-buttons {
             flex-direction: column;
             align-items: center;
+            gap: 1rem;
           }
 
-          .support-buttons .btn {
+          .support-btn {
             width: 100%;
             max-width: 280px;
+            padding: 14px 24px;
+          }
+
+          /* IMPROVED: Footer for mobile */
+          footer {
+            padding: 3rem 1rem 2rem;
+          }
+
+          .footer-logo {
+            gap: 8px;
+          }
+
+          .footer-logo-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+          }
+
+          .footer-logo-text {
+            font-size: 1.3rem;
+          }
+
+          .footer-text {
+            font-size: 1rem;
+            padding: 0 1rem;
+          }
+
+          .footer-links {
+            gap: 1rem;
+            margin: 1.5rem 0;
+          }
+
+          .footer-link {
+            font-size: 0.9rem;
+            padding: 6px 10px;
           }
         }
 
@@ -753,17 +868,21 @@ let result = client.predict(
             font-size: 0.9rem;
             word-break: break-word;
           }
+
+          .support-btn {
+            padding: 16px 24px;
+            font-size: 1.1rem;
+          }
         }
 
         @media (min-width: 1200px) {
-          .nav-container,
-          .container {
+          .nav-container {
             max-width: 1200px;
           }
         }
       `}</style>
 
-      {/* Navigation - Using the exact same styles from About page */}
+      {/* Navigation */}
       <nav
         style={{
           borderBottom: "1px solid #e2e8f0",
@@ -1427,8 +1546,22 @@ let result = client.predict(
               Need help integrating our API? Check out our documentation or contact our support team.
             </p>
             <div className="support-buttons">
-              <a href="#" className="btn btn-primary">View Full Documentation</a>
-              <a href="#" className="btn btn-outline">Contact Support</a>
+              <a href="#" className="support-btn support-btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10,9 9,9 8,9" />
+                </svg>
+                View Full Documentation
+              </a>
+              <a href="#" className="support-btn support-btn-outline">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                Contact Support
+              </a>
             </div>
           </section>
         </div>
@@ -1438,14 +1571,23 @@ let result = client.predict(
       <footer>
         <div className="footer-content">
           <div className="footer-logo">
-            <div className="logo-icon">Q</div>
-            <div className="logo-text">Quizontal<span className="logo-accent">RBG</span></div>
+            <div className="footer-logo-icon">Q</div>
+            <div className="footer-logo-text">Quizontal<span className="footer-logo-accent">RBG</span></div>
           </div>
           <p className="footer-text">
-            AI-powered background removal made simple and free
+            AI-powered background removal made simple and free for everyone. 
+            Remove backgrounds instantly with our advanced AI technology.
           </p>
+          <div className="footer-links">
+            <Link href="/" className="footer-link">Home</Link>
+            <Link href="/api" className="footer-link">API</Link>
+            <Link href="/about" className="footer-link">About</Link>
+            <Link href="https://blog.quizontal.cc" className="footer-link">Blog</Link>
+            <Link href="#" className="footer-link">Privacy</Link>
+            <Link href="#" className="footer-link">Terms</Link>
+          </div>
           <p className="footer-copyright">
-            &copy; 2024 QuizontalRBG. All rights reserved.
+            &copy; 2024 QuizontalRBG. All rights reserved. Made with ❤️ for the community.
           </p>
         </div>
       </footer>

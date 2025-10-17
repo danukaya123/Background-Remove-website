@@ -675,7 +675,7 @@ export default function Home() {
           
           {/* Desktop Navigation Links */}
 
-<div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+<div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
   {[
     { name: 'Home', href: 'https://rbg.quizontal.cc' },
     { name: 'Upload', href: '#upload-section' },
@@ -683,6 +683,7 @@ export default function Home() {
     { name: 'Examples', href: '#examples' },
     { name: 'API Documentation', href: '/api-documentation' },
     { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
     { name: 'Blog', href: 'https://blog.quizontal.cc' }
   ].map((item) => (
     <a 
@@ -1016,8 +1017,9 @@ export default function Home() {
     { name: 'Upload', href: '#upload-section' },
     { name: 'Features', href: '#Features' },
     { name: 'Examples', href: '#examples' },
-    { name: 'API Documentation', href: 'api.html' },
-    { name: 'About', href: 'about.html' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
     { name: 'Blog', href: 'https://blog.quizontal.cc' }
   ].map((item) => (
             <a

@@ -867,7 +867,7 @@ export default function About() {
               <Link
                 href="/signup"
                 style={{
-                  width: "100%",
+                  // width: "100%",
                   background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
                   border: "none",
                   color: "white",

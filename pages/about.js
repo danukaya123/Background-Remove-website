@@ -334,15 +334,16 @@ export default function About() {
           </Link>
           
           {/* Desktop Navigation Links */}
-          <div className="desktop-only nav-links" style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+          <div className="desktop-only nav-links" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {[
-              { name: 'Home', href: '/' },
-              { name: 'Upload', href: '/#upload-section' },
-              { name: 'Features', href: '/#Features' },
-              { name: 'Examples', href: '/#examples' },
-              { name: 'API Documentation', href: '/api' },
-              { name: 'About', href: '/about' },
-              { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: '#upload-section' },
+    { name: 'Features', href: '#Features' },
+    { name: 'Examples', href: '#examples' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
             ].map((item) => (
               <Link 
                 key={item.name}
@@ -682,13 +683,14 @@ export default function About() {
         {/* Navigation Items */}
         <div style={{ flex: 1, padding: "1rem 0" }}>
           {[
-            { name: 'Home', href: '/' },
-            { name: 'Upload', href: '/#upload-section' },
-            { name: 'Features', href: '/#Features' },
-            { name: 'Examples', href: '/#examples' },
-            { name: 'API Documentation', href: '/api' },
-            { name: 'About', href: '/about' },
-            { name: 'Blog', href: 'https://blog.quizontal.cc' }
+    { name: 'Home', href: 'https://rbg.quizontal.cc' },
+    { name: 'Upload', href: '#upload-section' },
+    { name: 'Features', href: '#Features' },
+    { name: 'Examples', href: '#examples' },
+    { name: 'API Documentation', href: '/api-documentation' },
+    { name: 'About', href: '/about' },
+    { name: 'Support', href: '/support' },
+    { name: 'Blog', href: 'https://blog.quizontal.cc' }
           ].map((item) => (
             <Link
               key={item.name}
@@ -963,7 +965,7 @@ export default function About() {
             AI-powered background removal made simple and free
           </p>
           <p style={{ color: "#94a3b8", fontSize: "12px", marginTop: "1rem" }}>
-            &copy; 2024 QuizontalRBG. All rights reserved.
+            &copy; 2025 QuizontalRBG. All rights reserved.
           </p>
         </div>
       </footer>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
+import Head from 'next/head';
+
 
 export default function Signup() {
     const pageMeta = {

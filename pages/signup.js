@@ -4,6 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
 
 export default function Signup() {
+    const pageMeta = {
+    title: 'Signup - Quizontal AI Background Remover',
+    description: 'Signup to Quizontal AI Background Remover to access all features. Easy signup using Google, Github or Email & Password.',
+    image: 'https://rbg.quizontal.cc/og-image.jpg',
+    url: 'https://rbg.quizontal.cc/signup'
+  };
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -122,6 +128,23 @@ export default function Signup() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
+
+      <Head>
+        <title>{pageMeta.title}</title>
+        <meta name="description" content={pageMeta.description} />
+        <meta property="og:title" content={pageMeta.title} />
+        <meta property="og:description" content={pageMeta.description} />
+        <meta property="og:image" content={pageMeta.image} />
+        <meta property="og:url" content={pageMeta.url} />
+        <meta name="twitter:title" content={pageMeta.title} />
+        <meta name="twitter:description" content={pageMeta.description} />
+        <meta name="twitter:image" content={pageMeta.image} />
+
+        <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" 
+  />
+      </Head>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
